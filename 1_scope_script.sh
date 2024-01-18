@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 # Author: Martín Gil Blanco
 
 # El script se va a ejecutar un cambio de directorio pero no va a afectar

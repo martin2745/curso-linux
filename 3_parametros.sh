@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 # Author: Martín Gil Blanco
 
 # Uso de variables y parámetros dinámicos

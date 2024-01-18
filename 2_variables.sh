@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 # Author: Martín Gil Blanco
 
 # Muestra el contenido de variables en script.
