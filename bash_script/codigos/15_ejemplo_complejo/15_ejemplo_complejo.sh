@@ -39,17 +39,27 @@ function crear_usuarios {
             echo "...Creando estudiante${i}..."
             addgroup estudiante${i} &> /dev/null
             useradd -d /home/estudiante${i} -m -s /bin/bash -g estudiante${i} -G alumnos -p "$(mkpasswd 'abc123.')" estudiante${i} &> /dev/null
+            $(dd if=/dev/zero of=/home/estudiante${i}/ficheroZeros.img bs=4M count=1 &>/dev/null) # Creo contenido dentro del directorio de trabajo del usuario
         done
-
-        echo -e "\nProceso terminado"
         # reset
     fi
 }
 
 function info_usuarios {
     guid=$(egrep ^alumnos:* /etc/group | cut -d":" -f3)
-    echo "guid ${guid}"
+    echo "${guid}"
+    usuarios=$(egrep ^alumnos:* /etc/group | cut -d":" -f4 | sed "s/,/ /g") # Array de usuarios
+    for u in ${usuarios}; do
+        echo -e "\n\nUSUARIO: ${u}"
+        echo -e "\tEl usuario ${u} tiene como información de usuario:"
+        echo -e "\t$(id ${u})"
+        echo -e "\tPertenece a los grupos $(groups ${u})"
+        echo -e "\tEn su directorio de trabajo hay tiene: "
+        echo -e "\t$(du -h /home/${u})"
+
+    done
 }
 
 crear_usuarios
 info_usuarios
+echo -e "\nProceso terminado"
