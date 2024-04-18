@@ -1240,6 +1240,36 @@ martin:$y$j9T$D1YstIGhwPXktsEmolZg./$I7fKcY0m9yE2LYgGBEn8yolExy5PLvBTIlZf5keudM3
 useradd -m -d /home/juan -p "$(mkpasswd 'abc123..')" -g sistemas -G dam -s /bin/bash juan
 ```
 
+_*Nota: Si queremos que un usuario tenga un grupo principal con el mismo nombre, no hay que indicarlo con la opción -g, es automático*_
+
+```bash
+si@si-VirtualBox:~/Desktop/scripts/ejercicios/ej2$ sudo useradd -m -d /home/alumno -p $(mkpasswd 'abc123.') -s "/bin/bash" alumno
+
+si@si-VirtualBox:~/Desktop/scripts/ejercicios/ej2$ tail -1 /etc/passwd
+geoclue:x:124:131::/var/lib/geoclue:/usr/sbin/nologin
+pulse:x:125:132:PulseAudio daemon,,,:/run/pulse:/usr/sbin/nologin
+gnome-initial-setup:x:126:65534::/run/gnome-initial-setup/:/bin/false
+hplip:x:127:7:HPLIP system user,,,:/run/hplip:/bin/false
+gdm:x:128:134:Gnome Display Manager:/var/lib/gdm3:/bin/false
+si:x:1000:1000:si,,,:/home/si:/bin/bash
+vboxadd:x:999:1::/var/run/vboxadd:/bin/false
+sshd:x:129:65534::/run/sshd:/usr/sbin/nologin
+mysql:x:130:137:MySQL Server,,,:/nonexistent:/bin/false
+alumno:x:1001:1001::/home/alumno:/bin/bash
+
+si@si-VirtualBox:~/Desktop/scripts/ejercicios/ej2$ tail -1 /etc/group
+pulse:x:132:
+pulse-access:x:133:
+gdm:x:134:
+lxd:x:135:si
+si:x:1000:
+sambashare:x:136:si
+vboxsf:x:999:
+vboxdrmipc:x:998:
+mysql:x:137:
+alumno:x:1001:
+```
+
 **usermod**: Permite modificar las propiedades de un usuario existente en el sistema.
 
 ```bash
