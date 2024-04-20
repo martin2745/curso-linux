@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Haciendo uso de [[ para las operaciones lógicas and y or se emplea && || en lugar de -a -o
+# Si queremos utilizar un elif siempre tenemos que terminar con un else
 
 read -p "Dime un número: " numero
 
