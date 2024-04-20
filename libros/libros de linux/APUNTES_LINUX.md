@@ -2520,7 +2520,7 @@ cut [opciones] archivo
   Por ejemplo, si tienes un archivo de texto donde los campos están separados por comas (`,`), puedes usar la opción `-d` para extraer los campos correctamente:
 
   ```bash
-  cut -d',' -f1,3 archivo.csv
+  cut -d ',' -f1,3 archivo.csv
   ```
 
   Esto extraería el primer y tercer campo de cada línea del archivo `archivo.csv`, considerando que los campos están separados por comas.
@@ -2559,6 +2559,34 @@ cut [opciones] archivo
 
   Esto devolverá todos los caracteres de cada línea hasta el tercero, excluyéndolo.
 
+  _*Nota: Con `cut` si escribimos -f3,1 no obtenemos la tercera columa y luego la primera. Obtenemos siempre primera y luego tercera. Para este comportamiento necesitaremos el `awk`*_
+
+  ```bash
+  si@si-VirtualBox:~$ head /etc/passwd | cut -d ':' -f1,2
+  root:x
+  daemon:x
+  bin:x
+  sys:x
+  sync:x
+  games:x
+  man:x
+  lp:x
+  mail:x
+  news:x
+
+  si@si-VirtualBox:~$ head /etc/passwd | cut -d ':' -f2,1
+  root:x
+  daemon:x
+  bin:x
+  sys:x
+  sync:x
+  games:x
+  man:x
+  lp:x
+  mail:x
+  news:x
+  ```
+
 ---
 
 ### awk
@@ -2583,6 +2611,16 @@ El comando de `awk` anterior realiza:
 - `awk`: Es el comando `awk` que invoca el intérprete de `awk` para procesar el texto.
 - `-F'addr:'`: La opción `-F` especifica el delimitador de campo utilizado por `awk`. En este caso, se establece como `'addr:'`, lo que significa que `awk` dividirá cada línea de entrada en campos cada vez que encuentre la cadena `'addr:'`.
 - `' {print $2 $1}'`: Esta es la acción que `awk` tomará en cada línea de entrada. En este caso, `$2` hace referencia al segundo campo y `$1` al primer campo después de dividir la línea según el delimitador especificado. La acción `print` imprime los campos especificados. Al imprimir `$2` antes de `$1` y no separarlos con una coma ni espacio, se concatenarán los campos sin ningún espacio adicional entre ellos.
+- `awk` es muy interesante para poder mostrar la última columna si no sabemos en que posicióne está con el valor `$NF`.
+
+```bash
+si@si-VirtualBox:~$ cat /etc/passwd | awk -F ':' '{print $NF}'
+/bin/bash
+/usr/sbin/nologin
+/usr/sbin/nologin
+/usr/sbin/nologin
+/bin/sync
+```
 
 Por ejemplo, si tenemos una línea de entrada como esta:
 
