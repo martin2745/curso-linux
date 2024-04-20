@@ -2669,6 +2669,15 @@ si@si-VirtualBox:~$ ps -e
       9 ?        00:00:01 kworker/0:1-events
 ```
 
+`ps -p` muestra el proceso según su pid.
+
+```bash
+si@si-VirtualBox:~$ ps -p `pidof bash`
+    PID TTY          TIME CMD
+   1457 pts/1    00:00:00 bash
+
+```
+
 `ps -ef` muestra todos los procesos del sistema con mayor nivel de detalle que `ps -e`.
 
 ```bash
