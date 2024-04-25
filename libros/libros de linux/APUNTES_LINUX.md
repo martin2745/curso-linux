@@ -2,8 +2,6 @@
 
 ---
 
-## Autor:
-
 ## Martín Gil Blanco
 
 ---
@@ -53,6 +51,8 @@
 - [Uso de {variable}](#Uso-de-{variable})
 - [Ejecución de scripts](#Ejecución-de-scripts)
 - [subshells](#subshells)
+- [arrays en bash](#arrays-en-bash)
+- [Prácticas sobre arrays](#Prácticas-sobre-arrays)
 
 ---
 
