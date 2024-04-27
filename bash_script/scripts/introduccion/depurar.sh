@@ -9,5 +9,12 @@ else
 fi
 
 # Ejecuciones si no ponemos arriba -xv
+
 # $ /bin/bash -v ./11_depurar.sh
-# $ /bin/bash -x ./11_depurar.sh
+# Ejecuta el script en modo verbose (-v), mostrando cada línea de código a medida que se ejecuta, útil para entender el flujo de ejecución y detectar problemas.
+
+# $ /bin/bash -x ./11_depurar.sh 
+# Ejecuta el script en modo debug (-x), mostrando cada comando y su expansión, útil para rastrear problemas de ejecución o entender cómo se evalúan las variables y comandos.
+
+# $ /bin/bash -n ./11_depurar.sh
+# Realiza un chequeo de sintaxis (-n) en el script sin ejecutarlo, útil para detectar problemas de sintaxis antes de la ejecución del script.
