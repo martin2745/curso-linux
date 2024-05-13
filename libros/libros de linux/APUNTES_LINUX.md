@@ -540,8 +540,8 @@ El comando `wc` en sistemas Unix/Linux es una herramienta muy útil para contar 
 - **Opciones comunes**:
   - `-l`: Muestra solo el recuento de líneas.
   - `-w`: Muestra solo el recuento de palabras.
-  - `-c`: Muestra solo el recuento de bytes (caracteres).
-  - `-m`: Muestra el recuento de caracteres de ancho.
+  - `-c`: Muestra solo el recuento de bytes.
+  - `-m`: Muestra solo el recuento de caracteres.
   - `-L`: Muestra la longitud de la línea más larga.
 
 ```bash
