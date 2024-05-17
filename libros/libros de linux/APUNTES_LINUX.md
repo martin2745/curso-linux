@@ -3480,6 +3480,7 @@ root@si-VirtualBox:~# parted -s /dev/sdb rm 1
 
 `mdadm` es una herramienta de administración de RAID (Redundant Array of Independent Disks) en sistemas operativos basados en Linux. Se utiliza para configurar y administrar matrices de discos para mejorar la redundancia y/o el rendimiento del almacenamiento de datos. Como comandos podemos destacar los siguientes:
 
+- mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd: Elimina el sector cero donde estaría la tabla de particiones si hibieran sido utilizados los discos anteriormente.
 - mdadm -C /dev/md0 -l raid5 -n 3 /dev/sdb1 /dev/sdc1 /dev/sdd1: Crea el RAID indicando su nombre (**/dev/md0**), el tipo de RAID (**raid5**) e indica las particiones que lo conforman (**/dev/sdb1 /dev/sdc1 /dev/sdd1**).
 - mdadm --create /dev/md0 --level=5 --raid-device=3 /dev/sdb1 /dev/sdc1 /dev/sdd1: Equivalente al comando anterior.
 - mdadm --detail /dev/md0: Muestra los detalles del RAID.
@@ -3500,6 +3501,12 @@ sda      8:0    0    50G  0 disk
 sdb      8:16   0    10G  0 disk
 sdc      8:32   0    10G  0 disk
 sdd      8:48   0    10G  0 disk
+```
+
+_**Nota**_: Previamente, aunque en esta práctica no es necesario ya que los discos no se han utilizado anteriormente, es recomendable realizar un borrado del sector cero.
+
+```bash
+root@si-VirtualBox:~# mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd
 ```
 
 1. Procedemos a crear las particiones en formato **GPT** de la siguiente forma. A continuación se realiza el proceso para `/dev/sdb`, esto tendrá que realizarse con `/dev/sdc` y `/dev/sdd`.
