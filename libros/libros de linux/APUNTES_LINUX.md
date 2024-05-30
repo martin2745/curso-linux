@@ -1497,6 +1497,17 @@ si@si-VirtualBox:/tmp/prueba$ lsattr fichero1.txt
 --------------e------- fichero1.txt
 ```
 
+Del mismo modo, ambos comandos son aplicables tambien a directorios, no unicamente a ficheros.
+
+```bash
+si@si-VirtualBox:/tmp$ lsattr -d COMUN/
+--------------e------- COMUN/
+
+si@si-VirtualBox:/tmp$ sudo chattr +i COMUN/
+si@si-VirtualBox:/tmp$ lsattr -d COMUN/
+----i---------e------- COMUN/
+```
+
 ---
 
 ### ACLs
@@ -1567,7 +1578,7 @@ mask::r-x
 other::r--
 ```
 
-#### `Asignación de ACP por defecto`
+#### `Asignación de ACL por defecto`
 
 ```bash
 setfacl -R -d -m g:dam:w prueba/
@@ -1658,6 +1669,10 @@ other::-w-
 setfacl -R -b -k datosEmpresa/
 ```
 
+- -R: Para que el comando se aplique de forma recursiva.
+- -b: Elimina las ACL.
+- -k: Elimina las ACL por defecto.
+
 ```bash
 root@si-VirtualBox:/mnt# setfacl -R -b -k prueba/
 
@@ -1677,6 +1692,52 @@ group::r--
 other::r--
 ```
 
+#### `Eliminar ACLs de un usuario/grupo`
+
+```bash
+si@si-VirtualBox:/tmp$ getfacl prueba/
+# file: prueba/
+# owner: si
+# group: si
+user::rwx
+user:carmencita:r-x
+group::rwx
+mask::rwx
+other::r-x
+
+si@si-VirtualBox:/tmp$ setfacl -x u:carmencita prueba/
+si@si-VirtualBox:/tmp$ getfacl prueba/
+# file: prueba/
+# owner: si
+# group: si
+user::rwx
+group::rwx
+mask::rwx
+other::r-x
+```
+
+```bash
+si@si-VirtualBox:/tmp$ getfacl prueba/
+# file: prueba/
+# owner: si
+# group: si
+user::rwx
+group::rwx
+group:primaria:r-x
+mask::rwx
+other::r-x
+
+si@si-VirtualBox:/tmp$ setfacl -x g:primaria prueba/
+si@si-VirtualBox:/tmp$ getfacl prueba/
+# file: prueba/
+# owner: si
+# group: si
+user::rwx
+group::rwx
+mask::rwx
+other::r-x
+```
+
 _*Notas: Es importante tener en cuenta que las ACL añaden tal cual los permisos que se especifican, es decir `g:dam:r-x` asigna solo permisos a dam de lectura y ejecución, igual que `g:dam:rx`. En caso de que existiera el permiso de escritura, este habría desaparecido.*_
 
 _*Notas 2: Cuando añadimos ACLs a un fichero o directorio aparece un signo `+` al final de los permisos UGO.*_
@@ -1685,9 +1746,40 @@ _*Notas 2: Cuando añadimos ACLs a un fichero o directorio aparece un signo `+` 
 -rw-rwx---+ 1 root root 8 abr 13 20:29 fichero1.txt
 ```
 
-_*Notas 3: Es incorrecto hacer `setfacl -m u:rw prueba/` o `setfacl -m g:r-w prueba/` pero si es correcto hacer `setfacl -m o:rw prueba/`.*_
+_*Notas 3: Es incorrecto hacer `setfacl -m u:rw prueba/` o `setfacl -m g:r-w prueba/` pero **si es correcto** hacer `setfacl -m o:rw prueba/` o `setfacl -m m:rw prueba/`.*_
 
 _*Nota 4: Se pueden juntar los parametros de una ACL para realzar algo como lo siguiente `setfacl -Rbk prueba/`.*_
+
+_*Nota 5: Los permisos de otros son acumulativos, como podemos ver en el siguiente ejemplo, si no eliminamos los permisos de otros se van a añadir a los del usuario.*_
+
+```bash
+si@si-VirtualBox:/tmp$ getfacl prueba/ -e
+# file: prueba/
+# owner: si
+# group: si
+user::rwx
+group::rwx                      #effective:---
+group:primaria:r-x              #effective:---
+mask::---
+other::r-x
+
+si@si-VirtualBox:/tmp$ sudo -u pepito ls /tmp/prueba/
+fichero1.txt
+si@si-VirtualBox:/tmp$ setfacl -m o:- prueba/
+si@si-VirtualBox:/tmp$ setfacl -m m:- prueba/
+si@si-VirtualBox:/tmp$ getfacl prueba/ -e
+# file: prueba/
+# owner: si
+# group: si
+user::rwx
+group::rwx                      #effective:---
+group:primaria:r-x              #effective:---
+mask::---
+other::---
+
+si@si-VirtualBox:/tmp$ sudo -u pepito ls /tmp/prueba/
+ls: cannot open directory '/tmp/prueba/': Permission denied
+```
 
 ---
 
