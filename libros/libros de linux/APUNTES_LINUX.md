@@ -50,7 +50,6 @@
 - [Montaje de un RAID 5 en Linux con mdadm](#montaje-de-un-raid-5-en-linux-con-mdadm)
 - [Bash scripting](#bash-scripting)
 
-
 ---
 
 ### Sistema de ficheros de Linux
@@ -3236,6 +3235,7 @@ tradicional del shell de Linux.
 `fdisk -l /dev/sdb`: Tabla de particiones de `/dev/sdb`.
 `fdisk /dev/sdb`: Modo de edición del disco `/dev/sdb`.
 Opciones de `fdisk`
+
 - `w`: Guardar.
 - `q`: Salir.
 - `n`: Crear partición.
@@ -3448,7 +3448,7 @@ root@si-VirtualBox:~# blkid | grep sdb
 /dev/sdb5: UUID="054a4742-ad44-4132-bfb9-ce927f9bfdc3" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="20eab2f1-05"
 ```
 
-#### mount y umount 
+#### mount y umount
 
 El paso final para poder leer y escribir de particiones es montarlas en
 una ruta del sistema de archivos para lo cual utilizaremos el comando
@@ -3493,10 +3493,11 @@ root@si-VirtualBox:~# cp -pv /etc/fstab /etc/fstab_VIEJO
 ```
 
 Neceitamos añadir en una nueva entrada del `/etc/fstab` el identificador de la partición. Dentro del `/etc/fstab` la entrada va a tener 6 columnas de datos:
+
 - El UUID o nombre de partición, el punto de montaje y el tipo de sistema de archivos
 - Opciones de montaje. Si dejamos `defaults` se aplicarán opciones por defecto según el sistema de archivos, pero hay múltiples opciones que nos permite configurar: si queremos o no montaje automático, modo de sólo lectura o lectura/escritura, permitir o bloquear el uso de los bits suid y sgid, limitar los usuarios que pueden montar la partición, ...
 - Opción dump: Número de veces que se aplicará un backup al sistema de ficheros por el programa dump (0
-indica que no se aplica)
+  indica que no se aplica)
 - Opción pass: Orden en el que se comprobará el sistema de archivos en el arranque. El 1 se reservar para el sistema raíz (/). Si ponemos un 0 no se comprueba en el arranque
 
 ```bash
@@ -3519,7 +3520,7 @@ UUID=887fddd5-c130-4d0e-a814-03c02bdd0050 /               ext4    errors=remount
 # /boot/efi was on /dev/sda2 during installation
 UUID=683C-B0C4  /boot/efi       vfat    umask=0077      0       1
 /swapfile                                 none            swap    sw              0       0
-UUID="c5e35664-cef9-4345-afbb-82a6723b2659"     /media/datos1   ext4    defaults        0       2   
+UUID="c5e35664-cef9-4345-afbb-82a6723b2659"     /media/datos1   ext4    defaults        0       2
 ```
 
 Si tuvieramos algún error en la configuración del `/etc/fstab` debería notificarmelo por pantalla. Como no exite ningún error reiniciamos la máquina.
@@ -3569,13 +3570,18 @@ root@si-VirtualBox:~# parted -s /dev/sdb rm 1
 
 ### Montaje de un RAID 5 en Linux con mdadm
 
-``mdadm`` es una herramienta de administración de RAID (Redundant Array of Independent Disks) en sistemas operativos basados en Linux. Se utiliza para configurar y administrar matrices de discos para mejorar la redundancia y/o el rendimiento del almacenamiento de datos. Como comandos podemos destacar los siguientes:
+`mdadm` es una herramienta de administración de RAID (Redundant Array of Independent Disks) en sistemas operativos basados en Linux. Se utiliza para configurar y administrar matrices de discos para mejorar la redundancia y/o el rendimiento del almacenamiento de datos. Como comandos podemos destacar los siguientes:
 
+- mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd: Elimina el sector cero donde estaría la tabla de particiones si hibieran sido utilizados los discos anteriormente.
 - mdadm -C /dev/md0 -l raid5 -n 3 /dev/sdb1 /dev/sdc1 /dev/sdd1: Crea el RAID indicando su nombre (**/dev/md0**), el tipo de RAID (**raid5**) e indica las particiones que lo conforman (**/dev/sdb1 /dev/sdc1 /dev/sdd1**).
+- mdadm --create /dev/md0 --level=5 --raid-device=3 /dev/sdb1 /dev/sdc1 /dev/sdd1: Equivalente al comando anterior.
 - mdadm --detail /dev/md0: Muestra los detalles del RAID.
 - mdadm --manage /dev/md0 --add /dev/sde1: Añade un disco al RAID.
 - mdadm --manage /dev/md0 --fail /dev/sdd1: Proboca el fallo de un disco del RAID.
 - mdadm --manage /dev/md0 --remove /dev/sdd1: Elimina un disco del RAID.
+- mdadm --stop /dev/md0: Detiene el RAID.
+- mdadm --remove /dev/md0: Elimina el RAID (para eliminarlo primero hay que detenerlo).
+- mdadm --grow /dev/md0 --raid-device=6: Amplia el número de discos que forman parte del RAID a 6 cogiendo los que están en espera.
 
 Para hacer el montaje de un RAID 5 necesitamos 3 discos de 10G cada uno para tener un RAID 5 de 20G, ya que 10G se utilizarán para el cálculo de la paridad.
 
@@ -3587,6 +3593,12 @@ sda      8:0    0    50G  0 disk
 sdb      8:16   0    10G  0 disk
 sdc      8:32   0    10G  0 disk
 sdd      8:48   0    10G  0 disk
+```
+
+_**Nota**_: Previamente, aunque en esta práctica no es necesario ya que los discos no se han utilizado anteriormente, es recomendable realizar un borrado del sector cero.
+
+```bash
+root@si-VirtualBox:~# mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd
 ```
 
 1. Procedemos a crear las particiones en formato **GPT** de la siguiente forma. A continuación se realiza el proceso para `/dev/sdb`, esto tendrá que realizarse con `/dev/sdc` y `/dev/sdd`.
@@ -3642,7 +3654,6 @@ mdadm: array /dev/md0 started.
 ```
 
 - `mdadm`: Programa para administrar RAIDs en sistemas Linux.
-  
 - `-C /dev/md0`: Es el nombre que se le dará a la nueva matriz RAID. El prefijo "/dev/md" es comúnmente utilizado para dispositivos RAID en Linux, y el número al final puede variar según la configuración del sistema.
 
 - `-l raid5`: Nivel de RAID que se va a utilizar. En este caso, se está creando una matriz RAID nivel 5.
@@ -3960,7 +3971,7 @@ root@si-VirtualBox:~# mdadm --manage /dev/md0 --add /dev/sdf1
 mdadm: added /dev/sdf1
 ```
 
-Vemos que en este puntp tenemos in disco en espear en el área de recuperación que entrará en funcionamiento si uno de los discos en uso falla.
+Vemos que en este punto tenemos un disco en espera en el área de recuperación que entrará en funcionamiento si uno de los discos en uso falla.
 
 ```bash
 Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Thu May 16 13:53:48 2024
