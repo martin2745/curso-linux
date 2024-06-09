@@ -1,12 +1,4 @@
-# Recopilatorio de comandos para sistemas LINUX/UNIX
-
----
-
-## Martín Gil Blanco
-
----
-
-## Índice
+# Recopilatorio de comandos para sistemas LINUX/UNIX Martín Gil Blanco
 
 ---
 
@@ -48,6 +40,7 @@
 - [Particionado en Linux con fdisk](#particionado-en-linux-con-fdisk)
 - [Particionado en Linux con parted](#particionado-en-linux-con-parted)
 - [Montaje de un RAID 5 en Linux con mdadm](#montaje-de-un-raid-5-en-linux-con-mdadm)
+- [Conexión por SSH y SCP](#conexión-por-ssh-y-scp)
 - [Bash scripting](#bash-scripting)
 
 ---
@@ -1906,133 +1899,231 @@ Tanto `ss` como `netstat` son comandos utilizados en sistemas Unix y Linux para 
 
 ### ssh y scp
 
-`SSH (Secure Shell)` es un protocolo de red seguro que permite la comunicación segura y el acceso remoto a sistemas informáticos a través de una conexión cifrada. Se utiliza comúnmente para administrar sistemas remotos de forma segura mediante una interfaz de línea de comandos.
+El cliente (comando ssh) posee una configuración predeterminada que podemos modificar. El orden de prioridad de esa configuración es:
+
+- Opciones invocadas desde la línea de comandos al ejecutar el propio comando ssh con el parámetro `-o`
+- Opciones invocadas a través del archivo perteneciente a cada usuario situado en la ruta `~/.ssh/config`
+- Opciones invocadas a través del archivo de configuración global del sistema en `/etc/ssh/ssh_config`
+
+Una vez que nos hemos conectado por ssh en el cliente se crea la carpeta `.ssh/known_hosts` con las claves públicas de los servidores a los que te has conectado anteriormente a través de SSH. Estas claves públicas se utilizan para verificar la identidad del servidor cuando te conectas nuevamente, asegurando que no haya ningún intento de suplantación de identidad (ataque de tipo "Man-in-the-middle").
+
+Comando ssh:
 
 ```bash
-ssh usuario@192.168.1.100
+ssh [-p port] user@hostname [command] || ssh [-p port] -l user hostname [command]
+```
+
+Comando scp:
+
+```bash
+scp [-P port] user@hostname:remote_path local_path #Copiar ficheros
+scp -r [-P port] user@hostname:remote_path local_path #Copiar directorios recursivamente
+scp [-P port] local_path user@hostname:remote_path #Copiar ficheros
+scp -r [-P port] local_path user@hostname:remote_path #Copiar directorios recursivamente
+```
+
+Para comprobar el estado del servicio ssh pondemos hacer uso del comando `nc` (netcat) con las opciones `-v`: verbose y `-z`: nos devuelve el PROMPT del sistema.
+
+```bash
+nc -vz localhost 22
+```
+
+#### StrickHostKeyChecking
+
+El parámetro `StrictHostKeyChecking` en SSH (Secure Shell) se utiliza para definir cómo el cliente SSH trata las claves de host al conectarse a un servidor por primera vez o cuando la clave del servidor cambia. Esta directiva es importante para evitar ataques de tipo "man-in-the-middle" (MITM), donde un atacante podría interceptar la conexión y hacerse pasar por el servidor legítimo. A continuación se definen cada uno de los valores que puedes asignar a `StrictHostKeyChecking`:
+
+1. **ask**:
+
+   - **Descripción**: Cuando se establece en `ask`, el cliente SSH pedirá confirmación al usuario si la clave del host del servidor no está en el archivo `known_hosts` o si la clave del servidor ha cambiado.
+   - **Ejemplo de uso**: `StrictHostKeyChecking ask`
+
+2. **yes**:
+
+   - **Descripción**: Si se establece en `yes`, el cliente SSH rechazará automáticamente la conexión si la clave del host del servidor no está en el archivo `known_hosts` o si la clave del servidor ha cambiado.
+   - **Ejemplo de uso**: `StrictHostKeyChecking yes`
+
+3. **no**:
+   - **Descripción**: Cuando se establece en `no`, el cliente SSH aceptará automáticamente la clave del host del servidor sin pedir confirmación, incluso si la clave del servidor no está en el archivo `known_hosts` o si la clave ha cambiado.
+   - **Ejemplo de uso**: `StrictHostKeyChecking no`
+
+Ejemplos de uso:
+
+```bash
+ssh -o StrictHostKeyChecking=no -o Port=9999 -l root 192.168.120.100
 ```
 
 ```bash
-ssh -p 2222 si@localhost
+ssh -o StrictHostKeyChecking=no -p 9999 root@192.168.120.100
+```
+
+#### Redirección gráfica por SSH
+
+El siguiente comando permitirá que nos conectemos por ssh y lanzará el navegador firefox en el cliente.
+
+```bash
+ssh -X si@192.168.120.101 firefox
+```
+
+`X11Forwarding` ➜ Directiva que determina si la redirección gráfica es posible mediante conexiones SSH. Solo puede tomar 2 valores: yes/no.
+
+- X11Forwarding no ➜ es el valor por defecto. Deshabilita la redirección gráfica del servidor SSH.
+
+- X11Forwarding yes ➜ Habilita la redirección gráfica del servidor SSH.
+
+`X11DisplayOffset` ➜ Directiva que determina el número del display donde espera el servidor gráfico. Por defecto es 10, para evitar interferencias con servidores X11 reales.
+
+- X11DisplayOffset 10 ➜ es el valor por defecto. Indica el número de display donde espera el servidor gráfico para conexiones SSH.
+
+- X11DisplayOffset 100 ➜ Indica el número de display 100 donde espera el servidor gráfico para conexiones SSH.
+
+- X11Forwarding yes ➜ Habilita la redirección gráfica del servidor SSH.
+
+`X11UseLocalhost` ➜ Directiva que determina si la redirección gráfica es posible en la dirección loopback o en cualquier dirección:
+
+- X11UseLocalhost yes ➜ es el valor por defecto. Permite la redirección gráfica a la dirección loopback y define la variable de entorno DISPLAY a localhost, lo cual previene conexiones remotas no permitidas al display.
+
+- X11UseLocalhost no ➜ Habilita la redirección gráfica a todas las interfaces de red.
+
+#### Comando SSH + contraseña
+
+Previamente se tendrá que instalar `sshpass` para poder hacer uso de esta utilidad. Una vez instalada podemos realizar la conexión en un único paso.
+
+```bash
+sshpass -p 'abc123.' ssh si@192.168.120.101
+```
+
+#### Cifrado asimétrico
+
+Generamos en el cliente el par de claves pública/privada en la ruta `~/.ssh/id_rsa`.
+
+```bash
+┌──(kali㉿kaliA)-[~]
+└─$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/kali/.ssh/id_rsa):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/kali/.ssh/id_rsa
+Your public key has been saved in /home/kali/.ssh/id_rsa.pub
+The key fingerprint is:
+SHA256:gckghzEyGS3QmomEnguTbWDkP6p0BH4e8/VMWrzUbb0 kali@kali
+The key's randomart image is:
++---[RSA 3072]----+
+|O*+oo            |
+|*=++ o o         |
+|=@.   + .        |
+|Xo=     ... . .  |
+|.+.B   .S= . o . |
+| .= = . B . .   .|
+| o o . . +     E |
+|o .              |
+|.                |
++----[SHA256]-----+
+```
+
+- Debemos elegir el directorio donde guardar las claves y el nombre de estas. Pulsamos Enter para dejar por defecto el directorio .ssh/ y el nombre id_rsa dentro del HOME del usuario: /home/kali.
+- Passphrase nulo. Si aquí ponemos una contraseña, frase o similar, cuando queramos conectarnos al Servidor SSH en vez de pedir la contraseña del usuario de la conexión pedirá esta passphrase, pero como cuando queremos conectarnos queremos hacerlo de forma directa sin petición de contraseña o passphrase, entonces pulsamos 2 veces Enter para que la conexión se haga sin contraseña.
+- Clave pública y privada creadas. Fingerprint. Se crearon en el directorio anteriormente indicado la clave privada id_rsa y la clave pública id_rsa.pub. También se creó el fingerprint de la clave pública, es decir, la identificación inequívoca de la clave pública correspondiente al usuario kali de este equipo.
+
+Ahora tenemos que enviar la clave pública al servidor.
+
+```bash
+┌──(kali㉿kaliA)-[~]
+└─$ ssh-copy-id -i .ssh/id_rsa.pub kali@192.168.120.101
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: ".ssh/id_rsa.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+kali@192.168.120.101's password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'kali@192.168.120.101'"
+and check to make sure that only the key(s) you wanted were added.
+```
+
+Si miramos, en el servidor, se ha creado una nueva carpeta con el contenido de la clave pública de kaliA en la ruta `.ssh/authorized_keys`.
+
+```bash
+┌──(kali㉿kaliB)-[~]
+└─$ cat .ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC8NlAcBQldgqvIBdeR3D9cpdSiLiL9PrPmgjDSWgGoxshi3bKCcwvmXrjCF75fxo/rqVtY8Wi2m9CX2CeVLeY7VZ6jdG7GMwBUpI+EBDKn5IqWoq+Ha6Tx7x6qNrfEWeoyyEL7HcnBt0jDiDsbD/rs/7wMCWyF2Z+ayUEy5+VWWZ7xr7ogBIJpOvmJ/Eiuu/z98ohHlRoaL6kmG01wzpss+nJZdzlgLn0sRFp4/zzn+aO9L6XDEu1gDhekIm5TRpmszhpIyM7eGEpAl1NsqgZlZyf8VY30FtAqPNKqig4SxLPGQxlrQrzHBeeJo//U0E5p4VEjMlKQXh8GVyJ1llSBGZZfd31pzJYX8D1FvYOHqrMsITGjNupN+4cn4eun6lrNTw1lxO6ppYbX1RGdTwEpe1/WPmVWnYY0FihX6tuIKFNEaoFSqvU0hWRhRXAw6sASWShd6lIWaq+W8HWNvXhSxsJUdEqVyeoCz9Mf4TzhM7pH3h8NzsEDJoUbZkDy5ik= kali@kali
+```
+
+Si hacemos una conexión entre kaliA hacia kaliB veremos como no se nos pide la contraseña.
+
+```bash
+┌──(kali㉿kaliA)-[~]
+└─$ ssh kali@192.168.120.101
+Linux kali 6.5.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.5.6-1kali1 (2023-10-09) x86_64
+
+The programs included with the Kali GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Jun  9 13:47:01 2024 from 10.0.2.2
+┌──(kali㉿kaliB)-[~]
+└─$ whoami
+kali
+```
+
+Si hubieramos introducido un `Passphrase` se nos hubiera pedido a la hora de hacer ssh tal y como se ve en este ejemplo.
+
+```bash
+┌──(kali㉿kaliA)-[~]
+└─$ ssh kali@192.168.120.101
+Enter passphrase for key '/home/kali/.ssh/id_rsa':
+Linux kali 6.5.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.5.6-1kali1 (2023-10-09) x86_64
+
+The programs included with the Kali GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Jun  9 13:48:45 2024 from 192.168.120.100
+┌──(kali㉿kaliB)-[~]
+└─$ whoami
+kali
+```
+
+#### scp de máquina A -> B indicado desde máquina C
+
+Vamos a hacer uso en este escenario de tres máquinas kaliA, kaliB y kaliC. Desde kaliC vamos a indicar a máquina A que tiene que hacer un scp de una carpeta /prueba que contiene 5 ficheros.
+
+Lo primero de todo será crear los ficheros con una petición ssh desde máquina C hacia A (C->A).
+
+```bash
+┌──(kali㉿kaliC)-[~]
+└─$ ssh kali@192.168.120.100 'mkdir prueba && for i in $(seq 1 5); do echo "Soy fichero${i}.txt" > prueba/fichero${i}.txt; done && ls prueba/'
+kali@192.168.120.100's password:
+fichero1.txt
+fichero2.txt
+fichero3.txt
+fichero4.txt
+fichero5.txt
+```
+
+Ahora vamos a hacer un scp del contenido de `prueba/` de máquina A hacia máquina B. La orde se enviará desde máquina C hacia máquina A (C->A->B).
+
+```bash
+┌──(kali㉿kaliC)-[~]
+└─$ scp -r kali@192.168.120.100:~/prueba kali@192.168.120.101:/tmp
+kali@192.168.120.101's password:
+kali@192.168.120.100's password:
+fichero5.txt                                        100%   17     6.6KB/s   00:00
+fichero4.txt                                        100%   17     6.6KB/s   00:00
+fichero3.txt                                        100%   17     5.7KB/s   00:00
+fichero2.txt                                        100%   17     5.4KB/s   00:00
+fichero1.txt                                        100%   17     6.4KB/s   00:00
 ```
 
 ```bash
-PS C:\Users\gilbl> ssh -p 1010 si@localhost
-PS C:\Users\gilbl> ssh -p 1010 -l si localhost
-si@localhost's password:
-Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 6.5.0-27-generic x86_64)
-
-si@si-VirtualBox:~$
-```
-
-Tambien puede ejecutar un único comando sin necesidad de tener una conexión abierta hasta que se decida finalizarla.
-
-```bash
-PS C:\Users\gilbl> ssh -p 1010 si@localhost ls
-si@localhost's password:
-Desktop
-Documents
-Downloads
-Music
-Pictures
-Public
-snap
-Templates
-Videos
-PS C:\Users\gilbl>
-
-PS C:\Users\gilbl> ssh -p 1010 si@localhost "ls && ls -l"
-si@localhost's password:
-Desktop
-Documents
-Downloads
-Music
-Pictures
-Public
-snap
-Templates
-Videos
-total 36
-drwxr-xr-x 2 si si 4096 abr 14 17:38 Desktop
-drwxr-xr-x 2 si si 4096 ene  3 17:18 Documents
-drwxr-xr-x 2 si si 4096 mar 11 22:32 Downloads
-drwxr-xr-x 2 si si 4096 ene  3 17:18 Music
-drwxr-xr-x 2 si si 4096 ene  3 17:18 Pictures
-drwxr-xr-x 2 si si 4096 ene  3 17:18 Public
-drwx------ 6 si si 4096 abr  9 13:02 snap
-drwxr-xr-x 2 si si 4096 ene  3 17:18 Templates
-drwxr-xr-x 2 si si 4096 ene  3 17:18 Videos
-```
-
-Tambien se podría ejecutar un script.
-
-```bash
-PS C:\Users\gilbl> ssh -p 1010 si@localhost bash /home/si/Desktop/scripts/apagar.sh
-```
-
-`SCP (Secure Copy)` es una herramienta de línea de comandos basada en SSH que se utiliza para transferir archivos de forma segura entre sistemas locales y remotos. Utiliza SSH para cifrar la transferencia de datos, proporcionando una forma segura de copiar archivos de un lugar a otro a través de una red.
-
-Se puede transferir a mi equipo.
-
-```bash
-scp usuario@192.168.1.100:/home/usuario/Desktop/bd.sql .
-```
-
-```bash
-scp -P 2222 -r si@localhost:~/Desktop .
-```
-
-O transferir a otro equipo diferente.
-
-```bash
-scp archivo.txt si@localhost:~/Desktop
-```
-
-```bash
-si@si-VirtualBox:~/Desktop$ scp si@192.168.2.19:~/Desktop/bd.sql .
-si@192.168.2.19's password:
-bd.sql                                              100% 5232     2.0MB/s   00:00
-si@si-VirtualBox:~/Desktop$ ls
-bd.sql
-
-si@si-VirtualBox:~/Desktop$ scp bd.sql si@192.168.2.19:~/Desktop
-si@192.168.2.19's password:
-bd.sql                                              100% 5232     1.6MB/s   00:00
-```
-
-En caso de no indicar ruta a continuación de la ip, se adjuntarán los archivos en la ruta $HOME del usuario.
-
-```bash
-si@si-VirtualBox:~/Desktop$ mkdir prueba && for i in $(seq 1 100); do touch prueba/fichero${i}.txt; done
-
-si@si-VirtualBox:~/Desktop$ scp -r prueba/ si@192.168.2.19:
-si@192.168.2.19's password:
-fichero1.txt                                        100%    0     0.0KB/s   00:00
-fichero71.txt                                       100%    0     0.0KB/s   00:00
-fichero9.txt                                        100%    0     0.0KB/s   00:00
-fichero17.txt                                       100%    0     0.0KB/s   00:00
-...
-```
-
-```bash
-si@si-VirtualBox:~$ ls
-Desktop    Downloads  Pictures  Public  Templates
-Documents  Music      prueba    snap    Videos
-```
-
-Tambien hay que mencionar que podemos tener escenarios donde desde una máquina `A` hagamos una transferencia de archivos desde `B` hacia `C`.
-
-```bash
-si@si-VirtualBox:~/Desktop$ scp -r usuarioB@192.168.2.19:~/Desktop/prueba usuarioC@192.168.2.20:~/Desktop
-```
-
-El archivo `known_hosts` en el directorio `/root/.ssh/` contiene las claves públicas de los hosts a los que te has conectado anteriormente mediante SSH desde la cuenta de usuario root en ese sistema. Cada línea en este archivo representa la información de un host específico, incluyendo su dirección IP, nombre de host y su clave pública.
-
-Aquí hay un ejemplo simplificado de cómo se ve el contenido del archivo `known_hosts`:
-
-```bash
-192.168.2.19 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCXyOePwBsMn5t....
-192.168.2.20 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCXyOePwBsMn5t....
+┌──(kali㉿kaliB)-[~]
+└─$ ls /tmp/prueba/*
+/tmp/prueba/fichero1.txt  /tmp/prueba/fichero3.txt  /tmp/prueba/fichero5.txt
+/tmp/prueba/fichero2.txt  /tmp/prueba/fichero4.txt
 ```
 
 ---
