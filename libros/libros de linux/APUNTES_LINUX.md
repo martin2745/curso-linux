@@ -1777,16 +1777,33 @@ ls: cannot open directory '/tmp/prueba/': Permission denied
 
 ### Repositorios
 
-Por supuesto:
+Tenemos dos comando principales para la gestión de repositorios en linux.
 
 **`apt`**:
 
-- `-get`: Obtiene los paquetes de los repositorios pero no los instala. Actualmente ya no es necesario.
-- `-install`: Instala uno o varios paquetes.
-- `-remove`: Elimina uno o varios paquetes.
-- `-purge`: Elimina uno o varios paquetes y también sus archivos de configuración.
-- `-update`: Actualiza la lista de paquetes disponibles en los repositorios.
-- `-upgrade`: Actualiza todos los paquetes instalados a las versiones más recientes disponibles.
+- `get`: Obtiene los paquetes de los repositorios pero no los instala. Actualmente ya no es necesario.
+- `install`: Instala uno o varios paquetes.
+- `remove`: Elimina uno o varios paquetes.
+- `purge`: Elimina uno o varios paquetes y también sus archivos de configuración.
+- `update`: Actualiza la lista de paquetes disponibles en los repositorios.
+- `upgrade`: Actualiza todos los paquetes instalados a las versiones más recientes disponibles.
+- `dist-upgrade`: Realiza una actualización más completa que `apt upgrade`, incluyendo la resolución de dependencias y la eliminación o instalación de nuevos paquetes si es necesario para completar la actualización de forma coherente.
+
+Podemos ver los repositorios donde `apt` hace sus busquedas a continuación:
+
+```bash
+si@si-VirtualBox:~$ cat /etc/apt/sources.list | sed -e '/^#/d' -e '/^$/d'
+deb http://es.archive.ubuntu.com/ubuntu/ jammy main restricted
+deb http://es.archive.ubuntu.com/ubuntu/ jammy-updates main restricted
+deb http://es.archive.ubuntu.com/ubuntu/ jammy universe
+deb http://es.archive.ubuntu.com/ubuntu/ jammy-updates universe
+deb http://es.archive.ubuntu.com/ubuntu/ jammy multiverse
+deb http://es.archive.ubuntu.com/ubuntu/ jammy-updates multiverse
+deb http://es.archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu jammy-security main restricted
+deb http://security.ubuntu.com/ubuntu jammy-security universe
+deb http://security.ubuntu.com/ubuntu jammy-security multiverse
+```
 
 **`dpkg`**:
 
@@ -1794,7 +1811,7 @@ Por supuesto:
 - `-r`: Elimina un paquete pero conserva sus archivos de configuración.
 - `-P`: Elimina un paquete y también sus archivos de configuración.
 - `-l`: Lista todos los paquetes instalados en el sistema.
-- `-L`: Lista todos los archivos instalados por un paquete específico.
+- `-L`: Lista todos los ficheros instalados que pertenecen a un paquete específico.
 
 ```bash
 root@debian12:~/Descargas# ls
@@ -2026,26 +2043,26 @@ El parámetro `StrictHostKeyChecking` en SSH (Secure Shell) se utiliza para defi
 
 1. **ask**:
 
-   - **Descripción**: Cuando se establece en `ask`, el cliente SSH pedirá confirmación al usuario si la clave del host del servidor no está en el archivo `known_hosts` o si la clave del servidor ha cambiado.
+   - **Descripción**: Cuando se establece en `ask`, el cliente SSH pedirá confirmación al usuario si la clave del host del servidor no está en el archivo `known_hosts` o si la clave del servidor ha cambiado. Añade la Host Key del servidor SSH.
    - **Ejemplo de uso**: `StrictHostKeyChecking ask`
 
 2. **yes**:
 
-   - **Descripción**: Si se establece en `yes`, el cliente SSH rechazará automáticamente la conexión si la clave del host del servidor no está en el archivo `known_hosts` o si la clave del servidor ha cambiado.
+   - **Descripción**: Si se establece en `yes`, el cliente SSH rechazará automáticamente la conexión si la clave del host del servidor no está en el archivo `known_hosts` o si la clave del servidor ha cambiado. Nunca añade la Host Key del servidor SSH.
    - **Ejemplo de uso**: `StrictHostKeyChecking yes`
 
 3. **no**:
-   - **Descripción**: Cuando se establece en `no`, el cliente SSH aceptará automáticamente la clave del host del servidor sin pedir confirmación, incluso si la clave del servidor no está en el archivo `known_hosts` o si la clave ha cambiado.
+   - **Descripción**: Cuando se establece en `no`, el cliente SSH aceptará automáticamente la clave del host del servidor sin pedir confirmación, incluso si la clave del servidor no está en el archivo `known_hosts` o si la clave ha cambiado. Añade la Host Key del servidor SSH.
    - **Ejemplo de uso**: `StrictHostKeyChecking no`
 
 Ejemplos de uso:
 
 ```bash
-ssh -o StrictHostKeyChecking=no -o Port=9999 -l root 192.168.120.100
+ssh -o StrictHostKeyChecking=no -o Port=9999 -l kali 192.168.120.100
 ```
 
 ```bash
-ssh -o StrictHostKeyChecking=no -p 9999 root@192.168.120.100
+ssh -o StrictHostKeyChecking=no -p 9999 kali@192.168.120.100
 ```
 
 #### Redirección gráfica por SSH
@@ -2875,7 +2892,7 @@ Este comando puede ser útil para cambiar el orden o el formato de los campos en
 
 ### ps, psgrep, ptree, pidof, kill, killall
 
-`ps` muestra los procesos asociados con la terminal desde la que se ejecuta el comando. Muestra el PID (identificador de proceso), la terminal asociada, tiempo desde que se anzó el proceso y el comando que lo desencadena.
+`ps` muestra los procesos asociados con la terminal desde la que se ejecuta el comando. Muestra el PID (identificador de proceso), la terminal asociada, tiempo desde que se lanzó el proceso y el comando que lo desencadena.
 
 ```bash
 si@si-VirtualBox:~$ ps
@@ -3051,7 +3068,7 @@ El comando `kill` en Linux se utiliza para enviar señales a procesos en ejecuci
 2. **SIGKILL (9)**:
 
    - La señal SIGKILL (9) se emplea cuando un proceso está atascado y no responde y necesitas asegurarte de que termine de inmediato. Con esta señal los procesos no pueden interceptarla, gestionarla ni ignorarla. Puede causar que los procesos padres o relacionados queden en un estado inconsistente si no se gestionan adecuadamente los recursos y la sincronización entre procesos.
-   
+
      ```bash
      kill -9 5678
      kill -KILL $(pidof yes)
