@@ -3040,7 +3040,7 @@ El comando `kill` en Linux se utiliza para enviar señales a procesos en ejecuci
 
 1. **SIGINT (2)**:
 
-   - Es la señal de interrupción. Se envía a un proceso cuando el usuario presiona `Ctrl+C` en la terminal. Por lo general, esto indica al proceso que debe `detener su ejecución de forma controlada`.
+   - La señal SIGINT (2) se emplea cuando deseas dar al proceso una oportunidad para terminar de forma ordenada, como cuando presionas Ctrl+C en la consola. Con esta señal los procesos pueden interceptar y gestionar la señal para realizar tareas de limpieza antes de finalizar.
 
      ```bash
      kill -2 1234
@@ -3050,7 +3050,8 @@ El comando `kill` en Linux se utiliza para enviar señales a procesos en ejecuci
 
 2. **SIGKILL (9)**:
 
-   - Es una señal especial que `no puede ser manejada ni ignorada por los procesos`. Se utiliza para terminar un proceso de forma inmediata y forzosa. No permite al proceso realizar ninguna acción de limpieza.
+   - La señal SIGKILL (9) se emplea cuando un proceso está atascado y no responde y necesitas asegurarte de que termine de inmediato. Con esta señal los procesos no pueden interceptarla, gestionarla ni ignorarla. Puede causar que los procesos padres o relacionados queden en un estado inconsistente si no se gestionan adecuadamente los recursos y la sincronización entre procesos.
+   
      ```bash
      kill -9 5678
      kill -KILL $(pidof yes)
@@ -3069,7 +3070,7 @@ El comando `kill` en Linux se utiliza para enviar señales a procesos en ejecuci
 
 4. **SIGSTOP (19)**:
 
-   - Detiene la ejecución de un proceso. Similar a SIGKILL pero permite reanudar la ejecución posteriormente. `No puede ser manejada ni ignorada por los procesos
+   - La señal SIGSTOP (19) es una señal de parada no atrapable ni ignorada, que detiene el proceso de forma inmediata y no puede ser gestionada por el proceso, garantizando así que el proceso se detenga inmediatamente.
 
      ```bash
      kill -19 2345
@@ -3079,7 +3080,7 @@ El comando `kill` en Linux se utiliza para enviar señales a procesos en ejecuci
 
 5. **SIGTSTP (20)**:
 
-   - Se envía a un proceso cuando el usuario presiona `Ctrl+Z` en la terminal. Detiene la ejecución del proceso, `permite que el proceso sea reanudado más tarde`.
+   - La señal SIGTSTP (20) es una señal de parada que puede ser atrapada y gestionada por el proceso. Comúnmente se genera cuando se presiona Ctrl+Z en la consola, suspendiendo el proceso en primer plano y devolviendo el control a la consola. Esta suspensión es temporal y el proceso puede ser reanudado posteriormente con el comando fg (foreground) o bg (background).
 
      ```bash
      kill -20 3456
