@@ -1579,7 +1579,7 @@ En caso de conflicto entre el usuario propietario/otros (uo de ugo) y las ACLs, 
 
 En caso de conflicto entre el grupo propietario (g de ugo)/otros grupos distintos del propietario/otros usuarios distintos del propietario y las ACLs, prevalecen las ACLs.
 
-- `Atributos` → `mascara/ACLs` → `g de ugo`:
+- `Atributos` → `mascara` → `ACLs` → `g de ugo`:
 
 #### `Asignar ACLs a usuario`
 
@@ -1811,35 +1811,38 @@ _*Notas 3: Es incorrecto hacer `setfacl -m u:rw prueba/` o `setfacl -m g:r-w pru
 
 _*Nota 4: Se pueden juntar los parametros de una ACL para realzar algo como lo siguiente `setfacl -Rbk prueba/`.*_
 
-_*Nota 5: Los permisos de otros son acumulativos, como podemos ver en el siguiente ejemplo, si no eliminamos los permisos de otros se van a añadir a los del usuario.*_
+_*Nota 5: Los permisos de otros son acumulativos, como podemos ver en el siguiente ejemplo, si no eliminamos los permisos de otros se van a añadir a los del usuario. Este es el motivo por el cual lucia que pertenece a dam puede en el primer caso listar el contenido de `/tmp/prueba` y una vez eliminamos los permisos de otros ya no puede.*_
 
 ```bash
+si@si-VirtualBox:/tmp$ id lucia
+uid=1001(lucia) gid=1001(lucia) groups=1001(lucia),27(sudo),1003(dam)
 si@si-VirtualBox:/tmp$ getfacl prueba/ -e
 # file: prueba/
 # owner: si
 # group: si
 user::rwx
 group::rwx                      #effective:---
-group:primaria:r-x              #effective:---
+group:dam:r-x                   #effective:---
 mask::---
 other::r-x
 
-si@si-VirtualBox:/tmp$ sudo -u pepito ls /tmp/prueba/
-fichero1.txt
-si@si-VirtualBox:/tmp$ setfacl -m o:- prueba/
-si@si-VirtualBox:/tmp$ setfacl -m m:- prueba/
+si@si-VirtualBox:/tmp$ sudo -u lucia ls -l /tmp/prueba
+total 0
+-rw-rw-r-- 1 si si 0 jun 11 11:29 fichero.txt
+si@si-VirtualBox:/tmp$ sudo setfacl -R -m o::- prueba/
+si@si-VirtualBox:/tmp$ sudo setfacl -R -m m::- prueba/
 si@si-VirtualBox:/tmp$ getfacl prueba/ -e
 # file: prueba/
 # owner: si
 # group: si
 user::rwx
 group::rwx                      #effective:---
-group:primaria:r-x              #effective:---
+group:dam:r-x                   #effective:---
 mask::---
 other::---
 
-si@si-VirtualBox:/tmp$ sudo -u pepito ls /tmp/prueba/
-ls: cannot open directory '/tmp/prueba/': Permission denied
+si@si-VirtualBox:/tmp$ sudo -u lucia ls -l /tmp/prueba
+ls: cannot open directory '/tmp/prueba': Permission denied
 ```
 
 ---
