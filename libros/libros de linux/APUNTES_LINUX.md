@@ -918,6 +918,24 @@ martin:$y$j9T$D1YstIGhwPXktsEmolZg./$I7fKcY0m9yE2LYgGBEn8yolExy5PLvBTIlZf5keudM3
 vboxadd:!:19755::::::
 ```
 
+```bash
+si@si-VirtualBox:~$ ls > prueba.txt 2>&1
+si@si-VirtualBox:~$ cat prueba.txt
+Desktop
+Documents
+Downloads
+Music
+Pictures
+prueba.txt
+Public
+snap
+Templates
+Videos
+si@si-VirtualBox:~$ lss > prueba.txt 2>&1
+si@si-VirtualBox:~$ cat prueba.txt
+Command 'lss' not found, but there are 15 similar ones.
+```
+
 ---
 
 ### tar
@@ -1408,20 +1426,15 @@ A continuación se van a explicar los permisos que pueden existir en un fichero 
 
 1. **Permisos ugo para fichero:**
 
-   - **r (read):** Permite leer el contenido del archivo.
-   - **w (write):** Permite modificar el contenido del archivo.
-   - **x (execute):** Permite ejecutar el archivo como un programa o script. El propietario o los usuarios autorizados pueden ejecutar el archivo si es ejecutable.
+    - **r (read):** Permite leer el contenido del archivo.
+    - **w (write):** Permite modificar el contenido del archivo.
+    - **x (execute):** Permite ejecutar el archivo como un programa o script. El propietario o los usuarios autorizados pueden ejecutar el archivo si es ejecutable.
 
-   **Permisos ugo para fichero:**
+2. **Permisos ugo para directorio:**
 
-   - **r (read):** Permite ver el listado de archivos que contiene el directorio.
-   - **w (write):** Permite modificar el contenido del directorio.
-   - **x (execute):** Permite acceder al contenido del directorio.
-
-2. **Tipos de permisos:**
-   - **r:** Lectura
-   - **w:** Escritura
-   - **x:** Ejecución
+    - **r (read):** Permite ver el listado de archivos que contiene el directorio.
+    - **w (write):** Permite modificar el contenido del directorio.
+    - **x (execute):** Permite acceder al contenido del directorio.
 
 **Ejemplo 1:**
 
