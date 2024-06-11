@@ -40,7 +40,6 @@
 - [Particionado en Linux con fdisk](#particionado-en-linux-con-fdisk)
 - [Particionado en Linux con parted](#particionado-en-linux-con-parted)
 - [Montaje de un RAID 5 en Linux con mdadm](#montaje-de-un-raid-5-en-linux-con-mdadm)
-- [Conexión por SSH y SCP](#conexión-por-ssh-y-scp)
 - [Bash scripting](#bash-scripting)
 
 ---
@@ -2976,131 +2975,131 @@ si@si-VirtualBox:~$ ps
 
 1. **Sintaxis Estándar**: Esta es una convención comúnmente utilizada en sistemas que siguen las especificaciones de POSIX (Portable Operating System Interface), como la mayoría de las distribuciones de Linux.
 
-`ps -e` muestra los procesos de todo el sistema en cualquier terminal. La información que obtenemos por pantalla es la misma que con `ps` pero para todas las terminales.
+    `ps -e` muestra los procesos de todo el sistema en cualquier terminal. La información que obtenemos por pantalla es la misma que con `ps` pero para todas las terminales.
 
-```bash
-si@si-VirtualBox:~$ ps -e
-    PID TTY          TIME CMD
-      1 ?        00:00:02 systemd
-      2 ?        00:00:00 kthreadd
-      3 ?        00:00:00 rcu_gp
-      4 ?        00:00:00 rcu_par_gp
-      5 ?        00:00:00 slub_flushwq
-      6 ?        00:00:00 netns
-      8 ?        00:00:00 kworker/0:0H-events_highpri
-      9 ?        00:00:01 kworker/0:1-events
-```
+    ```bash
+    si@si-VirtualBox:~$ ps -e
+        PID TTY          TIME CMD
+          1 ?        00:00:02 systemd
+          2 ?        00:00:00 kthreadd
+          3 ?        00:00:00 rcu_gp
+          4 ?        00:00:00 rcu_par_gp
+          5 ?        00:00:00 slub_flushwq
+          6 ?        00:00:00 netns
+          8 ?        00:00:00 kworker/0:0H-events_highpri
+          9 ?        00:00:01 kworker/0:1-events
+    ```
 
-`ps -p` muestra el proceso según su pid.
+    `ps -p` muestra el proceso según su pid.
 
-```bash
-si@si-VirtualBox:~$ ps -p `pidof bash`
-    PID TTY          TIME CMD
-   1457 pts/1    00:00:00 bash
+    ```bash
+    si@si-VirtualBox:~$ ps -p `pidof bash`
+        PID TTY          TIME CMD
+      1457 pts/1    00:00:00 bash
 
-```
+    ```
 
-`ps -ef` muestra todos los procesos del sistema con mayor nivel de detalle que `ps -e`.
+    `ps -ef` muestra todos los procesos del sistema con mayor nivel de detalle que `ps -e`.
 
-```bash
-si@si-VirtualBox:~$ ps -ef
-UID          PID    PPID  C STIME TTY          TIME CMD
-root           1       0  0 16:07 ?        00:00:02 /sbin/init splash
-root           2       0  0 16:07 ?        00:00:00 [kthreadd]
-root           3       2  0 16:07 ?        00:00:00 [rcu_gp]
-root           4       2  0 16:07 ?        00:00:00 [rcu_par_gp]
-root           5       2  0 16:07 ?        00:00:00 [slub_flushwq]
-root           6       2  0 16:07 ?        00:00:00 [netns]
-root           8       2  0 16:07 ?        00:00:00 [kworker/0:0H-events_highpri]
-root           9       2  0 16:07 ?        00:00:01 [kworker/0:1-events]
-root          11       2  0 16:07 ?        00:00:00 [mm_percpu_wq]
-root          12       2  0 16:07 ?        00:00:00 [rcu_tasks_kthread]
-```
+    ```bash
+    si@si-VirtualBox:~$ ps -ef
+    UID          PID    PPID  C STIME TTY          TIME CMD
+    root           1       0  0 16:07 ?        00:00:02 /sbin/init splash
+    root           2       0  0 16:07 ?        00:00:00 [kthreadd]
+    root           3       2  0 16:07 ?        00:00:00 [rcu_gp]
+    root           4       2  0 16:07 ?        00:00:00 [rcu_par_gp]
+    root           5       2  0 16:07 ?        00:00:00 [slub_flushwq]
+    root           6       2  0 16:07 ?        00:00:00 [netns]
+    root           8       2  0 16:07 ?        00:00:00 [kworker/0:0H-events_highpri]
+    root           9       2  0 16:07 ?        00:00:01 [kworker/0:1-events]
+    root          11       2  0 16:07 ?        00:00:00 [mm_percpu_wq]
+    root          12       2  0 16:07 ?        00:00:00 [rcu_tasks_kthread]
+    ```
 
-`ps -efH` muestra todos los procesos del sistema con mayor nivel de detalle que `ps -e` y en forma de arbol.
+    `ps -efH` muestra todos los procesos del sistema con mayor nivel de detalle que `ps -e` y en forma de arbol.
 
-```bash
-si@si-VirtualBox:~$ ps -efH
-UID          PID    PPID  C STIME TTY          TIME CMD
-root           2       0  0 16:07 ?        00:00:00 [kthreadd]
-root           3       2  0 16:07 ?        00:00:00   [rcu_gp]
-root           4       2  0 16:07 ?        00:00:00   [rcu_par_gp]
-root           5       2  0 16:07 ?        00:00:00   [slub_flushwq]
-root           6       2  0 16:07 ?        00:00:00   [netns]
-root           8       2  0 16:07 ?        00:00:00   [kworker/0:0H-events_highpri]
-root           9       2  0 16:07 ?        00:00:01   [kworker/0:1-events]
-root          11       2  0 16:07 ?        00:00:00   [mm_percpu_wq]
-root          12       2  0 16:07 ?        00:00:00   [rcu_tasks_kthread]
-```
+    ```bash
+    si@si-VirtualBox:~$ ps -efH
+    UID          PID    PPID  C STIME TTY          TIME CMD
+    root           2       0  0 16:07 ?        00:00:00 [kthreadd]
+    root           3       2  0 16:07 ?        00:00:00   [rcu_gp]
+    root           4       2  0 16:07 ?        00:00:00   [rcu_par_gp]
+    root           5       2  0 16:07 ?        00:00:00   [slub_flushwq]
+    root           6       2  0 16:07 ?        00:00:00   [netns]
+    root           8       2  0 16:07 ?        00:00:00   [kworker/0:0H-events_highpri]
+    root           9       2  0 16:07 ?        00:00:01   [kworker/0:1-events]
+    root          11       2  0 16:07 ?        00:00:00   [mm_percpu_wq]
+    root          12       2  0 16:07 ?        00:00:00   [rcu_tasks_kthread]
+    ```
 
-`ps -o` muestra la información de los procesos que se especifique por el usuario.
+    `ps -o` muestra la información de los procesos que se especifique por el usuario.
 
-```bash
-si@si-VirtualBox:~$ ps -eo cmd,pid,ppid,time,user,%cpu, --sort -%mem | head
-CMD                             PID    PPID     TIME USER     %CPU
-/usr/sbin/mysqld                761       1 00:00:18 mysql     0.7
-/usr/bin/gnome-shell           3849    2516 00:00:07 si        0.4
-/usr/bin/python3 /usr/bin/u    5628    2516 00:00:04 si        0.2
-/snap/snap-store/959/usr/bi    4142    2516 00:00:02 si        0.1
-/usr/libexec/fwupd/fwupd       4537       1 00:00:01 root      0.0
-/usr/libexec/gsd-xsettings     4345    2516 00:00:00 si        0.0
-/usr/libexec/evolution-data    4179    3821 00:00:00 si        0.0
-/usr/bin/Xwayland :0 -rootl    4261    3849 00:00:00 si        0.0
-/usr/libexec/packagekitd       3189       1 00:00:06 root      0.2
-```
+    ```bash
+    si@si-VirtualBox:~$ ps -eo cmd,pid,ppid,time,user,%cpu, --sort -%mem | head
+    CMD                             PID    PPID     TIME USER     %CPU
+    /usr/sbin/mysqld                761       1 00:00:18 mysql     0.7
+    /usr/bin/gnome-shell           3849    2516 00:00:07 si        0.4
+    /usr/bin/python3 /usr/bin/u    5628    2516 00:00:04 si        0.2
+    /snap/snap-store/959/usr/bi    4142    2516 00:00:02 si        0.1
+    /usr/libexec/fwupd/fwupd       4537       1 00:00:01 root      0.0
+    /usr/libexec/gsd-xsettings     4345    2516 00:00:00 si        0.0
+    /usr/libexec/evolution-data    4179    3821 00:00:00 si        0.0
+    /usr/bin/Xwayland :0 -rootl    4261    3849 00:00:00 si        0.0
+    /usr/libexec/packagekitd       3189       1 00:00:06 root      0.2
+    ```
 
 2. **Sintaxis BSD**: Esta es una convención utilizada principalmente en sistemas derivados de BSD (Berkeley Software Distribution), como FreeBSD, OpenBSD y macOS. En la sintaxis BSD, las opciones del comando `ps` se especifican sin guiones y pueden estar combinadas.
 
-`ps aux` o `ps -aux` muestra una lista detallada de todos los procesos en el sistema.
+    `ps aux` o `ps -aux` muestra una lista detallada de todos los procesos en el sistema.
 
-```bash
-si@si-VirtualBox:~$ ps aux
-USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root           1  0.2  0.3 168064 13252 ?        Ss   16:07   0:02 /sbin/init splash
-root           2  0.0  0.0      0     0 ?        S    16:07   0:00 [kthreadd]
-root           3  0.0  0.0      0     0 ?        I<   16:07   0:00 [rcu_gp]
-root           4  0.0  0.0      0     0 ?        I<   16:07   0:00 [rcu_par_gp]
-root           5  0.0  0.0      0     0 ?        I<   16:07   0:00 [slub_flushwq]
-root           6  0.0  0.0      0     0 ?        I<   16:07   0:00 [netns]
-root           8  0.0  0.0      0     0 ?        I<   16:07   0:00 [kworker/0:0H-events_highpri]
-root           9  0.1  0.0      0     0 ?        I    16:07   0:01 [kworker/0:1-events]
-root          11  0.0  0.0      0     0 ?        I<   16:07   0:00 [mm_percpu_wq]
-root          12  0.0  0.0      0     0 ?        I    16:07   0:00 [rcu_tasks_kthread]
-```
+    ```bash
+    si@si-VirtualBox:~$ ps aux
+    USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+    root           1  0.2  0.3 168064 13252 ?        Ss   16:07   0:02 /sbin/init splash
+    root           2  0.0  0.0      0     0 ?        S    16:07   0:00 [kthreadd]
+    root           3  0.0  0.0      0     0 ?        I<   16:07   0:00 [rcu_gp]
+    root           4  0.0  0.0      0     0 ?        I<   16:07   0:00 [rcu_par_gp]
+    root           5  0.0  0.0      0     0 ?        I<   16:07   0:00 [slub_flushwq]
+    root           6  0.0  0.0      0     0 ?        I<   16:07   0:00 [netns]
+    root           8  0.0  0.0      0     0 ?        I<   16:07   0:00 [kworker/0:0H-events_highpri]
+    root           9  0.1  0.0      0     0 ?        I    16:07   0:01 [kworker/0:1-events]
+    root          11  0.0  0.0      0     0 ?        I<   16:07   0:00 [mm_percpu_wq]
+    root          12  0.0  0.0      0     0 ?        I    16:07   0:00 [rcu_tasks_kthread]
+    ```
 
-`pstree` muestra información de los procesos en forma de arbol
+    `pstree` muestra información de los procesos en forma de arbol
 
-```bash
-si@si-VirtualBox:~$ pstree -u si | head
-gdm-wayland-ses-+-gnome-session-b---2*[{gnome-session-b}]
-                `-2*[{gdm-wayland-ses}]
+    ```bash
+    si@si-VirtualBox:~$ pstree -u si | head
+    gdm-wayland-ses-+-gnome-session-b---2*[{gnome-session-b}]
+                    `-2*[{gdm-wayland-ses}]
 
-gnome-keyring-d---3*[{gnome-keyring-d}]
+    gnome-keyring-d---3*[{gnome-keyring-d}]
 
-sshd---bash-+-head
-            |-pstree
-            `-yes
+    sshd---bash-+-head
+                |-pstree
+                `-yes
 
-systemd-+-(sd-pam)
-```
+    systemd-+-(sd-pam)
+    ```
 
-`pidof` es más simple y directo, útil para encontrar PIDs basados en nombres de procesos específicos, mientras que `pgrep` es más versátil y puede realizar búsquedas más avanzadas con una variedad de criterios. La elección entre ellos depende de las necesidades específicas de búsqueda que tengas en un momento dado.
+    `pidof` es más simple y directo, útil para encontrar PIDs basados en nombres de procesos específicos, mientras que `pgrep` es más versátil y puede realizar búsquedas más avanzadas con una variedad de criterios. La elección entre ellos depende de las necesidades específicas de búsqueda que tengas en un momento dado.
 
-`pgrep` muestra los IDs de proceso (PID) de los procesos sshd que están siendo ejecutados por los usuarios root y si.
+    `pgrep` muestra los IDs de proceso (PID) de los procesos sshd que están siendo ejecutados por los usuarios root y si.
 
-```bash
-si@si-VirtualBox:~$ pgrep -u root,si sshd
-735
-1331
-2707
-```
+    ```bash
+    si@si-VirtualBox:~$ pgrep -u root,si sshd
+    735
+    1331
+    2707
+    ```
 
-`pidof` muestra los IDs de proceso (PID) asociados con un programa específico.
+    `pidof` muestra los IDs de proceso (PID) asociados con un programa específico.
 
-```bash
-si@si-VirtualBox:~$ pidof yes
-3716
-```
+    ```bash
+    si@si-VirtualBox:~$ pidof yes
+    3716
+    ```
 
 #### Señales
 
@@ -3129,7 +3128,7 @@ El comando `kill` en Linux se utiliza para enviar señales a procesos en ejecuci
 
 1. **SIGINT (2)**:
 
-   - La señal SIGINT (2) se emplea cuando deseas dar al proceso una oportunidad para terminar de forma ordenada, como cuando presionas Ctrl+C en la consola. Con esta señal los procesos pueden interceptar y gestionar la señal para realizar tareas de limpieza antes de finalizar.
+   - La señal SIGINT (2) se emplea cuando deseas dar al proceso una oportunidad para terminar de forma ordenada, como cuando presionas `Ctrl+C` en la consola. Con esta señal los procesos pueden interceptar y gestionar la señal para realizar tareas de limpieza antes de finalizar.
 
      ```bash
      kill -2 1234
@@ -3169,7 +3168,7 @@ El comando `kill` en Linux se utiliza para enviar señales a procesos en ejecuci
 
 5. **SIGTSTP (20)**:
 
-   - La señal SIGTSTP (20) es una señal de parada que puede ser atrapada y gestionada por el proceso. Comúnmente se genera cuando se presiona Ctrl+Z en la consola, suspendiendo el proceso en primer plano y devolviendo el control a la consola. Esta suspensión es temporal y el proceso puede ser reanudado posteriormente con el comando fg (foreground) o bg (background).
+   - La señal SIGTSTP (20) es una señal de parada que puede ser atrapada y gestionada por el proceso. Comúnmente se genera cuando se presiona `Ctrl+Z` en la consola, suspendiendo el proceso en primer plano y devolviendo el control a la consola. Esta suspensión es temporal y el proceso puede ser reanudado posteriormente con el comando fg (foreground) o bg (background).
 
      ```bash
      kill -20 3456
@@ -3177,33 +3176,35 @@ El comando `kill` en Linux se utiliza para enviar señales a procesos en ejecuci
      kill -s TSTP $(pidof yes)
      ```
 
-```bash
-si@si-VirtualBox:~$ ps
-    PID TTY          TIME CMD
-   2708 pts/1    00:00:00 bash
-  13649 pts/1    00:00:00 ps
-si@si-VirtualBox:~$ yes >/dev/null &
-[1] 13650
-si@si-VirtualBox:~$ ps
-    PID TTY          TIME CMD
-   2708 pts/1    00:00:00 bash
-  13650 pts/1    00:00:00 yes
-  13651 pts/1    00:00:00 ps
-si@si-VirtualBox:~$ killall yes
-[1]+  Terminated              yes > /dev/null
-si@si-VirtualBox:~$ ps
-    PID TTY          TIME CMD
-   2708 pts/1    00:00:00 bash
-  13653 pts/1    00:00:00 ps
-si@si-VirtualBox:~$ yes >/dev/null &
-[1] 13654
-si@si-VirtualBox:~$ killall -s INT yes
-[1]+  Interrupt               yes > /dev/null
-si@si-VirtualBox:~$ ps
-    PID TTY          TIME CMD
-   2708 pts/1    00:00:00 bash
-  13656 pts/1    00:00:00 ps
-```
+    Todo lo mencionado sobre señales se puede ralizar tanto con `kill` como con `killall`.
+
+    ```bash
+    si@si-VirtualBox:~$ ps
+        PID TTY          TIME CMD
+      2708 pts/1    00:00:00 bash
+      13649 pts/1    00:00:00 ps
+    si@si-VirtualBox:~$ yes >/dev/null &
+    [1] 13650
+    si@si-VirtualBox:~$ ps
+        PID TTY          TIME CMD
+      2708 pts/1    00:00:00 bash
+      13650 pts/1    00:00:00 yes
+      13651 pts/1    00:00:00 ps
+    si@si-VirtualBox:~$ killall yes
+    [1]+  Terminated              yes > /dev/null
+    si@si-VirtualBox:~$ ps
+        PID TTY          TIME CMD
+      2708 pts/1    00:00:00 bash
+      13653 pts/1    00:00:00 ps
+    si@si-VirtualBox:~$ yes >/dev/null &
+    [1] 13654
+    si@si-VirtualBox:~$ killall -s INT yes
+    [1]+  Interrupt               yes > /dev/null
+    si@si-VirtualBox:~$ ps
+        PID TTY          TIME CMD
+      2708 pts/1    00:00:00 bash
+      13656 pts/1    00:00:00 ps
+    ```
 
 ---
 
