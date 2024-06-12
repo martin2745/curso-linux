@@ -3109,6 +3109,53 @@ Lo que significa que `$2` se colocará antes que `$1`, y no habrá espacio ni ot
 
 Este comando puede ser útil para cambiar el orden o el formato de los campos en líneas de texto que siguen un patrón específico, como en este caso, donde se manipula una dirección IP precedida por la etiqueta "addr:".
 
+_**Nota:**_ Es importante tener en cuenta que `cut` y `awk` permite separar por un campo pero en la salida `cut` **conservará el separador** a diferencia de `awk` **que eliminará el separador**, tal y como podemos ver a continuación.
+
+```bash
+si@si-VirtualBox:~/scripts$ si@si-VirtualBox:~/scripts$ cat script.sh
+#!/bin/bash
+
+echo "----- SALIDA DE CUT -----"
+
+tail /etc/passwd | cut -d ':' -f1,6,7
+
+echo -e '\n\n\n'
+
+echo "----- SALIDA DE CUT -----"
+
+tail /etc/passwd | awk -F ':' '{print $1 $6 $NF}'
+```
+
+```bash
+si@si-VirtualBox:~/scripts$ si@si-VirtualBox:~/scripts$ bash script.sh
+----- SALIDA DE CUT -----
+colord:/var/lib/colord:/usr/sbin/nologin
+geoclue:/var/lib/geoclue:/usr/sbin/nologin
+pulse:/run/pulse:/usr/sbin/nologin
+gnome-initial-setup:/run/gnome-initial-setup/:/bin/false
+hplip:/run/hplip:/bin/false
+gdm:/var/lib/gdm3:/bin/false
+si:/home/si:/bin/bash
+vboxadd:/var/run/vboxadd:/bin/false
+sshd:/run/sshd:/usr/sbin/nologin
+mysql:/nonexistent:/bin/false
+
+
+
+
+----- SALIDA DE CUT -----
+colord/var/lib/colord/usr/sbin/nologin
+geoclue/var/lib/geoclue/usr/sbin/nologin
+pulse/run/pulse/usr/sbin/nologin
+gnome-initial-setup/run/gnome-initial-setup//bin/false
+hplip/run/hplip/bin/false
+gdm/var/lib/gdm3/bin/false
+si/home/si/bin/bash
+vboxadd/var/run/vboxadd/bin/false
+sshd/run/sshd/usr/sbin/nologin
+mysql/nonexistent/bin/false
+```
+
 ---
 
 ### tr
