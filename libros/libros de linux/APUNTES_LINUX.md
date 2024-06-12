@@ -1509,6 +1509,121 @@ chmod u=rwx,g=rw,o=w documento.txt
 chmod u+wx,g-rw,a=w documento.txt
 ```
 
+#### Permisos especiales: Setuid, Setgid, Sticky Bit
+
+##### Setuid (Set User ID)
+
+Es un mecanismo en sistemas Unix y Unix-like que permite que un programa sea ejecutado con los privilegios del propietario del archivo, en lugar de los del usuario que lo ejecuta. Se denota por la letra 's' en el lugar del bit de ejecución del propietario.
+
+Este permiso es fundamental para que un usuario pueda hacer cosas tan simples como cambiar su contraseña de acceso. Básicamente cambiar la contraseña de un usuario distinto de root implica modificar el fichero /etc/shadow el cual tiene permisos rw-r----- y pertenece al usuario root grupo shadow. Con esta configuración de permisos sólo el usuario root puede realizar modificaciones sobre este fichero. Para realizar este cambio de contraseña se usa la herramienta passwd la cual tiene unos permisos especiales (rwsr-xr-x):
+
+```bash
+si@si-VirtualBox:~$ which passwd
+/usr/bin/passwd
+si@si-VirtualBox:~$ ls -la $(which passwd)
+-rwsr-xr-x 1 root root 59976 feb  6 13:54 /usr/bin/passwd
+si@si-VirtualBox:~$ ls -l /etc/shadow
+-rw-r----- 1 root shadow 1536 abr  9 13:07 /etc/shadow
+si@si-VirtualBox:~$ sudo cat /etc/shadow | grep -n si:
+48:si:$y$j9T$xzdCWBCAVajtbrVsu/dPu0$7bIViJJgWzNPhkT5yk1YLQkZNhhDfdN/vlXO5LB.B49:19725:0:99999:7:::
+```
+
+El cambio está en que en los permisos del usuario propietario se ha sustituido una x por una s. Y así es como se representa el permiso Set UID en los ficheros ejecutables el cual es un acrónimo de “set user ID upon execution”. **Un ejecutable con este permiso activado se ejecuta como el usuario propietario (el usuario root en este caso) y no con los privilegios del usuario actual.**
+
+Por último, en Linux cuando un fichero tiene permiso Set UID pero no tiene permiso de ejecución, Linux marca esta circunstancia con una “S” (mayúscula).
+
+```bash
+si@si-VirtualBox:~$ echo "Permisos" > fichero.txt
+si@si-VirtualBox:~$ ls -l fichero.txt
+-rw-rw-r-- 1 si si 9 jun 12 09:23 fichero.txt
+
+si@si-VirtualBox:~$ chmod 4700 fichero.txt
+si@si-VirtualBox:~$ ls -l fichero.txt
+-rws------ 1 si si 9 jun 12 09:23 fichero.txt
+
+si@si-VirtualBox:~$ chmod u-x fichero.txt
+si@si-VirtualBox:~$ ls -l fichero.txt
+-rwS------ 1 si si 9 jun 12 09:23 fichero.txt
+```
+
+##### Setgid
+
+Similar al setuid, el setgid es un mecanismo que permite que un programa se ejecute con los privilegios del grupo del archivo, en lugar de los del usuario que lo ejecuta. Se denota por la letra 's' en el lugar del bit de ejecución del grupo. El permiso Set GID, de forma paralela a Set UID, hace que el grupo de ejecución de un fichero sea el grupo propietario del fichero y no el grupo principal al que pertenece el usuario que lo ejecuta.
+
+El ejemplo más conocido de este tipo de permisos está relacionado también con el fichero /etc/shadow y con /sbin/unix_chkpwd que es un programa que participa en la autentificación de los usuarios junto con PAM. 
+
+Como se puede ver en el ejemplo, el fichero /etc/shadow tiene permiso de lectura para el grupo propietario (shadow) de la misma forma que /sbin/unix_chkpwd es un ejecutable cuyo grupo propietario es shadow. Si se ejecuta este programa con el grupo shadow, se obtendrán permisos de acceso de sólo lectura a /etc/shadow y, de esta forma, será posible comprobar la contraseña. 
+
+Para asignar permisos de Set GID habrá que anteponer un 2 al permiso en formato numérico (2755) ó usar g+s. Por otra banda, es posible activar Set UID y Set GID a la vez empleando chmod con las especificaciones de permisos 6755 ó u+s g+s.
+
+```bash
+si@si-VirtualBox:~$ echo "Permisos" > fichero.txt
+si@si-VirtualBox:~$ ls -l fichero.txt
+-rw-rw-r-- 1 si si 9 jun 12 10:50 fichero.txt
+
+si@si-VirtualBox:~$ chmod 2070 fichero.txt
+si@si-VirtualBox:~$ ls -l fichero.txt
+----rws--- 1 si si 9 jun 12 10:50 fichero.txt
+
+si@si-VirtualBox:~$ chmod g-x fichero.txt
+si@si-VirtualBox:~$ ls -l fichero.txt
+----rwS--- 1 si si 9 jun 12 10:50 fichero.txt
+```
+
+##### Sticky bit
+
+El Sticky bit es un permiso especial aplicado a directorios en sistemas Unix. Cuando se establece en un directorio, solo el propietario del archivo o superusuario puede eliminar o renombrar sus archivos, aunque otros tengan permisos de escritura en el directorio. Se denota por la letra 't' en el lugar del bit de ejecución del otros.
+
+Este permiso permite proteger ficheros dentro de un directorio. Concretamente evita que un usuario pueda borrar ficheros de otros usuarios que se sitúan en una carpeta pública como el directorio /tmp.
+
+Por otro lado, indicar que con la T (mayúscula) indica que no existe el permiso de ejecución para el colectivo otros usuarios que en carpetas significa poder acceder a la carpeta.
+
+```bash
+si@si-VirtualBox:~$ sudo groupadd secundaria
+si@si-VirtualBox:~$ sudo useradd -m -d /home/juan -p $(mkpasswd 'abc123.') -s /bin/bash -g secundaria -G sudo juan
+si@si-VirtualBox:~$ sudo useradd -m -d /home/mateo -p $(mkpasswd 'abc123.') -s /bin/bash -g secundaria -G sudo mateo
+
+si@si-VirtualBox:~$ id juan
+uid=1001(juan) gid=1001(secundaria) groups=1001(secundaria),27(sudo)
+si@si-VirtualBox:~$ id mateo
+uid=1002(mateo) gid=1001(secundaria) groups=1001(secundaria),27(sudo)
+
+si@si-VirtualBox:~$ mkdir /tmp/sticky
+si@si-VirtualBox:~$ ls -ld /tmp/sticky/
+drwxrwxr-x 2 si si 4096 jun 12 10:58 /tmp/sticky/
+
+si@si-VirtualBox:~$ chmod 1777 /tmp/sticky/
+si@si-VirtualBox:~$ ls -ld /tmp/sticky/
+drwxrwxrwt 2 si si 4096 jun 12 10:58 /tmp/sticky/
+
+si@si-VirtualBox:~$ su - juan -c "touch /tmp/sticky/fi1.txt"
+Password:
+si@si-VirtualBox:~$ su - mateo -c "rm /tmp/sticky/fi1.txt"
+Password:
+rm: remove write-protected regular empty file '/tmp/sticky/fi1.txt'? yes
+rm: cannot remove '/tmp/sticky/fi1.txt': Operation not permitted
+si@si-VirtualBox:~$ tree /tmp/sticky/
+/tmp/sticky/
+└── fi1.txt
+
+0 directories, 1 file
+
+si@si-VirtualBox:~$ chmod o-t /tmp/sticky/
+si@si-VirtualBox:~$ ls -ld /tmp/sticky/
+drwxrwxrwx 2 si si 4096 jun 12 11:04 /tmp/sticky/
+
+si@si-VirtualBox:~$ su - mateo -c "rm /tmp/sticky/fi1.txt"
+Password:
+rm: remove write-protected regular empty file '/tmp/sticky/fi1.txt'? yes
+
+si@si-VirtualBox:~$ ls -ld /tmp/sticky/
+drwxrwxrwx 2 si si 4096 jun 12 11:08 /tmp/sticky/
+si@si-VirtualBox:~$ tree /tmp/sticky/
+/tmp/sticky/
+
+0 directories, 0 files
+```
+
 #### `chattr` y `lsattr`
 
 A mayores existen en Linux a editar con los comandos `chattr` y listar con `lsattr` otros permisos. `chattr` es un comando en sistemas Unix y Linux que se utiliza para cambiar los `atributos` de un archivo en el sistema de archivos. Estos atributos pueden controlar varios aspectos del archivo, como su capacidad de modificación, eliminación o incluso si puede ser movido o renombrado. Uno de los atributos más comunes es el atributo de solo lectura.
