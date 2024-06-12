@@ -8,7 +8,7 @@
 # Se se introducir un valor diferente, o script mostrará a mensaxe “erro na selección”.
 # Se repetirá o menú ata que o usuario introduza a opción 3 (sair)
 
-function opciones() {
+function f_opciones() {
     echo -e "\n1. Listar o contido do directorio actual"
     echo "2. Listar o contido do directorio actual en formato largo"
     echo -e "3. Salir\n"
@@ -19,7 +19,7 @@ op=0
 
 while [ ${op} -ne 3 ]; do
 
-    opciones
+    f_opciones
 
     case ${op} in
         1) ls;;

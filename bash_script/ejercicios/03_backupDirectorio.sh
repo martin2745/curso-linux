@@ -1,11 +1,11 @@
 #!/bin/bash
 
-directorio(){
+function f_directorio(){
 	read -p "Introduce la ruta de un directorio para hacer backup: " directorio
-	backup
+	f_backup
 }
 
-backup(){
+function f_backup(){
 	if test -d ${directorio}
 	then
 		echo "Existe el directorio ${directorio}"
@@ -17,4 +17,4 @@ backup(){
 	fi
 }
 
-directorio
+f_directorio
