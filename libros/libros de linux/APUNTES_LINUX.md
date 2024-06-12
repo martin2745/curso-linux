@@ -2825,6 +2825,40 @@ si@si-VirtualBox:/tmp/prueba$ cat fileModificado.tmp
 "usuario2","p2","/bin/bash","/home/usuario2"
 ```
 
+- Permite el uso de expresiones regulares con la opción `-r`.
+
+```bash
+si@si-VirtualBox:/tmp/prueba$ echo 'http://www.example1.local/cig/' | sed -r 's|(http)(://)(www.example1.local/cig)|\1s\2example1.local/cig|'
+https://example1.local/cig/
+```
+
+**Desglose del patrón de búsqueda**
+
+1. **(http)**: Captura la cadena `http` y la guarda en el grupo de captura 1.
+2. **(://)**: Captura los caracteres `://` y los guarda en el grupo de captura 2.
+3. **(www.example1.local/cig)**: Captura la cadena `www.example1.local/cig` y la guarda en el grupo de captura 3.
+
+**Desglose del patrón de reemplazo**
+
+- **\1**: Referencia al contenido capturado en el grupo 1, que es `http`.
+- **s**: Un carácter literal que se inserta en el resultado.
+- **\2**: Referencia al contenido capturado en el grupo 2, que es `://`.
+- **example1.local/cig**: Texto literal que se inserta directamente en el resultado.
+
+**Funcionamiento del comando completo**
+
+1. **Entrada**: `'http://www.example1.local/cig/'`
+2. **Patrón de búsqueda**: `(http)(://)(www.example1.local/cig)`
+3. **Coincidencia**:
+   - `http` se guarda en el grupo 1.
+   - `://` se guarda en el grupo 2.
+   - `www.example1.local/cig` se guarda en el grupo 3.
+4. **Reemplazo**: `\1s\2example1.local/cig`
+   - `\1` se reemplaza con `http`.
+   - `s` se inserta literalmente.
+   - `\2` se reemplaza con `://`.
+   - `example1.local/cig` se inserta literalmente.
+
 ---
 
 ### find
