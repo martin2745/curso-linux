@@ -3121,7 +3121,7 @@ tail /etc/passwd | cut -d ':' -f1,6,7
 
 echo -e '\n\n\n'
 
-echo "----- SALIDA DE CUT -----"
+echo "----- SALIDA DE AWK -----"
 
 tail /etc/passwd | awk -F ':' '{print $1 $6 $NF}'
 ```
@@ -3143,7 +3143,7 @@ mysql:/nonexistent:/bin/false
 
 
 
------ SALIDA DE CUT -----
+----- SALIDA DE AWK -----
 colord/var/lib/colord/usr/sbin/nologin
 geoclue/var/lib/geoclue/usr/sbin/nologin
 pulse/run/pulse/usr/sbin/nologin
