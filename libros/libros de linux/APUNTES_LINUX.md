@@ -681,10 +681,12 @@ A continuación definimos cual es la consecuencia de este comando:
 ### Proceso de Arranque en MBR
 
 1. **Encendido del Sistema y Ejecución del BIOS**:
+
    - Al encender el sistema, el BIOS (Basic Input/Output System) se inicia y realiza una serie de pruebas de hardware conocidas como POST (Power-On Self Test).
    - Una vez completadas las pruebas, el BIOS busca un dispositivo de arranque (como un disco duro) y lee el primer sector del dispositivo, conocido como el Master Boot Record (MBR).
 
 2. **Código de Arranque en el MBR**:
+
    - El MBR es el primer sector del disco (512 bytes) y contiene:
      - **Código de Arranque o Boot Code** (los primeros 446 bytes): Este es un pequeño programa que se ejecuta inmediatamente después de que el BIOS carga el MBR en la memoria.
      - **Tabla de Particiones** (64 bytes): Describe la estructura de las particiones del disco.
@@ -692,6 +694,7 @@ A continuación definimos cual es la consecuencia de este comando:
    - El **Código de Arranque** del MBR tiene la tarea de localizar la partición activa (una de las particiones primarias marcadas como activa en la tabla de particiones), por lo que es el encargado de iniciar el proceso de arranque.
 
 3. **Gestor de Arranque Secundario**:
+
    - El código de arranque en el MBR carga y ejecuta el gestor de arranque secundario desde el sector de arranque de la partición activa.
    - Ejemplos de gestores de arranque secundarios son GRUB o GRUB2, LILO en sistemas Linux, o BOOTMGR en sistemas Windows.
    - El **Gestor de Arranque Secundario** presenta un menú al usuario para seleccionar entre múltiples sistemas operativos o diferentes modos de arranque.
@@ -713,7 +716,7 @@ Cuando ejecutas el comando `dd if=/dev/zero of=/dev/sda bs=512 count=1`, sucede 
 ### Efecto del Comando
 
 - Este comando escribe 512 bytes de ceros en el primer sector del disco duro (`/dev/sda`), que es el MBR.
-- **Sobrescribir el MBR**: 
+- **Sobrescribir el MBR**:
   - El código de arranque en el MBR será sobrescrito con ceros.
   - La tabla de particiones también será sobrescrita, eliminando la información sobre las particiones del disco.
   - La firma de arranque (0x55AA) será eliminada, lo que indica al BIOS que el MBR no es un sector de arranque válido.
@@ -1522,15 +1525,15 @@ A continuación se van a explicar los permisos que pueden existir en un fichero 
 
 1. **Permisos ugo para fichero:**
 
-    - **r (read):** Permite leer el contenido del archivo.
-    - **w (write):** Permite modificar el contenido del archivo.
-    - **x (execute):** Permite ejecutar el archivo como un programa o script. El propietario o los usuarios autorizados pueden ejecutar el archivo si es ejecutable.
+   - **r (read):** Permite leer el contenido del archivo.
+   - **w (write):** Permite modificar el contenido del archivo.
+   - **x (execute):** Permite ejecutar el archivo como un programa o script. El propietario o los usuarios autorizados pueden ejecutar el archivo si es ejecutable.
 
 2. **Permisos ugo para directorio:**
 
-    - **r (read):** Permite ver el listado de archivos que contiene el directorio.
-    - **w (write):** Permite modificar el contenido del directorio.
-    - **x (execute):** Permite acceder al contenido del directorio.
+   - **r (read):** Permite ver el listado de archivos que contiene el directorio.
+   - **w (write):** Permite modificar el contenido del directorio.
+   - **x (execute):** Permite acceder al contenido del directorio.
 
 **Ejemplo 1:**
 
@@ -1647,9 +1650,9 @@ si@si-VirtualBox:~$ ls -l fichero.txt
 
 Similar al setuid, el setgid es un mecanismo que permite que un programa se ejecute con los privilegios del grupo del archivo, en lugar de los del usuario que lo ejecuta. Se denota por la letra 's' en el lugar del bit de ejecución del grupo. El permiso Set GID, de forma paralela a Set UID, hace que el grupo de ejecución de un fichero sea el grupo propietario del fichero y no el grupo principal al que pertenece el usuario que lo ejecuta.
 
-El ejemplo más conocido de este tipo de permisos está relacionado también con el fichero /etc/shadow y con /sbin/unix_chkpwd que es un programa que participa en la autentificación de los usuarios junto con PAM. 
+El ejemplo más conocido de este tipo de permisos está relacionado también con el fichero /etc/shadow y con /sbin/unix_chkpwd que es un programa que participa en la autentificación de los usuarios junto con PAM.
 
-Como se puede ver en el ejemplo, el fichero /etc/shadow tiene permiso de lectura para el grupo propietario (shadow) de la misma forma que /sbin/unix_chkpwd es un ejecutable cuyo grupo propietario es shadow. Si se ejecuta este programa con el grupo shadow, se obtendrán permisos de acceso de sólo lectura a /etc/shadow y, de esta forma, será posible comprobar la contraseña. 
+Como se puede ver en el ejemplo, el fichero /etc/shadow tiene permiso de lectura para el grupo propietario (shadow) de la misma forma que /sbin/unix_chkpwd es un ejecutable cuyo grupo propietario es shadow. Si se ejecuta este programa con el grupo shadow, se obtendrán permisos de acceso de sólo lectura a /etc/shadow y, de esta forma, será posible comprobar la contraseña.
 
 Para asignar permisos de Set GID habrá que anteponer un 2 al permiso en formato numérico (2755) ó usar g+s. Por otra banda, es posible activar Set UID y Set GID a la vez empleando chmod con las especificaciones de permisos 6755 ó u+s g+s.
 
@@ -2071,6 +2074,7 @@ Tenemos dos comando principales para la gestión de repositorios en linux.
 - `update`: Actualiza la lista de paquetes disponibles en los repositorios.
 - `upgrade`: Actualiza todos los paquetes instalados a las versiones más recientes disponibles.
 - `dist-upgrade`: Realiza una actualización más completa que `apt upgrade`, incluyendo la resolución de dependencias y la eliminación o instalación de nuevos paquetes si es necesario para completar la actualización de forma coherente.
+- `list --installed`: En linux, ejecutar `apt list --installed` permite mostrar todos los paquetes deb instalados en el sistema.
 
 Podemos ver los repositorios donde `apt` hace sus busquedas a continuación:
 
@@ -2095,6 +2099,7 @@ deb http://security.ubuntu.com/ubuntu jammy-security multiverse
 - `-P`: Elimina un paquete y también sus archivos de configuración.
 - `-l`: Lista todos los paquetes instalados en el sistema.
 - `-L`: Lista todos los ficheros instalados que pertenecen a un paquete específico.
+- `--get-selectios`: En linux, ejecutar `dpkg --get-selections` permite mostrar todos los paquetes deb instalados en el sistema.
 
 ```bash
 root@debian12:~/Descargas# ls
@@ -3266,7 +3271,7 @@ El comando `tr` en Linux es una utilidad de línea de comandos utilizada para tr
 si@si-VirtualBox:/tmp/prueba$ echo "Vamos a cambiar las a minusculas por mayusculas" | tr 'a' 'A'
 VAmos A cAmbiAr lAs A minusculAs por mAyusculAs
 ```
-   
+
 2. **Eliminación de caracteres**: Usando la opción `-d`, `tr` puede eliminar caracteres específicos de la entrada.
 
 ```bash
@@ -3345,131 +3350,131 @@ si@si-VirtualBox:~$ ps
 
 1. **Sintaxis Estándar**: Esta es una convención comúnmente utilizada en sistemas que siguen las especificaciones de POSIX (Portable Operating System Interface), como la mayoría de las distribuciones de Linux.
 
-    `ps -e` muestra los procesos de todo el sistema en cualquier terminal. La información que obtenemos por pantalla es la misma que con `ps` pero para todas las terminales.
+   `ps -e` muestra los procesos de todo el sistema en cualquier terminal. La información que obtenemos por pantalla es la misma que con `ps` pero para todas las terminales.
 
-    ```bash
-    si@si-VirtualBox:~$ ps -e
-        PID TTY          TIME CMD
-          1 ?        00:00:02 systemd
-          2 ?        00:00:00 kthreadd
-          3 ?        00:00:00 rcu_gp
-          4 ?        00:00:00 rcu_par_gp
-          5 ?        00:00:00 slub_flushwq
-          6 ?        00:00:00 netns
-          8 ?        00:00:00 kworker/0:0H-events_highpri
-          9 ?        00:00:01 kworker/0:1-events
-    ```
+   ```bash
+   si@si-VirtualBox:~$ ps -e
+       PID TTY          TIME CMD
+         1 ?        00:00:02 systemd
+         2 ?        00:00:00 kthreadd
+         3 ?        00:00:00 rcu_gp
+         4 ?        00:00:00 rcu_par_gp
+         5 ?        00:00:00 slub_flushwq
+         6 ?        00:00:00 netns
+         8 ?        00:00:00 kworker/0:0H-events_highpri
+         9 ?        00:00:01 kworker/0:1-events
+   ```
 
-    `ps -p` muestra el proceso según su pid.
+   `ps -p` muestra el proceso según su pid.
 
-    ```bash
-    si@si-VirtualBox:~$ ps -p `pidof bash`
-        PID TTY          TIME CMD
-      1457 pts/1    00:00:00 bash
+   ```bash
+   si@si-VirtualBox:~$ ps -p `pidof bash`
+       PID TTY          TIME CMD
+     1457 pts/1    00:00:00 bash
 
-    ```
+   ```
 
-    `ps -ef` muestra todos los procesos del sistema con mayor nivel de detalle que `ps -e`.
+   `ps -ef` muestra todos los procesos del sistema con mayor nivel de detalle que `ps -e`.
 
-    ```bash
-    si@si-VirtualBox:~$ ps -ef
-    UID          PID    PPID  C STIME TTY          TIME CMD
-    root           1       0  0 16:07 ?        00:00:02 /sbin/init splash
-    root           2       0  0 16:07 ?        00:00:00 [kthreadd]
-    root           3       2  0 16:07 ?        00:00:00 [rcu_gp]
-    root           4       2  0 16:07 ?        00:00:00 [rcu_par_gp]
-    root           5       2  0 16:07 ?        00:00:00 [slub_flushwq]
-    root           6       2  0 16:07 ?        00:00:00 [netns]
-    root           8       2  0 16:07 ?        00:00:00 [kworker/0:0H-events_highpri]
-    root           9       2  0 16:07 ?        00:00:01 [kworker/0:1-events]
-    root          11       2  0 16:07 ?        00:00:00 [mm_percpu_wq]
-    root          12       2  0 16:07 ?        00:00:00 [rcu_tasks_kthread]
-    ```
+   ```bash
+   si@si-VirtualBox:~$ ps -ef
+   UID          PID    PPID  C STIME TTY          TIME CMD
+   root           1       0  0 16:07 ?        00:00:02 /sbin/init splash
+   root           2       0  0 16:07 ?        00:00:00 [kthreadd]
+   root           3       2  0 16:07 ?        00:00:00 [rcu_gp]
+   root           4       2  0 16:07 ?        00:00:00 [rcu_par_gp]
+   root           5       2  0 16:07 ?        00:00:00 [slub_flushwq]
+   root           6       2  0 16:07 ?        00:00:00 [netns]
+   root           8       2  0 16:07 ?        00:00:00 [kworker/0:0H-events_highpri]
+   root           9       2  0 16:07 ?        00:00:01 [kworker/0:1-events]
+   root          11       2  0 16:07 ?        00:00:00 [mm_percpu_wq]
+   root          12       2  0 16:07 ?        00:00:00 [rcu_tasks_kthread]
+   ```
 
-    `ps -efH` muestra todos los procesos del sistema con mayor nivel de detalle que `ps -e` y en forma de arbol.
+   `ps -efH` muestra todos los procesos del sistema con mayor nivel de detalle que `ps -e` y en forma de arbol.
 
-    ```bash
-    si@si-VirtualBox:~$ ps -efH
-    UID          PID    PPID  C STIME TTY          TIME CMD
-    root           2       0  0 16:07 ?        00:00:00 [kthreadd]
-    root           3       2  0 16:07 ?        00:00:00   [rcu_gp]
-    root           4       2  0 16:07 ?        00:00:00   [rcu_par_gp]
-    root           5       2  0 16:07 ?        00:00:00   [slub_flushwq]
-    root           6       2  0 16:07 ?        00:00:00   [netns]
-    root           8       2  0 16:07 ?        00:00:00   [kworker/0:0H-events_highpri]
-    root           9       2  0 16:07 ?        00:00:01   [kworker/0:1-events]
-    root          11       2  0 16:07 ?        00:00:00   [mm_percpu_wq]
-    root          12       2  0 16:07 ?        00:00:00   [rcu_tasks_kthread]
-    ```
+   ```bash
+   si@si-VirtualBox:~$ ps -efH
+   UID          PID    PPID  C STIME TTY          TIME CMD
+   root           2       0  0 16:07 ?        00:00:00 [kthreadd]
+   root           3       2  0 16:07 ?        00:00:00   [rcu_gp]
+   root           4       2  0 16:07 ?        00:00:00   [rcu_par_gp]
+   root           5       2  0 16:07 ?        00:00:00   [slub_flushwq]
+   root           6       2  0 16:07 ?        00:00:00   [netns]
+   root           8       2  0 16:07 ?        00:00:00   [kworker/0:0H-events_highpri]
+   root           9       2  0 16:07 ?        00:00:01   [kworker/0:1-events]
+   root          11       2  0 16:07 ?        00:00:00   [mm_percpu_wq]
+   root          12       2  0 16:07 ?        00:00:00   [rcu_tasks_kthread]
+   ```
 
-    `ps -o` muestra la información de los procesos que se especifique por el usuario.
+   `ps -o` muestra la información de los procesos que se especifique por el usuario.
 
-    ```bash
-    si@si-VirtualBox:~$ ps -eo cmd,pid,ppid,time,user,%cpu, --sort -%mem | head
-    CMD                             PID    PPID     TIME USER     %CPU
-    /usr/sbin/mysqld                761       1 00:00:18 mysql     0.7
-    /usr/bin/gnome-shell           3849    2516 00:00:07 si        0.4
-    /usr/bin/python3 /usr/bin/u    5628    2516 00:00:04 si        0.2
-    /snap/snap-store/959/usr/bi    4142    2516 00:00:02 si        0.1
-    /usr/libexec/fwupd/fwupd       4537       1 00:00:01 root      0.0
-    /usr/libexec/gsd-xsettings     4345    2516 00:00:00 si        0.0
-    /usr/libexec/evolution-data    4179    3821 00:00:00 si        0.0
-    /usr/bin/Xwayland :0 -rootl    4261    3849 00:00:00 si        0.0
-    /usr/libexec/packagekitd       3189       1 00:00:06 root      0.2
-    ```
+   ```bash
+   si@si-VirtualBox:~$ ps -eo cmd,pid,ppid,time,user,%cpu, --sort -%mem | head
+   CMD                             PID    PPID     TIME USER     %CPU
+   /usr/sbin/mysqld                761       1 00:00:18 mysql     0.7
+   /usr/bin/gnome-shell           3849    2516 00:00:07 si        0.4
+   /usr/bin/python3 /usr/bin/u    5628    2516 00:00:04 si        0.2
+   /snap/snap-store/959/usr/bi    4142    2516 00:00:02 si        0.1
+   /usr/libexec/fwupd/fwupd       4537       1 00:00:01 root      0.0
+   /usr/libexec/gsd-xsettings     4345    2516 00:00:00 si        0.0
+   /usr/libexec/evolution-data    4179    3821 00:00:00 si        0.0
+   /usr/bin/Xwayland :0 -rootl    4261    3849 00:00:00 si        0.0
+   /usr/libexec/packagekitd       3189       1 00:00:06 root      0.2
+   ```
 
 2. **Sintaxis BSD**: Esta es una convención utilizada principalmente en sistemas derivados de BSD (Berkeley Software Distribution), como FreeBSD, OpenBSD y macOS. En la sintaxis BSD, las opciones del comando `ps` se especifican sin guiones y pueden estar combinadas.
 
-    `ps aux` o `ps -aux` muestra una lista detallada de todos los procesos en el sistema.
+   `ps aux` o `ps -aux` muestra una lista detallada de todos los procesos en el sistema.
 
-    ```bash
-    si@si-VirtualBox:~$ ps aux
-    USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-    root           1  0.2  0.3 168064 13252 ?        Ss   16:07   0:02 /sbin/init splash
-    root           2  0.0  0.0      0     0 ?        S    16:07   0:00 [kthreadd]
-    root           3  0.0  0.0      0     0 ?        I<   16:07   0:00 [rcu_gp]
-    root           4  0.0  0.0      0     0 ?        I<   16:07   0:00 [rcu_par_gp]
-    root           5  0.0  0.0      0     0 ?        I<   16:07   0:00 [slub_flushwq]
-    root           6  0.0  0.0      0     0 ?        I<   16:07   0:00 [netns]
-    root           8  0.0  0.0      0     0 ?        I<   16:07   0:00 [kworker/0:0H-events_highpri]
-    root           9  0.1  0.0      0     0 ?        I    16:07   0:01 [kworker/0:1-events]
-    root          11  0.0  0.0      0     0 ?        I<   16:07   0:00 [mm_percpu_wq]
-    root          12  0.0  0.0      0     0 ?        I    16:07   0:00 [rcu_tasks_kthread]
-    ```
+   ```bash
+   si@si-VirtualBox:~$ ps aux
+   USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+   root           1  0.2  0.3 168064 13252 ?        Ss   16:07   0:02 /sbin/init splash
+   root           2  0.0  0.0      0     0 ?        S    16:07   0:00 [kthreadd]
+   root           3  0.0  0.0      0     0 ?        I<   16:07   0:00 [rcu_gp]
+   root           4  0.0  0.0      0     0 ?        I<   16:07   0:00 [rcu_par_gp]
+   root           5  0.0  0.0      0     0 ?        I<   16:07   0:00 [slub_flushwq]
+   root           6  0.0  0.0      0     0 ?        I<   16:07   0:00 [netns]
+   root           8  0.0  0.0      0     0 ?        I<   16:07   0:00 [kworker/0:0H-events_highpri]
+   root           9  0.1  0.0      0     0 ?        I    16:07   0:01 [kworker/0:1-events]
+   root          11  0.0  0.0      0     0 ?        I<   16:07   0:00 [mm_percpu_wq]
+   root          12  0.0  0.0      0     0 ?        I    16:07   0:00 [rcu_tasks_kthread]
+   ```
 
-    `pstree` muestra información de los procesos en forma de arbol
+   `pstree` muestra información de los procesos en forma de arbol
 
-    ```bash
-    si@si-VirtualBox:~$ pstree -u si | head
-    gdm-wayland-ses-+-gnome-session-b---2*[{gnome-session-b}]
-                    `-2*[{gdm-wayland-ses}]
+   ```bash
+   si@si-VirtualBox:~$ pstree -u si | head
+   gdm-wayland-ses-+-gnome-session-b---2*[{gnome-session-b}]
+                   `-2*[{gdm-wayland-ses}]
 
-    gnome-keyring-d---3*[{gnome-keyring-d}]
+   gnome-keyring-d---3*[{gnome-keyring-d}]
 
-    sshd---bash-+-head
-                |-pstree
-                `-yes
+   sshd---bash-+-head
+               |-pstree
+               `-yes
 
-    systemd-+-(sd-pam)
-    ```
+   systemd-+-(sd-pam)
+   ```
 
-    `pidof` es más simple y directo, útil para encontrar PIDs basados en nombres de procesos específicos, mientras que `pgrep` es más versátil y puede realizar búsquedas más avanzadas con una variedad de criterios. La elección entre ellos depende de las necesidades específicas de búsqueda que tengas en un momento dado.
+   `pidof` es más simple y directo, útil para encontrar PIDs basados en nombres de procesos específicos, mientras que `pgrep` es más versátil y puede realizar búsquedas más avanzadas con una variedad de criterios. La elección entre ellos depende de las necesidades específicas de búsqueda que tengas en un momento dado.
 
-    `pgrep` muestra los IDs de proceso (PID) de los procesos sshd que están siendo ejecutados por los usuarios root y si.
+   `pgrep` muestra los IDs de proceso (PID) de los procesos sshd que están siendo ejecutados por los usuarios root y si.
 
-    ```bash
-    si@si-VirtualBox:~$ pgrep -u root,si sshd
-    735
-    1331
-    2707
-    ```
+   ```bash
+   si@si-VirtualBox:~$ pgrep -u root,si sshd
+   735
+   1331
+   2707
+   ```
 
-    `pidof` muestra los IDs de proceso (PID) asociados con un programa específico.
+   `pidof` muestra los IDs de proceso (PID) asociados con un programa específico.
 
-    ```bash
-    si@si-VirtualBox:~$ pidof yes
-    3716
-    ```
+   ```bash
+   si@si-VirtualBox:~$ pidof yes
+   3716
+   ```
 
 #### Señales
 
@@ -3546,35 +3551,35 @@ El comando `kill` en Linux se utiliza para enviar señales a procesos en ejecuci
      kill -s TSTP $(pidof yes)
      ```
 
-    Todo lo mencionado sobre señales se puede ralizar tanto con `kill` como con `killall`.
+   Todo lo mencionado sobre señales se puede ralizar tanto con `kill` como con `killall`.
 
-    ```bash
-    si@si-VirtualBox:~$ ps
-        PID TTY          TIME CMD
-      2708 pts/1    00:00:00 bash
-      13649 pts/1    00:00:00 ps
-    si@si-VirtualBox:~$ yes >/dev/null &
-    [1] 13650
-    si@si-VirtualBox:~$ ps
-        PID TTY          TIME CMD
-      2708 pts/1    00:00:00 bash
-      13650 pts/1    00:00:00 yes
-      13651 pts/1    00:00:00 ps
-    si@si-VirtualBox:~$ killall yes
-    [1]+  Terminated              yes > /dev/null
-    si@si-VirtualBox:~$ ps
-        PID TTY          TIME CMD
-      2708 pts/1    00:00:00 bash
-      13653 pts/1    00:00:00 ps
-    si@si-VirtualBox:~$ yes >/dev/null &
-    [1] 13654
-    si@si-VirtualBox:~$ killall -s INT yes
-    [1]+  Interrupt               yes > /dev/null
-    si@si-VirtualBox:~$ ps
-        PID TTY          TIME CMD
-      2708 pts/1    00:00:00 bash
-      13656 pts/1    00:00:00 ps
-    ```
+   ```bash
+   si@si-VirtualBox:~$ ps
+       PID TTY          TIME CMD
+     2708 pts/1    00:00:00 bash
+     13649 pts/1    00:00:00 ps
+   si@si-VirtualBox:~$ yes >/dev/null &
+   [1] 13650
+   si@si-VirtualBox:~$ ps
+       PID TTY          TIME CMD
+     2708 pts/1    00:00:00 bash
+     13650 pts/1    00:00:00 yes
+     13651 pts/1    00:00:00 ps
+   si@si-VirtualBox:~$ killall yes
+   [1]+  Terminated              yes > /dev/null
+   si@si-VirtualBox:~$ ps
+       PID TTY          TIME CMD
+     2708 pts/1    00:00:00 bash
+     13653 pts/1    00:00:00 ps
+   si@si-VirtualBox:~$ yes >/dev/null &
+   [1] 13654
+   si@si-VirtualBox:~$ killall -s INT yes
+   [1]+  Interrupt               yes > /dev/null
+   si@si-VirtualBox:~$ ps
+       PID TTY          TIME CMD
+     2708 pts/1    00:00:00 bash
+     13656 pts/1    00:00:00 ps
+   ```
 
 ---
 
