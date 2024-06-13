@@ -1,0 +1,6 @@
+#nome;contrasinal;grupo;habilitado
+user01;abc123.;group01;N
+user02;abc123.;group01;s
+user03;abc123.;group01;n
+user04;abc123.;group02;s
+user05;abc123.;group02;S
