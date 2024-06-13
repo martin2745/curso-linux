@@ -606,6 +606,30 @@ tail [OPCIÓN]... [ARCHIVO]...
   tail -n 20 archivo.txt
   ```
 
+  ```bash
+  si@si-VirtualBox:/tmp/prueba$ tail -2 users.csv
+  user04;abc123.;group02;s
+  user05;abc123.;group02;S
+  si@si-VirtualBox:/tmp/prueba$ tail +2 users.csv
+  user01;abc123.;group01;N
+  user02;abc123.;group01;s
+  user03;abc123.;group01;n
+  user04;abc123.;group02;s
+  user05;abc123.;group02;S
+  ```
+
+  ```bash
+  si@si-VirtualBox:/tmp/prueba$ tail -n -2 users.csv
+  user04;abc123.;group02;s
+  user05;abc123.;group02;S
+  si@si-VirtualBox:/tmp/prueba$ tail -n +2 users.csv
+  user01;abc123.;group01;N
+  user02;abc123.;group01;s
+  user03;abc123.;group01;n
+  user04;abc123.;group02;s
+  user05;abc123.;group02;S
+  ```
+
 - Mostrar los últimos 50 bytes:
 
   ```bash
