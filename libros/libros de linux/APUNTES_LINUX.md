@@ -1,7 +1,5 @@
 # Recopilatorio de comandos para sistemas LINUX/UNIX Martín Gil Blanco
 
----
-
 - [Sistema de ficheros de Linux](#sistema-de-ficheros-de-linux)
 - [Metacaracteres](#metacaracteres)
 - [Expresiones regulares, grep y egrep](#expresiones-regulares-grep-y-egrep)
@@ -9,6 +7,7 @@
 - [who, whoami, id y groups](#who-whoami-id-y-groups)
 - [sort](#sort)
 - [ls](#ls)
+- [head y tail](#head-y-tail)
 - [wc](#wc)
 - [dd](#dd)
 - [df](#df)
@@ -42,8 +41,6 @@
 - [Particionado en Linux con parted](#particionado-en-linux-con-parted)
 - [Montaje de un RAID 5 en Linux con mdadm](#montaje-de-un-raid-5-en-linux-con-mdadm)
 - [Bash scripting](#bash-scripting)
-
----
 
 ### Sistema de ficheros de Linux
 
@@ -153,7 +150,7 @@ Las expresiones regulares (regex o regexp) son patrones utilizados para encontra
 
 - **\{n\}**: Exactamente n coincidencias del patrón anterior.
 - **\{n,\}**: Como mínimo n coincidencias del patrón anterior.
-- **\{n,m\}**: Entre n y m coincidencias del patrón anterior.
+- **\{n,m\}**: `Entre` n y m coincidencias del patrón anterior.
 
 #### Ejemplos
 
@@ -162,7 +159,7 @@ Las expresiones regulares (regex o regexp) son patrones utilizados para encontra
 - **\(r.c\)**: Agrupa un conjunto de tres caracteres donde el primero es 'r', el tercero es 'c' y el segundo puede ser cualquier caracter.
 - **\{2\}**: Exactamente 2 caracteres minúsculos.
 - **[a-z]\{2,\}**: Como mínimo 2 caracteres minúsculos.
-- **[a-z]\{2,4\}**: Entre 2 y 4 caracteres minúsculos.
+- **[a-z]\{2,4\}**: `Entre` 2 y 4 caracteres minúsculos.
 
 #### Clases de Caracteres POSIX
 
@@ -527,6 +524,105 @@ Parámetros bien conocidos:
    Público
    Vídeos
    ```
+
+---
+
+### head y tail
+
+#### `head`
+
+El comando `head` se utiliza para mostrar las primeras líneas de uno o más archivos. Por defecto, muestra las primeras 10 líneas.
+
+##### Sintaxis básica
+
+```bash
+head [OPCIÓN]... [ARCHIVO]...
+```
+
+##### Opciones comunes
+
+- `-n K`, `--lines=K`: Muestra las primeras `K` líneas del archivo. Por ejemplo, `head -n 5 archivo.txt` muestra las primeras 5 líneas.
+- `-c K`, `--bytes=K`: Muestra los primeros `K` bytes del archivo. Por ejemplo, `head -c 100 archivo.txt` muestra los primeros 100 bytes.
+- `-q`, `--quiet`, `--silent`: No imprime el nombre del archivo cuando se trabaja con múltiples archivos.
+- `-v`, `--verbose`: Siempre imprime el nombre del archivo.
+
+##### Ejemplos
+
+- Mostrar las primeras 10 líneas (por defecto):
+
+  ```bash
+  head archivo.txt
+  ```
+
+- Mostrar las primeras 20 líneas:
+
+  ```bash
+  head -n 20 archivo.txt
+  ```
+
+- Mostrar los primeros 50 bytes:
+
+  ```bash
+  head -c 50 archivo.txt
+  ```
+
+- Mostrar las primeras 5 líneas de varios archivos sin imprimir el nombre de los archivos:
+
+  ```bash
+  head -n 5 -q archivo1.txt archivo2.txt
+  ```
+
+##### `tail`
+
+El comando `tail` se utiliza para mostrar las últimas líneas de uno o más archivos. Por defecto, muestra las últimas 10 líneas.
+
+##### Sintaxis básica
+
+```bash
+tail [OPCIÓN]... [ARCHIVO]...
+```
+
+##### Opciones comunes
+
+- `-n K`, `--lines=K`: Muestra las últimas `K` líneas del archivo. Por ejemplo, `tail -n 5 archivo.txt` muestra las últimas 5 líneas.
+- `-c K`, `--bytes=K`: Muestra los últimos `K` bytes del archivo. Por ejemplo, `tail -c 100 archivo.txt` muestra los últimos 100 bytes.
+- `-f`, `--follow`: Sigue el archivo en tiempo real, mostrando nuevas líneas a medida que se añaden.
+- `-F`: Similar a `-f`, pero también sigue el archivo si se renombra o se reemplaza.
+- `--pid=PID`: Con `-f`, finaliza después de que el proceso con el ID especificado finalice.
+- `-q`, `--quiet`, `--silent`: No imprime el nombre del archivo cuando se trabaja con múltiples archivos.
+- `-v`, `--verbose`: Siempre imprime el nombre del archivo.
+
+##### Ejemplos
+
+- Mostrar las últimas 10 líneas (por defecto):
+
+  ```bash
+  tail archivo.txt
+  ```
+
+- Mostrar las últimas 20 líneas:
+
+  ```bash
+  tail -n 20 archivo.txt
+  ```
+
+- Mostrar los últimos 50 bytes:
+
+  ```bash
+  tail -c 50 archivo.txt
+  ```
+
+- Seguir un archivo en tiempo real:
+
+  ```bash
+  tail -f archivo.txt
+  ```
+
+- Seguir un archivo en tiempo real y reconectarse si el archivo es renombrado:
+
+  ```bash
+  tail -F archivo.txt
+  ```
 
 ---
 
