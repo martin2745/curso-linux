@@ -425,6 +425,7 @@ Parámetros bien conocidos:
 - -i: Número de inodo.
 - -a: Archivos ocultos.
 - -r: Inverso.
+- -v: Ordena la salida.
 - --sort: Para ordenar.
 - --size: En función del tamaño.
 - --format: Para dar un formato a la salida.
@@ -524,6 +525,35 @@ Parámetros bien conocidos:
    Público
    Vídeos
    ```
+
+5. Ordenación vertical ordenada de un directorio con `ls -v -1`.
+
+```bash
+si@si-VirtualBox:~$ ls
+Desktop  Documents  Downloads  Music  Pictures  prueba  Public  snap  Templates  Videos
+si@si-VirtualBox:~$ ls -1
+Desktop
+Documents
+Downloads
+Music
+Pictures
+prueba
+Public
+snap
+Templates
+Videos
+si@si-VirtualBox:~$ ls -1 -v
+Desktop
+Documents
+Downloads
+Music
+Pictures
+Public
+Templates
+Videos
+prueba
+snap
+```
 
 ---
 
@@ -652,7 +682,7 @@ tail [OPCIÓN]... [ARCHIVO]...
 
 ### wc
 
-El comando `wc` en sistemas Unix/Linux es una herramienta muy útil para contar palabras, líneas y caracteres en archivos de texto.
+El comando `wc` (word count) en sistemas Unix/Linux es una herramienta muy útil para contar palabras, líneas y caracteres en archivos de texto.
 
 - **Opciones comunes**:
   - `-l`: Muestra solo el recuento de líneas.
@@ -1059,6 +1089,25 @@ si@si-VirtualBox:~$ cat prueba.txt
 Command 'lss' not found, but there are 15 similar ones.
 ```
 
+Hay que tener en cuenta que las salidas de información de `stdin`, `stdout` y `stderr` redirigen al mismo lugar y son los `fd/num` los descriptiones utilizados a la hora de redireccionar la información.
+
+```bash
+si@si-VirtualBox:~/Downloads$ ls -l /dev/stdin
+lrwxrwxrwx 1 root root 15 jun 15 09:12 /dev/stdin -> /proc/self/fd/0
+si@si-VirtualBox:~/Downloads$ ls -l /dev/stdout
+lrwxrwxrwx 1 root root 15 jun 15 09:12 /dev/stdout -> /proc/self/fd/1
+si@si-VirtualBox:~/Downloads$ ls -l /dev/stderr
+lrwxrwxrwx 1 root root 15 jun 15 09:12 /dev/stderr -> /proc/self/fd/2
+si@si-VirtualBox:~/Downloads$ ls -l /proc/self/fd/0
+lrwx------ 1 si si 64 jun 15 13:16 /proc/self/fd/0 -> /dev/pts/1
+si@si-VirtualBox:~/Downloads$ ls -l /proc/self/fd/1
+lrwx------ 1 si si 64 jun 15 13:16 /proc/self/fd/1 -> /dev/pts/1
+si@si-VirtualBox:~/Downloads$ ls -l /proc/self/fd/2
+lrwx------ 1 si si 64 jun 15 13:16 /proc/self/fd/2 -> /dev/pts/1
+si@si-VirtualBox:~/Downloads$ ls -l /dev/pts/1
+crw--w---- 1 si tty 136, 1 jun 15 13:17 /dev/pts/1
+```
+
 ---
 
 ### tar
@@ -1175,6 +1224,8 @@ martin@debian12:/tmp/prueba$ ls
 fichero1.txt  fichero3.txt  fichero5.txt
 fichero2.txt  fichero4.txt  fichero.tar.gz
 ```
+
+_*Nota: Tanto la extensión `tar.gz` como `tgz` son equivalentes.*_
 
 ---
 
@@ -1460,7 +1511,7 @@ root
 
 **passwd**: Permite modificar la contraseña. Los parametros destacables son:
 
-- l: Bloquea el acceso al sistema al usuario (usermod -L).
+- l: Bloquea el acceso al sistema al usuario (usermod -L). Se pone un ! en el campo de contraseña en el `/etc/shadow`.
 - u: Desbloquea el acceso al sistema del usuario (usermod -U).
 
 ```bash
@@ -1480,7 +1531,31 @@ martin:$y$j9T$D1YstIGhwPXktsEmolZg./$I7fKcY0m9yE2LYgGBEn8yolExy5PLvBTIlZf5keudM3
 useradd -m -d /home/juan -p "$(mkpasswd 'abc123..')" -g sistemas -G dam -s /bin/bash juan
 ```
 
-_*Nota: Si queremos que un usuario tenga un grupo principal con el mismo nombre, no hay que indicarlo con la opción -g, es automático*_
+```bash
+si@si-VirtualBox:~$ sudo useradd -m -d /home/user1 -s /bin/bash -p $(mkpasswd -m sha-512 'abc123.') -G sudo user1
+si@si-VirtualBox:~$ tail -1 /etc/passwd && sudo tail -1 /etc/shadow
+user1:x:1011:1011::/home/user1:/bin/bash
+user1:$6$j0kV4V7Uc2t9RDrY$XHh4NJsZA73bCXMDPkNtU.6D1TC2snGxByWwlwyyaedOd8GMPwG.6jiBxe2ecIIDbOCdBKj04oWUA.77Vrbjo/:19890:0:99999:7:::
+si@si-VirtualBox:~$ ls /etc/skel/
+scripts_bash
+si@si-VirtualBox:~$ sudo ls /home/user1/
+scripts_bash
+```
+
+```bash
+si@si-VirtualBox:~$ sudo useradd -M -d /home/user2 -s /bin/bash -p $(mkpasswd -m sha-512 'abc123.') -G sudo user2
+si@si-VirtualBox:~$ sudo ls /home/user2
+ls: cannot access '/home/user2': No such file or directory
+si@si-VirtualBox:~$ ls /home
+nuevo  si  user1
+si@si-VirtualBox:~$ tail -1 /etc/passwd
+user2:x:1012:1012::/home/user2:/bin/bash
+```
+
+_*Nota: Si queremos que un usuario tenga un grupo principal con el mismo nombre, no hay que indicarlo con la opción -g, es automático.*_
+_*Nota2: Podemos indicar el algoritmo de cifrado de la contraseña si queremos.*_
+_*Nota3: Con el parametro `-m` estamos indicando que se copie la estructura de `/etc/skel` para el nuevo usuario.*_
+_*Nota4: Con el parametro `-M` estamos indicando que el usuario no ha de tener un `/home` para el. A pesar de ello en el `/etc/passwd` si va a figurar como que existe la ruta.*_ -_Nota5: Con los parametros `-u` podemos dar un uid específico, `-g` un gid específico y con `-l` cambiar el nombre del usuario._\_
 
 ```bash
 si@si-VirtualBox:~/Desktop/scripts/ejercicios/ej2$ sudo useradd -m -d /home/alumno -p $(mkpasswd 'abc123.') -s "/bin/bash" alumno
@@ -1632,6 +1707,60 @@ chmod u=rwx,g=rw,o=w documento.txt
 ```
 chmod u+wx,g-rw,a=w documento.txt
 ```
+
+#### Máscara de permisos en linux
+
+En Linux, la máscara de permisos (`umask`) es un valor que determina los permisos predeterminados que se asignan a los nuevos archivos y directorios. Cuando se crea un archivo o directorio, el sistema aplica la `umask` para determinar los permisos efectivos.
+
+##### Comando `umask`
+
+- **`umask`**: Este comando se utiliza para mostrar o establecer la máscara de permisos actual.
+
+  - **Mostrar la máscara de permisos actual**:
+
+    ```sh
+    umask
+    ```
+
+    Esto devuelve la máscara de permisos actual en formato octal.
+
+  - **Establecer una nueva máscara de permisos**:
+    ```sh
+    umask 022
+    ```
+    Esto establece la máscara de permisos a `022`, que significa que los archivos nuevos tendrán permisos `rw-r--r--` y los directorios `rwxr-xr-x`.
+
+##### `umask -S`
+
+- **`umask -S`**: Este comando muestra la máscara de permisos actual en formato simbólico, que puede ser más fácil de entender que el formato octal.
+
+  - **Ejemplo**:
+    ```sh
+    umask -S
+    ```
+    Esto podría devolver algo como `u=rwx,g=rx,o=rx`, lo que significa que los permisos de usuario son `rwx`, los permisos de grupo son `rx` y los permisos para otros son `rx`.
+
+##### Diferencia en la Asignación de Permisos entre Directorios y Archivos
+
+- **Archivos**:
+  Los archivos en Linux nunca se crean con permisos de ejecución por defecto, incluso si la `umask` lo permitiría. Esto es por razones de seguridad para evitar que los archivos de texto o de datos se ejecuten accidentalmente.
+
+  - **Permisos predeterminados**: `666` (rw-rw-rw-)
+  - **Aplicación de `umask`**:
+    ```sh
+    umask 022
+    ```
+    Resulta en permisos efectivos de `644` (rw-r--r--)
+
+- **Directorios**:
+  Los directorios requieren permisos de ejecución para permitir la navegación dentro de ellos. Por lo tanto, se crean con permisos de ejecución si la `umask` lo permite.
+
+  - **Permisos predeterminados**: `777` (rwxrwxrwx)
+  - **Aplicación de `umask`**:
+    ```sh
+    umask 022
+    ```
+    Resulta en permisos efectivos de `755` (rwxr-xr-x)
 
 #### Permisos especiales: Setuid, Setgid, Sticky Bit
 
@@ -2238,6 +2367,32 @@ $ ip route add 192.168.100.0/24 via 192.168.100.1 dev eth0 onlink   # Equivale a
 
 - _*Nota: Es conveniente saber que tanto `ip a`, `ip addr` como `ip address` son equivalentes.*_
 
+Tambien es importante hablar del fichero `/etc/hosts` que nos permite evitar la configuración de un servicio DNS. El archivo /etc/hosts es un archivo de configuración en sistemas operativos Unix y Linux que se utiliza para mapear nombres de host a direcciones IP. Actúa como una especie de "agenda telefónica" local, permitiendo la resolución de nombres de host sin necesidad de consultar servidores DNS externos.
+
+```bash
+si@si-VirtualBox:~$ cat /etc/hosts
+127.0.0.1       localhost
+127.0.1.1       si-VirtualBox
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+```
+
+Ojo, una entrada como la siguiente sería correcta. Simplemente 9.9.9.9 respondería ante cualquiera de los 5 nombres.
+
+```bash
+<dirección IP> <nombre de host principal> <alias1> <alias2> ...
+```
+
+```bash
+9.9.9.9 pepito grillo manu
+9.9.9.9 manuel manolo
+```
+
 ---
 
 ### wget y curl
@@ -2546,6 +2701,45 @@ fichero1.txt                                        100%   17     6.4KB/s   00:0
 /tmp/prueba/fichero1.txt  /tmp/prueba/fichero3.txt  /tmp/prueba/fichero5.txt
 /tmp/prueba/fichero2.txt  /tmp/prueba/fichero4.txt
 ```
+
+#### Ejemplos de uso curiosos y cuestiones a considerar
+
+```bash
+scp -r ~/cousas root@192.168.100.20:
+```
+
+Se añade directamente la información en el `/home` del usuario sin poner la ruta.
+
+```bash
+scp -r ~/cousas 192.168.100.20:
+```
+
+Si no indicamos el nombre se utiliza el de la consola actual.
+
+```bash
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED! @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ECDSA key sent by the remote host is
+17:4A:50:91:36:cb:ca:3d:24:db:60:0e:af:00:9b:c9.
+Please contact your system administrator.
+Add correct host key in /root/.ssh/known_hosts to get rid of this message.
+Offending ECDSA key in /root/.ssh/known_hosts:7
+Password authentication is disabled to avoid man-in-the-middle attacks.
+Keyboard-interactive authentication is disabled to avoid man-in-the-middle attacks.
+Permission denied (publickey,password).
+```
+
+Se nos indica que el problema está la entrada 7 del archivo `/root/.ssh/known_hosts`.
+
+```bash
+ssh -p 8733 user1@192.168.100.20 df -h && ls /tmp
+```
+
+Este caso es incorrecto ya que el comando `df -h` se ejecutaría en el servidor pero el `ls /tmp` se lanzaría en el cliente si la conexión es exitosa por lo que tendríamos que poner entre comillas los dos comandos para no tener errores.
 
 ---
 
@@ -3042,7 +3236,7 @@ si@si-VirtualBox:/tmp/prueba$ find . -name "file*" | xargs -I X ls -l X;
 3. **-perm:**
 
    - Utilizado para buscar archivos por permisos.
-   - Ejemplo: Buscar archivos con permisos de lectura, escritura y ejecución para el propietario. El `/700` encontraría archivos con al menos todos los permisos para root y cualquier otro permiso para go.
+   - Ejemplo: Buscar archivos con permisos de lectura, escritura y ejecución para el propietario. El `/700` encontraría archivos con al menos todos los permisos para root y cualquier otro permiso para go. Podemos usar tambien notación `+600` para permisos iguales o superiores, `600` para permisos exactos o `-600` para permisos iguales o inferiores.
      ```bash
      find /ruta -perm 700
      find /ruta -perm /700
@@ -3281,6 +3475,35 @@ sshd/run/sshd/usr/sbin/nologin
 mysql/nonexistent/bin/false
 ```
 
+Veamos otro ejemplo, esta vez tambien hacemos uso del comando `rev` que permite invertir el orden del resultado.
+
+```bash
+si@si-VirtualBox:~$ ls -l | awk -F ' ' '{print $NF}'
+40
+Desktop
+Documents
+Downloads
+Music
+Pictures
+prueba
+Public
+snap
+Templates
+Videos
+si@si-VirtualBox:~$ ls -l | awk -F ' ' '{print $NF}' | rev
+04
+potkseD
+stnemucoD
+sdaolnwoD
+cisuM
+serutciP
+abeurp
+cilbuP
+pans
+setalpmeT
+soediV
+```
+
 ---
 
 ### tr
@@ -3500,6 +3723,8 @@ si@si-VirtualBox:~$ ps
    3716
    ```
 
+Tambien existen otros comando como `top`, `htop` y `uptime` que muestran información del sistema relativa a los procesos que se están ejecutando.
+
 #### Señales
 
 En sistemas operativos basados en Unix, incluyendo Linux, las señales son mecanismos de comunicación entre procesos y entre el kernel y los procesos. Estas señales se utilizan para notificar a un proceso de eventos importantes, solicitar la terminación de un proceso, manejar errores, y para una variedad de otras funciones.
@@ -3688,6 +3913,26 @@ _*Nota: Fijate que significa todos los domingos y podría ser un 7 en el último
 ```bash
 0 * * * * root /bin/bash /tmp/ejecutable.sh
 ```
+
+- Una `L` al final de un campo de día del mes tiene un significado especial. Indica "el último día" del mes.
+
+```bash
+0 0 L * * your_command
+```
+
+- Otros casos:
+
+```bash
+30 8,15 20 6 *  prof    /home/prof/check.sh
+```
+
+Se ejecuta como usuario prof el script /home/prof/check.sh a las 8:30 y a las 15:30 el día 20 de junio.
+
+```bash
+*/10 * * * 1-5  alu     /home/alu/test.sh >> /home/alu/wlog
+```
+
+Se ejecuta como usuario alu el script /home/alu/test.sh redireccionando la salida de la consola (canal 1) al archivo /home/alu wlog, el cual se crea en caso de no existir, y en caso de existir se añade contenido. Este script se ejecuta cada 10 minutos (intervalos de 10 minutos) de lunes a viernes (todas las semanas y meses).
 
 #### `at`
 
@@ -4075,11 +4320,10 @@ root@si-VirtualBox:~# cp -pv /etc/fstab /etc/fstab_VIEJO
 
 Neceitamos añadir en una nueva entrada del `/etc/fstab` el identificador de la partición. Dentro del `/etc/fstab` la entrada va a tener 6 columnas de datos:
 
-- El UUID o nombre de partición, el punto de montaje y el tipo de sistema de archivos
+- El UUID o nombre de partición, el punto de montaje y el tipo de sistema de archivos.
 - Opciones de montaje. Si dejamos `defaults` se aplicarán opciones por defecto según el sistema de archivos, pero hay múltiples opciones que nos permite configurar: si queremos o no montaje automático, modo de sólo lectura o lectura/escritura, permitir o bloquear el uso de los bits suid y sgid, limitar los usuarios que pueden montar la partición, ...
-- Opción dump: Número de veces que se aplicará un backup al sistema de ficheros por el programa dump (0
-  indica que no se aplica)
-- Opción pass: Orden en el que se comprobará el sistema de archivos en el arranque. El 1 se reservar para el sistema raíz (/). Si ponemos un 0 no se comprueba en el arranque
+- Opción dump: Número de veces que se aplicará un backup al sistema de ficheros por el programa dump (0 indica que no se aplica).
+- Opción pass: Orden en el que se comprobará el sistema de archivos en el arranque. El 1 se reservar para el sistema raíz (/). Si ponemos un 0 no se comprueba en el arranque.
 
 ```bash
 root@si-VirtualBox:~# blkid | grep sdb1
