@@ -3236,10 +3236,55 @@ si@si-VirtualBox:/tmp/prueba$ find . -name "file*" | xargs -I X ls -l X;
 3. **-perm:**
 
    - Utilizado para buscar archivos por permisos.
-   - Ejemplo: Buscar archivos con permisos de lectura, escritura y ejecución para el propietario. El `/700` encontraría archivos con al menos todos los permisos para root y cualquier otro permiso para go. Podemos usar tambien notación `+600` para permisos iguales o superiores, `600` para permisos exactos o `-600` para permisos iguales o inferiores.
+   - Ejemplo: Buscar archivos con permisos de lectura, escritura y ejecución para el propietario. El `/700` encontraría archivos con al menos todos los permisos para root y cualquier otro permiso para go.
+
      ```bash
      find /ruta -perm 700
      find /ruta -perm /700
+     ```
+
+     Buscar archivos con exactamente permisos 222
+
+     ```bash
+     $ find . -perm 222
+     ```
+
+     Buscar archivos donde TODOS en ugo posean permisos 2, es decir, u de ugo debe poseer permiso de escritura, g de ugo debe poseer permiso de escritura y o de ugo debe poseer permiso de escritura.
+
+     ```bash
+     $ find . -perm -222
+     ```
+
+     Buscar archivos donde CUALQUIERA en ugo posean permisos de escritura, es decir, ya sea u de ugo, g de ugo o o de ugo deben poseer permiso de escritura.
+
+     ```bash
+     $ find . -perm /222
+     ```
+
+     ```bash
+      $ touch file1 file2 file3
+      $ chmod 222 file1
+      $ chmod 766 file2
+      $ chmod 655 file3
+
+      $ ls -l
+      total 0
+      --w--w--w- 1 kali kali 0 jun 16 13:20 file1
+      -rwxrw-rw- 1 kali kali 0 jun 16 13:20 file2
+      -rw-r-xr-x 1 kali kali 0 jun 16 13:20 file3
+
+      $ find . -perm 222 #Buscar archivos con exactamente permisos 222
+      ./file1
+      $ find . -perm -222 #Buscar archivos donde TODOS en ugo posean permisos 2, es decir, u de ugo debe poseer permiso de escritura, g de ugo debe poseer permiso de escritura y o de ugo debe poseer permiso de escritura
+      ./file2
+      ./file1
+      $ find . -perm /222 #Buscar archivos donde CUALQUIERA en ugo posean permisos de escritura, es decir, ya sea u de ugo, g de ugo o o de ugo deben poseer permiso de escritura
+      .
+      ./file3
+      ./file2
+      ./file1
+      $ find . -perm +222 #La opción + está DESCONTINUADA, se debe usar find . -perm /222 en su lugar
+      find: modo inválido ‘+222’
      ```
 
 4. **-maxdepth:**
