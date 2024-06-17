@@ -3373,7 +3373,12 @@ cut [opciones] archivo
   Por ejemplo, si deseas extraer los primeros tres caracteres de cada línea de un archivo, puedes hacerlo así:
 
   ```bash
-  cut -c 1-3 archivo.txt
+  si@si-VirtualBox:/tmp/prueba$ cat p.txt
+  1234
+  1234
+  si@si-VirtualBox:/tmp/prueba$ cut -c 1-3 p.txt
+  123
+  123
   ```
 
   Esto devolverá los primeros tres caracteres de cada línea en el archivo `archivo.txt`.
