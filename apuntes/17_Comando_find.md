@@ -33,7 +33,7 @@ si@si-VirtualBox:/tmp/prueba$ find . -name "file*" | xargs -I X ls -l X;
 -rw-rw-r-- 1 si si 112 abr 14 16:02 ./file.tmp
 ```
 
-#### Parametros de find
+## Parametros de find
 
 1. **-name:**
 
@@ -148,3 +148,39 @@ Estos son solo ejemplos básicos de cómo usar cada parámetro y cómo combinar 
 find $HOME -type f -iname "*.png" -mtime +3 -mtime -5 -perm 644 -size +2M -user www-data -and -not -user root -and -group www-
 data -a ! -group root -exec ls -lah {} \; 2>/dev/null
 ```
+
+## Diferencia entre exec y xargs
+
+Para el siguiente caso:
+
+```bash
+┌──(kali㉿kali)-[/tmp]
+└─$ find /tmp -name "hola*" 2>/dev/null | xargs -I a ls -l a
+-rw-rw-r-- 1 root root 25 Feb 11 11:03 /tmp/hola.txt
+-rw-rw-r-- 1 root root 0 Feb 11 11:17 /tmp/hola2.txt
+
+┌──(kali㉿kali)-[/tmp]
+└─$ find /tmp -name "hola*" 2>/dev/null | xargs ls -l
+-rw-rw-r-- 1 root root 25 Feb 11 11:03 /tmp/hola.txt
+-rw-rw-r-- 1 root root  0 Feb 11 11:17 /tmp/hola2.txt
+
+┌──(kali㉿kali)-[/tmp]
+└─$ find /tmp -name "hola*" -exec ls -l {} \; 2>/dev/null
+-rw-rw-r-- 1 root root 25 Feb 11 11:03 /tmp/hola.txt
+-rw-rw-r-- 1 root root 0 Feb 11 11:17 /tmp/hola2.txt
+```
+
+La diferencia entre los tres comandos radica en cómo pasan los resultados del comando `find` al comando `ls -l`:
+
+1. **`find /tmp -name "hola*" 2>/dev/null | xargs -I a ls -l a`**  
+   Usa `xargs` con la opción `-I a`, lo que le permite tomar cada resultado de `find` (en este caso, cada archivo que empiece con "hola") y ejecutar `ls -l` sobre cada uno de esos archivos de manera individual. Esto es eficiente para manejar muchos resultados y no requiere ejecutar `ls -l` para todos los archivos al mismo tiempo.
+
+2. **`find /tmp -name "hola*" 2>/dev/null | xargs ls -l`**  
+   Similar al anterior, pero sin la opción `-I a`. Aquí, `xargs` toma todos los resultados de `find` y los pasa todos de una vez a `ls -l`, que luego listará los archivos en conjunto. Si hay muchos archivos, `xargs` puede pasar múltiples archivos a `ls -l` en un solo comando, lo que puede ser más rápido, pero menos controlado que el caso anterior.
+
+3. **`find /tmp -name "hola*" -exec ls -l {} \; 2>/dev/null`**  
+   Usa `-exec` de `find` para ejecutar `ls -l` sobre cada archivo que encuentra. Esto ejecuta `ls -l` de forma individual para cada archivo encontrado, similar a la opción `-I` de `xargs`, pero dentro del propio comando `find`. La diferencia principal es que se ejecuta un nuevo comando `ls -l` para cada archivo encontrado, lo cual puede ser más lento que usar `xargs` con múltiples archivos a la vez.
+
+En resumen:
+- El primer y segundo comando usan `xargs` para pasar múltiples archivos a `ls -l` a la vez, pero el primero tiene un control más detallado sobre cada archivo (`-I a`).
+- El tercero usa `-exec` para ejecutar `ls -l` sobre cada archivo individualmente.

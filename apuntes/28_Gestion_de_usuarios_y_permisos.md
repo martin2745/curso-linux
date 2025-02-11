@@ -381,7 +381,7 @@ En Linux, la máscara de permisos (`umask`) es un valor que determina los permis
 
 ## Permisos especiales: Setuid, Setgid, Sticky Bit
 
-### Setuid (Set User ID)
+### Setuid (Set User ID - SUID)
 
 Es un mecanismo en sistemas Unix y Unix-like que permite que un programa sea ejecutado con los privilegios del propietario del archivo, en lugar de los del usuario que lo ejecuta. Se denota por la letra 's' en el lugar del bit de ejecución del propietario.
 
@@ -416,7 +416,7 @@ si@si-VirtualBox:~$ ls -l fichero.txt
 -rwS------ 1 si si 9 jun 12 09:23 fichero.txt
 ```
 
-### Setgid
+### Setgid (Set Group ID - SGID)
 
 Similar al setuid, el setgid es un mecanismo que permite que un programa se ejecute con los privilegios del grupo del archivo, en lugar de los del usuario que lo ejecuta. Se denota por la letra 's' en el lugar del bit de ejecución del grupo. El permiso Set GID, de forma paralela a Set UID, hace que el grupo de ejecución de un fichero sea el grupo propietario del fichero y no el grupo principal al que pertenece el usuario que lo ejecuta.
 
@@ -442,7 +442,7 @@ si@si-VirtualBox:~$ ls -l fichero.txt
 
 ### Sticky bit
 
-El Sticky bit es un permiso especial aplicado a directorios en sistemas Unix. Cuando se establece en un directorio, solo el propietario del archivo o superusuario puede eliminar o renombrar sus archivos, aunque otros tengan permisos de escritura en el directorio. Se denota por la letra 't' en el lugar del bit de ejecución del otros.
+El Sticky bit es un permiso especial aplicado a directorios en sistemas Unix. Cuando se establece en un directorio, **solo el propietario del archivo o superusuario puede eliminar o renombrar sus archivos**, aunque otros tengan permisos de escritura en el directorio. Se denota por la letra 't' en el lugar del bit de ejecución del otros.
 
 Este permiso permite proteger ficheros dentro de un directorio. Concretamente evita que un usuario pueda borrar ficheros de otros usuarios que se sitúan en una carpeta pública como el directorio /tmp.
 
@@ -493,6 +493,8 @@ si@si-VirtualBox:~$ tree /tmp/sticky/
 
 0 directories, 0 files
 ```
+
+_*Nota*_: Tambien podríamos hacerlo con `chmod +t`.
 
 ### `chattr` y `lsattr`
 
@@ -826,3 +828,16 @@ other::---
 si@si-VirtualBox:/tmp$ sudo -u lucia ls -l /tmp/prueba
 ls: cannot open directory '/tmp/prueba': Permission denied
 ```
+
+---
+
+### Cuestionarios
+
+![1](../imagenes/cuestionarios/permisos/1.png)
+![2](../imagenes/cuestionarios/permisos/2.png)
+![3](../imagenes/cuestionarios/permisos/3.png)
+![4](../imagenes/cuestionarios/permisos/4.png)
+![5](../imagenes/cuestionarios/permisos/5.png)
+![6](../imagenes/cuestionarios/permisos/6.png)
+![7](../imagenes/cuestionarios/permisos/7.png)
+![8](../imagenes/cuestionarios/permisos/8.png)
