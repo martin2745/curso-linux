@@ -829,6 +829,196 @@ si@si-VirtualBox:/tmp$ sudo -u lucia ls -l /tmp/prueba
 ls: cannot open directory '/tmp/prueba': Permission denied
 ```
 
+## Capabilities
+
+**getcap, setcap**
+
+- **getcap**: Visualiza las capabilities de archivos.
+- **setcap**: Modifica las capabilities de archivos.
+
+### **Capabilities**
+Las capabilities en GNU/Linux son un sistema más granular de control de acceso que se utiliza principalmente para elevar los privilegios de ejecución de un programa o binario específico sin otorgarle privilegios totales.
+
+Permiten a los programas realizar operaciones específicas que normalmente requerirían privilegios elevados, pero solo durante la ejecución de ese programa en particular. En las capabilities, la cadena `=eip` se utiliza para asignar capacidades específicas a un archivo binario. Cada letra en la cadena tiene un significado particular:
+
+- **e → "Effective" (Efectiva)**: Indica que la capacidad se aplica al usuario efectivo del proceso, es decir, al usuario que está ejecutando el programa.
+- **i → "Inheritable" (Hereditaria)**: Indica que la capacidad es heredada por los procesos creados por el programa actual.
+- **p → "Permitted" (Permitida)**: Indica que la capacidad está permitida para el programa actual.
+
+Cuando se asigna `=eip` a un archivo binario, se otorgan las capabilities especificadas de la siguiente manera:
+
+- El usuario efectivo del proceso puede utilizar la capability especificada (**Effective**).
+- Los procesos creados por este programa heredan la capability (**Inheritable**).
+- La capability está permitida para el programa actual (**Permitted**).
+
+En resumen, `=eip` establece las capabilities de manera efectiva, heredable y permitida para el programa binario al que se le asigna. Este tipo de configuración puede utilizarse para permitir que un programa ejecute operaciones específicas con privilegios elevados sin otorgarle todos los privilegios de root.
+
+Para más información, se puede consultar la página de manual referente a capabilities:
+```bash
+$ man capabilities
+```
+
+### **Tipos de capabilities**
+Existen diferentes tipos de capabilities que se pueden asignar a un binario. Algunas de ellas son:
+
+| **Capability**           | **Explicación** |
+|--------------------------|-------------------------------------------|
+| **CAP_CHOWN**            | Permite cambiar el propietario de archivos. |
+| **CAP_DAC_OVERRIDE**     | Permite anular permisos de acceso a archivos. |
+| **CAP_DAC_READ_SEARCH**  | Permite leer archivos y directorios. |
+| **CAP_FOWNER**           | Permite eludir restricciones de control de acceso a archivos. |
+| **CAP_FSETID**           | Permite establecer bits setuid y setgid en archivos. |
+| **CAP_KILL**             | Permite enviar señales a otros procesos. |
+| **CAP_SETGID**           | Permite cambiar el grupo efectivo del proceso. |
+| **CAP_SETUID**           | Permite cambiar el usuario efectivo del proceso. |
+| **CAP_NET_BIND_SERVICE** | Permite enlazar sockets a puertos privilegiados (<1024). |
+| **CAP_NET_RAW**          | Permite usar sockets de red RAW. |
+
+Este sistema proporciona un mayor control y seguridad en la ejecución de programas sin necesidad de conceder permisos root completos.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ getcap -r / 2>/dev/null
+/usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-ptp-helper cap_net_bind_service,cap_net_admin,cap_sys_nice=ep
+/usr/lib/nmap/nmap cap_net_bind_service,cap_net_admin,cap_net_raw=eip
+/usr/bin/ping cap_net_raw=ep
+/usr/bin/fping cap_net_raw=ep
+/usr/bin/dumpcap cap_net_admin,cap_net_raw=eip
+```
+
+Como prueba vamos a otorgar capabilities a vim para que cualquier usuario modifique el /etc/passwd.
+
+En el siguiente conjunto de comandos se inspecciona la ubicación y permisos del editor **Vim** y revisa si tiene **capabilities** asignadas:  
+
+1. `ls -l /etc/passwd` → Muestra los permisos y detalles del archivo `/etc/passwd`, donde se almacenan los usuarios del sistema.  
+2. `whereis vim` → Localiza los archivos relacionados con Vim.  
+3. `ls -l $(which vim)` → Verifica qué binario se ejecuta al usar `vim`, revelando que es un enlace simbólico.  
+4. `ls -l /etc/alternatives/vim` → Confirma que Vim apunta a `/usr/bin/vim.basic` mediante el sistema de alternativas.  
+5. `ls -l /usr/bin/vim.basic` → Muestra permisos y detalles del binario real de Vim.  
+6. `getcap /usr/bin/vim.basic` → Comprueba si el binario tiene **capabilities** especiales asignadas.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ ls -l /etc/passwd
+-rw-r--r-- 1 root root 3364 Feb 11 09:30 /etc/passwd
+
+┌──(kali㉿kali)-[~]
+└─$ whereis vim
+vim: /usr/bin/vim /etc/vim /usr/share/vim /usr/share/man/man1/vim.1.gz
+
+┌──(kali㉿kali)-[~]
+└─$ ls -l $(which vim)
+lrwxrwxrwx 1 root root 21 Feb 10 11:47 /usr/bin/vim -> /etc/alternatives/vim
+
+┌──(kali㉿kali)-[~]
+└─$ ls -l /etc/alternatives/vim
+lrwxrwxrwx 1 root root 18 Feb 10 11:47 /etc/alternatives/vim -> /usr/bin/vim.basic
+
+┌──(kali㉿kali)-[~]
+└─$ ls -l /usr/bin/vim.basic
+-rwxr-xr-x 1 root root 3883352 Nov 13 12:33 /usr/bin/vim.basic
+
+┌──(kali㉿kali)-[~]
+└─$ getcap /usr/bin/vim.basic
+```
+
+En el siguiente conjunto de comandos se otorga y verifica una **capability** especial al binario de Vim:  
+
+1. `sudo setcap cap_dac_override=ep /usr/bin/vim.basic` → Asigna la capability **CAP_DAC_OVERRIDE** a Vim, permitiéndole ignorar permisos de acceso a archivos.  
+2. `getcap /usr/bin/vim.basic` → Verifica que la capability fue aplicada correctamente, mostrando que Vim ahora tiene **CAP_DAC_OVERRIDE** activado. 🚀
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ sudo setcap cap_dac_override=ep /usr/bin/vim.basic
+[sudo] password for kali:
+
+┌──(kali㉿kali)-[~]
+└─$ getcap /usr/bin/vim.basic
+/usr/bin/vim.basic cap_dac_override=ep
+```
+
+En el siguiente conjunto de comandos se crea un usuario, inicia sesión con él y verifica su información:  
+
+1. `sudo useradd -s /bin/bash -p $(mkpasswd 'abc123.') -m -d /home/pepe pepe` → Crea el usuario **pepe** con el shell Bash, establece su contraseña y genera su directorio home.  
+2. `su - pepe` → Inicia sesión como el usuario **pepe**.  
+3. `pwd` → Confirma que la sesión está en el directorio home del usuario (**/home/pepe**).  
+4. `id` → Muestra el UID, GID y grupos a los que pertenece **pepe**.  
+5. `exit` → Cierra la sesión del usuario **pepe** y vuelve al usuario anterior. 🚀
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ sudo useradd -s /bin/bash -p $(mkpasswd 'abc123.' ) -m -d /home/pepe pepe
+
+┌──(kali㉿kali)-[~]
+└─$ su - pepe
+Password:
+┌──(pepe㉿kali)-[~]
+└─$ pwd
+/home/pepe
+
+┌──(pepe㉿kali)-[~]
+└─$ id
+uid=1001(pepe) gid=1001(pepe) groups=1001(pepe)
+
+┌──(pepe㉿kali)-[~]
+└─$ exit
+logout
+```
+
+En el siguiente conjunto de comandos se **otorga privilegios de root** al usuario **pepe** editando el archivo `/etc/passwd`:  
+
+1. `vim /etc/passwd` → Abre el archivo de usuarios del sistema para edición.  
+2. `cat /etc/passwd | grep ':0:'` → Busca usuarios con **UID 0**, que tienen privilegios de **root**.  
+   - Se observa que **pepe** tiene `0:1001`, lo que significa que ahora tiene UID 0 (equivalente a root).  
+3. `su - pepe` → Inicia sesión como **pepe**, pero debido a su UID 0, se convierte en **root**.  
+4. `whoami` → Confirma que ahora el usuario **pepe** es en realidad **root**.  
+
+Modificar `/etc/passwd` para asignar UID 0 a un usuario es un **gran riesgo de seguridad**, ya que cualquier usuario con UID 0 tiene **control total** del sistema.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ vim /etc/passwd
+
+┌──(kali㉿kali)-[~]
+└─$ cat /etc/passwd | grep ':0:'
+root:x:0:0:root:/root:/usr/bin/zsh
+pepe:x:0:1001::/home/pepe:/bin/bash
+
+┌──(kali㉿kali)-[~]
+└─$ su - pepe
+
+Password:
+┌──(root㉿kali)-[~]
+└─# whoami
+root
+```
+
+En el siguiente conjunto de comandos se **elimina las capabilities de Vim**, pero el usuario **pepe** sigue teniendo privilegios de root:  
+
+1. `sudo setcap -r /usr/bin/vim.basic` → **Elimina todas las capabilities** de Vim, incluyendo `CAP_DAC_OVERRIDE`, que permitía ignorar permisos de archivos.  
+2. `getcap /usr/bin/vim.basic` → Verifica que Vim ya **no tiene capabilities asignadas**.  
+3. `su - pepe` → Inicia sesión como **pepe**, pero sigue teniendo UID `0`, es decir, aún es **root**.  
+4. `vim /etc/passwd` → Abre `/etc/passwd` con Vim, lo que sigue siendo posible porque **pepe sigue siendo root**, aunque ya no tenga capabilities en Vim.  
+
+__*Nota*_: Aunque se eliminaron las capabilities de Vim, el usuario **pepe** aún es root debido a su UID 0.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ sudo setcap -r /usr/bin/vim.basic
+
+┌──(kali㉿kali)-[~]
+└─$ getcap /usr/bin/vim.basic
+
+┌──(kali㉿kali)-[~]
+└─$ su - pepe
+Password:
+┌──(root㉿kali)-[~]
+└─# vim /etc/passwd
+ERROR, ya no se puede modificar de esta forma el /etc/passwd
+```
+
+Especialmente interesante es el recurso [gtfobins](https://gtfobins.github.io/) donde tenemos diferentes formas de **explotar capabilities** en un sistema.
+
 ---
 
 ### Cuestionarios
