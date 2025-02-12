@@ -36,3 +36,5 @@ Listado de variables de entorno interesantes:
 - **~/.bash_profile**, **~/.bash_login**: Permiten definir variables de entorno y scripts. Se ejecutan cuando se utiliza una shell con login. Las variables definidas solo afectaran a los programas ejecutados desde bash.
 
 - **~/.bashrc**: Permite definir variables de entorno y scripts. Se ejecuta cuando se abre la shell sin necesidad de hacer login. Las variables definidas solo afectaran a los programas ejecutados desde bash.
+
+_*Nota*_: En función de nuestra shell podemos trabajar con [.bashrc](https://www.compuhoy.com/que-es-bashrc-en-linux/) o [.zshrc](https://respontodo.com/que-es-zsh-y-por-que-deberia-usarlo-en-lugar-de-bash/) teniendo cada una sus propias particularidades.
