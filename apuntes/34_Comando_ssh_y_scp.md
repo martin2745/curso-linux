@@ -269,3 +269,157 @@ ssh -p 8733 user1@192.168.100.20 df -h && ls /tmp
 ```
 
 Este caso es incorrecto ya que el comando `df -h` se ejecutaría en el servidor pero el `ls /tmp` se lanzaría en el cliente si la conexión es exitosa por lo que tendríamos que poner entre comillas los dos comandos para no tener errores.
+
+### Retos de SSH
+
+Como web para prácticar tenemos los retos de [ssh de bandit](https://overthewire.org/wargames/bandit/bandit0.html)
+
+#### bandit0 --> bandit1
+
+```bash
+bandit0@bandit:~$ ls -l
+total 4
+-rw-r----- 1 bandit1 bandit0 438 Sep 19 07:08 readme
+
+bandit0@bandit:~$ cat readme
+Congratulations on your first steps into the bandit game!!
+Please make sure you have read the rules at https://overthewire.org/rules/
+If you are following a course, workshop, walkthrough or other educational activity,
+please inform the instructor about the rules as well and encourage them to
+contribute to the OverTheWire community so we can keep these games free!
+
+The password you are looking for is: ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If
+```
+
+#### bandit1 --> bandit2
+
+```bash
+bandit1@bandit:~$ ls -l
+total 4
+-rw-r----- 1 bandit2 bandit1 33 Sep 19 07:08 -
+
+bandit1@bandit:~$ cat ./-
+263JGJPfgU6LtdEvgfWU1XP5yac29mFx
+
+bandit1@bandit:~$ cat $(pwd)/-
+263JGJPfgU6LtdEvgfWU1XP5yac29mFx
+```
+
+#### bandit2 --> bandit3
+
+```bash
+bandit2@bandit:~$ ls -l
+total 4
+-rw-r----- 1 bandit3 bandit2 33 Sep 19 07:08 spaces in this filename
+
+bandit2@bandit:~$ cat spaces\ in\ this\ filename
+MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
+
+bandit2@bandit:~$ cat "spaces in this filename"
+MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
+
+bandit2@bandit:~$ cat $(pwd)/*
+MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
+
+bandit2@bandit:~$ cat *
+MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
+
+bandit2@bandit:~$ cat $(pwd)/s*
+MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
+
+bandit2@bandit:~$ cat s*
+MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
+```
+
+#### bandit3 --> bandit4
+
+```bash
+bandit3@bandit:~$ ls -la inhere/
+total 12
+drwxr-xr-x 2 root    root    4096 Sep 19 07:08 .
+drwxr-xr-x 3 root    root    4096 Sep 19 07:08 ..
+-rw-r----- 1 bandit4 bandit3   33 Sep 19 07:08 ...Hiding-From-You
+
+bandit3@bandit:~$ file $(pwd)/inhere/...*
+/home/bandit3/inhere/...Hiding-From-You: ASCII text
+
+bandit3@bandit:~$ cat $(pwd)/inhere/...*
+2WmrDFRmJIq3IPxneAaMGhap0pFhF3NJ
+
+bandit3@bandit:~$ find . -type f | grep Hid | xargs cat
+2WmrDFRmJIq3IPxneAaMGhap0pFhF3NJ
+
+bandit3@bandit:~$ find . -type f | grep -vE 'bash|profile' | xargs cat
+2WmrDFRmJIq3IPxneAaMGhap0pFhF3NJ
+```
+
+#### bandit4 --> bandit5
+
+```bash
+bandit4@bandit:~$ find . | grep inhere | xargs file
+./inhere:         directory
+./inhere/-file08: data
+./inhere/-file02: data
+./inhere/-file09: data
+./inhere/-file01: data
+./inhere/-file00: data
+./inhere/-file05: data
+./inhere/-file07: ASCII text
+./inhere/-file03: data
+./inhere/-file06: data
+./inhere/-file04: data
+
+bandit4@bandit:~$ find inhere/ | xargs file | grep "07" | awk -F ":" '{print $1}' | xargs cat
+4oQYVPkxZOOEOO5pTW81FB8j8lxXGUQw
+```
+
+#### bandit5 --> bandit6
+
+```bash
+bandit5@bandit:~$ find . -type f -readable ! -executable -size 1033c | xargs cat
+HWasnPhtq9AVKe0dmk45nxy20cvUa6EG
+```
+
+#### bandit6 --> bandit7
+
+```bash
+bandit6@bandit:~$ find / -type f -user bandit7 -group bandit6 -size 33c 2>/dev/null | xargs cat
+morbNTDkSW6jIlUc0ymOdMaLnOlFVAaj
+```
+
+#### bandit7 --> bandit8
+
+```bash
+bandit7@bandit:~$ ls -l
+total 4088
+-rw-r----- 1 bandit8 bandit7 4184396 Sep 19 07:08 data.txt
+
+bandit7@bandit:~$ cat data.txt | grep millionth | awk '{print $NF}'
+dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
+
+bandit7@bandit:~$ cat data.txt | grep millionth | awk '{print $N2}'
+millionth       dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
+
+bandit7@bandit:~$ cat data.txt | grep millionth | tr -s '\t' ' ' | cut -d ' ' -f2
+dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
+
+bandit7@bandit:~$ cat data.txt | grep millionth | xargs | cut -d ' ' -f2
+dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
+
+bandit7@bandit:~$ cat data.txt | grep millionth | sed 's/\t/ /g' | cut -d ' ' -f2
+dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc 
+```
+
+#### bandit8 --> bandit9
+
+```bash
+bandit8@bandit:~$ sort data.txt | uniq -u
+4CKMh1JI91bUIZZPXDqGanal4xvAg0JM
+```
+
+#### bandit8 --> bandit9
+
+```bash
+bandit8@bandit:~$ sort data.txt | uniq -u
+4CKMh1JI91bUIZZPXDqGanal4xvAg0JM
+```
