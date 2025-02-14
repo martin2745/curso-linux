@@ -274,6 +274,17 @@ Este caso es incorrecto ya que el comando `df -h` se ejecutaría en el servidor 
 
 Como web para prácticar tenemos los retos de [ssh de bandit](https://overthewire.org/wargames/bandit/bandit0.html)
 
+```bash
+                         _                     _ _ _
+                        | |__   __ _ _ __   __| (_) |_
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+
+
+                      This is an OverTheWire game server.
+```
+
 #### bandit0 --> bandit1
 
 ```bash
@@ -529,16 +540,6 @@ _*Nota*_: Para este ejercicio hago uso de una máquina kali que me permita insta
 ```bash
 ┌──(kali㉿kali)-[/tmp]
 └─$ scp -P 2220 bandit12@bandit.labs.overthewire.org:~/data.txt data.txt
-                         _                     _ _ _
-                        | |__   __ _ _ __   __| (_) |_
-                        | '_ \ / _` | '_ \ / _` | | __|
-                        | |_) | (_| | | | | (_| | | |_
-                        |_.__/ \__,_|_| |_|\__,_|_|\__|
-
-
-                      This is an OverTheWire game server.
-            More information on http://www.overthewire.org/wargames
-
 bandit12@bandit.labs.overthewire.org's password:
 data.txt                                        100% 2583    20.1KB/s   00:00
 
@@ -704,4 +705,40 @@ done
 ┌──(kali㉿kali)-[/tmp]
 └─$ cat data9.bin
 The password is FO5dwFsc0cbaIiH0h8J2eUks2vdTDwAn
+```
+
+#### bandit13 --> bandit14
+
+```bash
+bandit13@bandit:~$ ls -l
+total 4
+-rw-r----- 1 bandit14 bandit13 1679 Sep 19 07:08 sshkey.private
+
+bandit13@bandit:~$ cat sshkey.private
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAxkkOE83W2cOT7IWhFc9aPaaQmQDdgzuXCv+ppZHa++buSkN+
+3btnJeSIU+8ZXq9XjPRpKwUCgYA7z6LiOQKxNeXH3qHXcnHok855maUj5fJNpPbY
+iDkyZ8ySF8GlcFsky8Yw6fWCqfG3zDrohJ5l9JmEsBh7SadkwsZhvecQcS9t4vby
+9/8X4jS0P8ibfcKS4nBP+dT81kkkg5Z5MohXBORA7VWx+ACohcDEkprsQ+w32xeD
+qT1EvQKBgQDKm8ws2ByvSUVs9GjTilCajFqLJ0eVYzRPaY6f++Gv/UVfAPV4c+S0
+kAWpXbv5tbkkzbS0eaLPTKgLzavXtQoTtKwrjpolHKIHUz6Wu+n4abfAIRFubOdN
+/+aLoRQ0yBDRbdXMsZN/jvY44eM+xRLdRVyMmdPtP8belRi2E2aEzA==
+-----END RSA PRIVATE KEY-----
+
+bandit13@bandit:~$ ssh -i sshkey.private -p 2220 bandit14@bandit.labs.overthewire.org
+...
+bandit14@bandit:~$ whoami
+bandit14
+
+bandit14@bandit:~$ cat /etc/bandit_pass/bandit14
+MU4VWeTyJk8ROof1qqmcBPaLh7lDCPvS
+```
+
+#### bandit14 --> bandit15
+
+```bash
+bandit14@bandit:~$ nc localhost 30000
+MU4VWeTyJk8ROof1qqmcBPaLh7lDCPvS
+Correct!
+8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo
 ```
