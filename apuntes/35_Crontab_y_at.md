@@ -1,8 +1,26 @@
 # crontab y at
 
-## rontab
+## crontab
 
-`Crontab` es un archivo de configuración en sistemas operativos basados en Unix, como Linux, situado en la ruta `/etc/crontab` y que se utiliza para programar tareas periódicas para que se ejecuten automáticamente en momentos específicos. La estructura básica de un archivo crontab consta de siete campos y es la siguiente:
+`Crontab` es un archivo de configuración en sistemas operativos basados en Unix, como Linux, situado en la ruta `/etc/crontab` y que se utiliza para programar tareas periódicas para que se ejecuten automáticamente en momentos específicos en base al servicio cron que tiene que estar habilitado. 
+
+```bash
+si@si-virtualBox:~$ systemctl status cron
+● cron.service - Regular background program processing daemon
+     Loaded: loaded (/usr/lib/systemd/system/cron.service; enabled; preset: enabled)
+     Active: active (running) since Fri 2025-02-14 06:57:04 UTC; 4 days ago
+       Docs: man:cron(8)
+   Main PID: 606
+      Tasks: 1 (limit: 4586)
+     Memory: 1.8M (peak: 41.2M)
+        CPU: 9min 46.281s
+     CGroup: /system.slice/cron.service
+             └─606 /usr/sbin/cron -f -P
+
+Warning: some journal files were not opened due to insufficient permissions.
+```
+
+La estructura básica de un archivo crontab consta de siete campos y es la siguiente:
 
 ```bash
 30 2 * * * (usuario) /ruta/al/script/backup.sh
@@ -100,6 +118,18 @@ Se ejecuta como usuario prof el script /home/prof/check.sh a las 8:30 y a las 15
 
 Se ejecuta como usuario alu el script /home/alu/test.sh redireccionando la salida de la consola (canal 1) al archivo /home/alu wlog, el cual se crea en caso de no existir, y en caso de existir se añade contenido. Este script se ejecuta cada 10 minutos (intervalos de 10 minutos) de lunes a viernes (todas las semanas y meses).
 
+Para prácticar todas estas tareas cron existen múltiples recursos de gran utilidad: [enlace](https://www.site24x7.com/es/tools/crontab/cron-generator.html)
+
+### /etc/cron.d
+
+`/etc/cront.d` es un directorio donde se guardan archivos con tareas programadas (cron jobs) para ejecutarse automáticamente en el sistema.
+
+**Ejemplo de archivo en `/etc/cront.d` (llamado `cronjob_tarea`):**
+```bash
+30 2 * * * root /usr/bin/backup.sh
+```
+*Ejecuta `/usr/bin/backup.sh` todos los días a las 2:30 AM como usuario root.*
+
 ## at
 
 El comando `at` en Linux es una herramienta que te permite ejecutar comandos o scripts en un momento específico en el futuro.
@@ -147,3 +177,18 @@ at [hora] -f archivo.sh
 ```
 at 10:00 PM -f script.txt
 ```
+
+---
+
+### Cuestionarios
+
+![1](../imagenes/cuestionarios/cron/1.png)
+![2](../imagenes/cuestionarios/cron/2.png)
+![3](../imagenes/cuestionarios/cron/3.png)
+![4](../imagenes/cuestionarios/cron/4.png)
+![5](../imagenes/cuestionarios/cron/5.png)
+![6](../imagenes/cuestionarios/cron/6.png)
+![7](../imagenes/cuestionarios/cron/7.png)
+![8](../imagenes/cuestionarios/cron/8.png)
+![9](../imagenes/cuestionarios/cron/9.png)
+![10](../imagenes/cuestionarios/cron/10.png)
