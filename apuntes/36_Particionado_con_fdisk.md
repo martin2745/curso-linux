@@ -1,9 +1,160 @@
 # Particionado en Linux con fdisk
 
+## Tipos de particionado
+
+### Tipos de particionado: MBR y GPT
+
+#### MBR (Master Boot Record)
+El esquema **MBR** es el más antiguo y se introdujo en 1983 con IBM PC DOS 2.0. Sus características principales son:  
+
+- **Límite de almacenamiento**: Soporta discos de hasta **2 TB**.  
+- **Número de particiones**: Solo permite **cuatro particiones primarias**, aunque una de ellas puede ser una **partición extendida** que permite múltiples particiones lógicas.  
+- **Ubicación del registro de arranque**: Se encuentra en el primer sector del disco (sector 0) y contiene la tabla de particiones junto con el **código de arranque**. 
+- **Compatibilidad**: Es compatible con sistemas operativos más antiguos y con el modo BIOS.  
+
+#### GPT (GUID Partition Table) 
+El esquema **GPT** es más moderno y forma parte del estándar UEFI. Sus características principales son:  
+
+- **Límite de almacenamiento**: Puede gestionar discos de **hasta 9.4 ZB** (zettabytes).  
+- **Número de particiones**: Permite hasta **128 particiones** sin necesidad de una partición extendida.  
+- **Ubicación del registro de arranque**: No depende de un solo sector, ya que almacena copias redundantes de la tabla de particiones en distintas partes del disco, lo que lo hace más seguro ante fallos.  
+- **Compatibilidad**: Es necesario para discos de más de 2 TB y funciona con el modo **UEFI**. Algunos sistemas antiguos no pueden arrancar desde discos GPT.  
+
+En resumen:
+
+| Característica | BIOS/MBR | UEFI/GPT |
+|--------------|---------|----------|
+| Tipo de firmware | BIOS | UEFI |
+| Ubicación del cargador | MBR (sector 0) | Partición EFI |
+| Seguridad | Sin protección avanzada | Soporta Secure Boot |
+| Límite de particiones | 4 primarias (o extendida) | Hasta 128 |
+| Tamaño máximo del disco | 2 TB | 9.4 ZB |
+
+En pocas palabras:
+- **MBR**: Usa el **BIOS** y una **partición activa** para arrancar, donde se carga el cargador de arranque desde el primer sector del disco.
+- **GPT**: Usa **UEFI** y una **partición EFI** para arrancar, donde se almacenan los archivos necesarios para iniciar el sistema desde una partición separada.
+
+![MBR](../imagenes/recursos/particionado/mbr.jpg)
+![GPT](../imagenes/recursos/particionado/gpt.png)
+
+### Proceso de arranque con MBR
+
+Configuración de disco MBR con 3 particiones primarias y 1 extendida:
+
+1. **Partición 1**: **Windows**  
+   - Contiene los archivos del sistema de Windows, incluyendo el cargador de arranque de Windows (**bootmgr**).
+   
+2. **Partición 2**: **Linux (root /)**  
+   - Contiene el **kernel de Linux** (por ejemplo: `/vmlinuz`).
+   
+3. **Partición 3**: **Partición extendida**  
+   - Dentro de la extendida, tienes particiones lógicas, como `/home` en Linux (si las tienes).
+
+4. **Partición 4** (activa): **GRUB (Gestor de arranque)**  
+   - Contiene el cargador de arranque **GRUB 2** y la configuración para seleccionar entre Linux y Windows.
+
+### **Proceso de arranque:**
+
+1. **BIOS** carga el **MBR** (sector 0 del disco). **MBR** contiene tanto el código de arranque como la tabla de particiones.
+2. **MBR** carga el **código de arranque**.
+- El código de arranque es un pequeño programa que inicia el proceso de arranque, buscando y cargando el cargador de arranque del sistema operativo desde el disco.
+- **MBR** busca la **partición activa** (generalmente donde está **GRUB 2**).
+3. **GRUB 2** se carga desde la **partición 4** (donde está GRUB 2).
+4. **GRUB 2** muestra el menú y seleccionas el sistema operativo (Linux o Windows).
+5. Si seleccionas **Linux**:
+- **GRUB 2** carga el **kernel de Linux** desde la **partición 2** (root `/`).
+- Arranca Linux.
+6. Si seleccionas **Windows**:
+- **GRUB 2** pasa el control al **bootmgr** en la **partición 1** (Windows).
+- Arranca Windows.
+
+En resumen:
+
+- **Partición 1**: Windows (contiene **bootmgr**).
+- **Partición 2**: Linux (contiene el **kernel de Linux**).
+- **Partición 3**: Partición extendida (con particiones lógicas).
+- **Partición 4**: GRUB 2 (gestor de arranque).
+
+En pocas palabras:
+- **MBR**: Usa el **BIOS** y una **partición activa** para arrancar, donde se carga el cargador de arranque desde el primer sector del disco.
+- **GPT**: Usa **UEFI** y una **partición EFI** para arrancar, donde se almacenan los archivos necesarios para iniciar el sistema desde una partición separada.
+
+## Estado de partida
+
+A continuación, vamos a realizar el particionado de un disco y vamos a proceder a su montado. Inicialmente partimos de la siguiente situación.
+
+```bash
+root@si-VirtualBox:~# df -Th
+S.ficheros     Tipo  Tamaño Usados  Disp Uso% Montado en
+tmpfs          tmpfs   795M   1,4M  793M   1% /run
+/dev/sda3      ext4     49G    12G   35G  26% /
+tmpfs          tmpfs   3,9G      0  3,9G   0% /dev/shm
+tmpfs          tmpfs   5,0M   4,0K  5,0M   1% /run/lock
+/dev/sda2      vfat    512M   6,1M  506M   2% /boot/efi
+tmpfs          tmpfs   795M    72K  795M   1% /run/user/1000
+tmpfs          tmpfs   795M    84K  795M   1% /run/user/128
+```
+
+## lsblk
+
+### Dispositivos `loop`  
+Un dispositivo `loop` es un disco virtual que permite montar un archivo como si fuera un dispositivo de almacenamiento real. Se usa para acceder a archivos de imagen (ISO, IMG) o paquetes Snap sin necesidad de grabarlos en un disco físico. 
+
+```bash
+loop2    7:2    0 271,2M  1 loop /snap/firefox/4848
+``` 
+  
+### Disco principal `sda`  
+
+```bash
+sda      8:0    0    50G  0 disk
+├─sda1   8:1    0     1M  0 part
+├─sda2   8:2    0   513M  0 part /boot/efi
+└─sda3   8:3    0  49,5G  0 part /
+```
+
+`sda` es un disco de 50 GB con **tres particiones**:  
+- `sda1` (1 MB) → Pequeña partición reservada (uso de GRUB). Si usas BIOS antiguo, el código de GRUB suele guardarse en el MBR (Master Boot Record), que es el primer sector del disco. En modo GPT, una pequeña partición (como sda1) puede ser usada para el **gestor de arranque**. 
+- `sda2` (513 MB) → Montada en `/boot/efi` (para arranque UEFI). Esta partición contiene el **cargador de arranque** y los archivos necesarios para que UEFI inicie Linux. 
+- `sda3` (49.5 GB) → Montada en `/` (almacena el sistema operativo).  
+
+_*Nota*_: Diferencia entre **gestor de arranque** y **cargador de arranque**
+
+- Gestor de arranque (Boot Manager): Decide qué sistema operativo arrancar si hay más de uno. Ejemplo: GRUB.
+- Cargador de arranque (Boot Loader): Carga el núcleo del sistema operativo en la memoria para que el SO se inicie.
+
+Si tienes Windows y Linux en el mismo PC, el **gestor de arranque (GRUB)** te permite elegir cuál arrancar. Una vez elegido el sistema, el **cargador de arranque** carga el kernel de Linux o Windows en la memoria.
+
+### Segundo disco `sdb`
+
+```bash
+sdb      8:16   0    25G  0 disk
+```
+- `sdb` es un disco de **25 GB sin particiones ni sistema de archivos**. Para usarlo, se debe **particionar y formatear** antes de montarlo.  
+
+```bash
+root@si-VirtualBox:~# lsblk
+NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0    7:0    0     4K  1 loop /snap/bare/5
+loop1    7:1    0  74,3M  1 loop /snap/core22/1612
+loop2    7:2    0 271,2M  1 loop /snap/firefox/4848
+loop3    7:3    0 505,1M  1 loop /snap/gnome-42-2204/176
+loop4    7:4    0  91,7M  1 loop /snap/gtk-common-themes/1535
+loop5    7:5    0  12,9M  1 loop /snap/snap-store/1113
+loop6    7:6    0  38,8M  1 loop /snap/snapd/21759
+loop7    7:7    0   500K  1 loop /snap/snapd-desktop-integration/178
+loop8    7:8    0  44,4M  1 loop /snap/snapd/23545
+loop9    7:9    0  73,9M  1 loop /snap/core22/1748
+sda      8:0    0    50G  0 disk
+├─sda1   8:1    0     1M  0 part
+├─sda2   8:2    0   513M  0 part /boot/efi
+└─sda3   8:3    0  49,5G  0 part /
+sdb      8:16   0    25G  0 disk
+```
+
 ## fdisk
 
-`fdisk` es la herramienta de administración de discos y particiones
-tradicional del shell de Linux.
+`fdisk` es la herramienta de administración de discos y particiones tradicional del shell de Linux.
 
 `fdisk -l`: Tabla de particiones de todos los discos.
 `fdisk -l /dev/sdb`: Tabla de particiones de `/dev/sdb`.
@@ -20,7 +171,7 @@ Opciones de `fdisk`
 - `g`: Cambiamos la etiqueta DOS(MBR) a GPT. Eliminaría la tabla de particiones.
 - `o`: Cambiamos la etiqueta GPT a MBR(DOS). Eliminaría la tabla de particiones.
 
-A continuación creamos una partición primaria en el disco `/dev/sdb` de 10G.
+A continuación creamos una partición primaria en el disco `/dev/sdb` de 10GiB sobre un disco de 25GiB de partida.
 
 ```bash
 root@si-VirtualBox:~# fdisk /dev/sdb
@@ -54,7 +205,7 @@ Device     Boot Start      End  Sectors Size Id Type
 /dev/sdb1        2048 20973567 20971520  10G 83 Linux
 ```
 
-Una vez creada la partición vamos a partición extendida de 15G.
+Una vez creada la partición vamos a partición extendida de 15GiB.
 
 ```bash
 Command (m for help): n
@@ -82,7 +233,7 @@ Device     Boot    Start      End  Sectors Size Id Type
 /dev/sdb2       20973568 52428799 31455232  15G  5 Extended
 ```
 
-Añadimos ahora una partición lógica de 5G y guardamos la configuración.
+Añadimos ahora una partición lógica de 5GiB y guardamos la configuración.
 
 ```bash
 Command (m for help): n
@@ -171,7 +322,7 @@ Disklabel type: gpt
 Disk identifier: 9D46AE3B-2D99-F94C-8C2F-3A58DB60DC6F
 ```
 
-### blkid
+## blkid
 
 `blkid`: Permite consultar el identificador único de cada disco. Como no tienen un sistema de ficheros asignado el identificador va a tener el tamaño que se muestra a continuación.
 
@@ -181,7 +332,7 @@ root@si-VirtualBox:~# blkid | grep sdb
 /dev/sdb1: PARTUUID="20eab2f1-01"
 ```
 
-### mkfs
+## mkfs
 
 `mkfs` Permite aplicar un formato de sistema de ficheros a una partición.
 
@@ -222,17 +373,11 @@ root@si-VirtualBox:~# blkid | grep sdb
 /dev/sdb5: UUID="054a4742-ad44-4132-bfb9-ce927f9bfdc3" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="20eab2f1-05"
 ```
 
-### mount y umount
+## mount y umount
 
-El paso final para poder leer y escribir de particiones es montarlas en
-una ruta del sistema de archivos para lo cual utilizaremos el comando
-mount:
-
-`mount /dev/sdb1 /media/datos1` Monta la partición 1 del disco /dev/sdb en
-la ruta /media/datos1.
-
-`umount /dev/sdb1` Desmonta la partición 1 del disco /dev/sdb de donde esté
-montada.
+El paso final para poder leer y escribir de particiones es montarlas en una ruta del sistema de archivos para lo cual utilizaremos el comando mount:
+- `mount /dev/sdb1 /media/datos1` Monta la partición 1 del disco /dev/sdb en la ruta /media/datos1.
+- `umount /dev/sdb1` Desmonta la partición 1 del disco /dev/sdb de donde esté montada.
 
 Vamos a montar la partición en la ruta `/media/datos1`. Una vez montada podremos crear contenido en su interior que se guardará en el dispositivo `/dev/sdb1`.
 
@@ -257,7 +402,7 @@ fichero10.txt  fichero2.txt  fichero4.txt  fichero6.txt  fichero8.txt  fichero.t
 fichero1.txt   fichero3.txt  fichero5.txt  fichero7.txt  fichero9.txt
 ```
 
-### fstab
+## fstab
 
 Para que el montaje de la partición `/dev/sdb1` sea persistente y no tener que volver a realizar este proceso cuando encendamos de nuevo el ordenador tenemos que añadir la configuración correspondiente en el fichero `/etc/fstab`. Tenemos que tener cuidado con las modificaciones realizadas en este fichero ya que si los datos introducidos son incorrectos podría no iniciarse el ordenador. Para ello vamos a hacer un `cp -pv /etc/fstab /etc/fstab_VIEJO` y ejecutar el comando `mount -a` para ver si tenemos algún error antes de reiniciar la máquina.
 
@@ -301,3 +446,55 @@ Si tuvieramos algún error en la configuración del `/etc/fstab` debería notifi
 ```bash
 root@si-VirtualBox:~# mount -a
 ```
+
+El archivo **`/etc/fstab`** en Linux contiene información sobre los sistemas de archivos que deben montarse al iniciar el sistema. Cada línea en **`fstab`** describe un sistema de archivos y cómo debe ser montado. Aquí te explico los valores que puede tener:
+
+1. **<file system>**
+- Especifica el dispositivo o sistema de archivos a montar.
+- Puede ser:
+- **UUID**: Identificador único del dispositivo (por ejemplo, `UUID=887fddd5-c130-4d0e-a814-03c02bdd0050`).
+- **LABEL**: Etiqueta del dispositivo (por ejemplo, `LABEL=mydata`).
+- **Dispositivo**: Nombre del dispositivo de bloque, como `/dev/sda1` o `/dev/sdb2`.
+
+2. **<mount point>**
+- Especifica el punto de montaje, que es el directorio donde se montará el sistema de archivos.
+- Ejemplo: `/`, `/boot/efi`, `/media/datos1`.
+
+3. **<type>**
+- Especifica el tipo de sistema de archivos.
+- Algunos ejemplos:
+- **ext4**: Sistema de archivos de Linux moderno.
+- **vfat**: Sistema de archivos FAT, generalmente usado para particiones EFI.
+- **swap**: Espacio de intercambio de memoria.
+- **ntfs**: Sistema de archivos de Windows (si se monta con `ntfs-3g`).
+
+4. **<options>**
+- Especifica las opciones de montaje del sistema de archivos.
+- Algunos ejemplos:
+- **defaults**: Opciones predeterminadas para el montaje.
+- **errors=remount-ro**: Remonta el sistema de archivos como solo lectura si ocurre un error (común en `ext4`).
+- **umask=0077**: Establece los permisos de los archivos y directorios en la partición (común en sistemas FAT).
+- **sw**: Indica que es una partición de intercambio (swap).
+
+5. **<dump>**
+- Especifica si el sistema de archivos debe ser respaldado por **dump** (una herramienta de respaldo para copias de seguridad).
+- **0**: No se hace respaldo.
+- **1**: Se hace respaldo.
+
+6. **<pass>**
+- Especifica el orden en que los sistemas de archivos deben ser revisados durante el arranque por **fsck** (herramienta de chequeo de sistemas de archivos).
+- **0**: No se realiza chequeo en el arranque.
+- **1**: Se realiza chequeo en la raíz (`/`).
+- **2**: Se realiza chequeo en otros sistemas de archivos después de la raíz.
+
+Resumen de lo que pueden contener los campos:
+1. **<file system>**: UUID, LABEL, /dev/sdX
+2. **<mount point>**: Directorios donde se monta.
+3. **<type>**: Tipo de sistema de archivos (ext4, vfat, swap, etc.).
+4. **<options>**: Opciones como `defaults`, `errors=remount-ro`, etc.
+5. **<dump>**: 0 o 1 para respaldo con `dump`.
+6. **<pass>**: 0 (sin chequeo), 1 (chequeo para raíz), 2 (chequeo para otras particiones).
+
+### Como recuperar el sistema si cometemos un error en el archivo /etc/fstab
+
+Si no arranca el sistema ya que el archivo `/etc/fstab` está incorrectamente formado podemos hacer lo siguiente:
