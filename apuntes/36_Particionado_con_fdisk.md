@@ -419,8 +419,9 @@ Neceitamos añadir en una nueva entrada del `/etc/fstab` el identificador de la 
 - Opción pass: Orden en el que se comprobará el sistema de archivos en el arranque. El 1 se reservar para el sistema raíz (/). Si ponemos un 0 no se comprueba en el arranque.
 
 ```bash
-root@si-VirtualBox:~# blkid | grep sdb1
-/dev/sdb1: UUID="c5e35664-cef9-4345-afbb-82a6723b2659" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="20eab2f1-01"
+root@usuario:/home/usuario# blkid | grep sdb | awk -F ' ' '{print $2}' | sed 's/"//g'
+UUID=79d603be-d399-400e-b3d8-63ca1ebf5d95
+UUID=42ec4832-6a90-465b-943b-d523c45b8137
 ```
 
 ```bash
@@ -428,23 +429,23 @@ root@si-VirtualBox:~# nano /etc/fstab
 ```
 
 ```bash
+root@usuario:/home/usuario# cat /etc/fstab
+# /etc/fstab: static file system information.
+#
 # Use 'blkid' to print the universally unique identifier for a
 # device; this may be used with UUID= as a more robust way to name devices
 # that works even if disks are added and removed. See fstab(5).
 #
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
 # / was on /dev/sda3 during installation
-UUID=887fddd5-c130-4d0e-a814-03c02bdd0050 /               ext4    errors=remount-ro 0       1
+UUID=8c5ae77c-73fc-4bcb-aed7-f43b45341596 /               ext4    errors=remount-ro 0       1
 # /boot/efi was on /dev/sda2 during installation
-UUID=683C-B0C4  /boot/efi       vfat    umask=0077      0       1
+UUID=1A8A-1C88  /boot/efi       vfat    umask=0077      0       1
 /swapfile                                 none            swap    sw              0       0
-UUID="c5e35664-cef9-4345-afbb-82a6723b2659"     /media/datos1   ext4    defaults        0       2
-```
-
-Si tuvieramos algún error en la configuración del `/etc/fstab` debería notificarmelo por pantalla. Como no exite ningún error reiniciamos la máquina.
-
-```bash
-root@si-VirtualBox:~# mount -a
+# sdb1
+UUID=79d603be-d399-400e-b3d8-63ca1ebf5d95       /media/sdb1     ext4    defaults        0       2
+# sdb2
+UUID=42ec4832-6a90-465b-943b-d523c45b8137       /media/sdb5     ext4    defaults        0       2
 ```
 
 El archivo **`/etc/fstab`** en Linux contiene información sobre los sistemas de archivos que deben montarse al iniciar el sistema. Cada línea en **`fstab`** describe un sistema de archivos y cómo debe ser montado. Aquí te explico los valores que puede tener:
@@ -495,6 +496,37 @@ Resumen de lo que pueden contener los campos:
 5. **<dump>**: 0 o 1 para respaldo con `dump`.
 6. **<pass>**: 0 (sin chequeo), 1 (chequeo para raíz), 2 (chequeo para otras particiones).
 
+Si tuvieramos algún error en la configuración del `/etc/fstab` debería notificarmelo por pantalla. Como no exite ningún error reiniciamos la máquina.
+
+```bash
+root@si-VirtualBox:~# mount -a
+```
+
+Despues de volver a iniciar el sistema tenemos montados las particiones `sdb1` y `sdb5`.
+
+```bash
+root@usuario:~# ls /media/sdb*
+/media/sdb1:
+lost+found
+
+/media/sdb5:
+lost+found  prueba
+
+root@usuario:~# cat /media/sdb5/prueba/prueba.txt
+Hola Mundo!
+```
+
 ### Como recuperar el sistema si cometemos un error en el archivo /etc/fstab
 
+Vamos a cometer un error en el `/etc/fstab` para que el sistema no pueda cargar las particiones, esto producirá que el sistema no carge correctamente.
+
+```bash
+root@usuario:~# mount -a
+mount: /media/sdb1: no se puede encontrar UUID=9d603be-d399-400e-b3d8-63ca1ebf5d95.
+mount: /media/sdb5: no se puede encontrar UUID=2ec4832-6a90-465b-943b-d523c45b8137.
+```
+
 Si no arranca el sistema ya que el archivo `/etc/fstab` está incorrectamente formado podemos hacer lo siguiente:
+1. Editamos los parametros de arranque.
+![kernel-parametros-arranque-syslinux](../imagenes/recursos/varios/kernel-parametros-arranque-syslinux.png)
+2. Modificamos `/etc/fstab` para que se produzca el arranque del sistema. Si hemos realizado el proceso como se ha indicado, tendremos el archivo inicial `/etc/fstab_VIEJO` con los datos correctos de arranque.

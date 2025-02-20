@@ -1,9 +1,16 @@
 # Particionado con parted
 
-1. Asignamos el tipo de partición.
 
+1. Asignamos el tipo de particionado.
+
+**MBR**
 ```bash
 root@si-VirtualBox:~# parted -s /dev/sdb mklabel msdos
+```
+
+**GPT**
+```bash
+root@si-VirtualBox:~# parted -s /dev/sdb mklabel gpt
 ```
 
 2. Creamos particiones primarias, extendidas y lógicas.
@@ -27,8 +34,13 @@ Number  Start   End     Size    Type      File system  Flags
  5      10,0GB  13,0GB  2999MB  logical
 ```
 
+_*Nota*_: A diferencia de MBR, en GPT no hay distinción entre particiones primarias, extendidas o lógicas. Todas las particiones son "primarias".
+
 3. Tambien puedo eliminar particiones de la siguiente forma.
 
 ```bash
 root@si-VirtualBox:~# parted -s /dev/sdb rm 1
 ```
+
+4. Proceso de montado.
+Una vez realizado todo este proceso, lo siguiente sería realizar el montado de las particiones o realizar las modificaciones en el `/etc/fstab` para que se cargen en el inicio.
