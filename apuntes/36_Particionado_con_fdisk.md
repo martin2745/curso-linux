@@ -450,18 +450,18 @@ UUID=42ec4832-6a90-465b-943b-d523c45b8137       /media/sdb5     ext4    defaults
 
 El archivo **`/etc/fstab`** en Linux contiene información sobre los sistemas de archivos que deben montarse al iniciar el sistema. Cada línea en **`fstab`** describe un sistema de archivos y cómo debe ser montado. Aquí te explico los valores que puede tener:
 
-1. **<file system>**
+1. **file system**
 - Especifica el dispositivo o sistema de archivos a montar.
 - Puede ser:
 - **UUID**: Identificador único del dispositivo (por ejemplo, `UUID=887fddd5-c130-4d0e-a814-03c02bdd0050`).
 - **LABEL**: Etiqueta del dispositivo (por ejemplo, `LABEL=mydata`).
 - **Dispositivo**: Nombre del dispositivo de bloque, como `/dev/sda1` o `/dev/sdb2`.
 
-2. **<mount point>**
+2. **mount point**
 - Especifica el punto de montaje, que es el directorio donde se montará el sistema de archivos.
 - Ejemplo: `/`, `/boot/efi`, `/media/datos1`.
 
-3. **<type>**
+3. **type**
 - Especifica el tipo de sistema de archivos.
 - Algunos ejemplos:
 - **ext4**: Sistema de archivos de Linux moderno.
@@ -469,7 +469,7 @@ El archivo **`/etc/fstab`** en Linux contiene información sobre los sistemas de
 - **swap**: Espacio de intercambio de memoria.
 - **ntfs**: Sistema de archivos de Windows (si se monta con `ntfs-3g`).
 
-4. **<options>**
+4. **options**
 - Especifica las opciones de montaje del sistema de archivos.
 - Algunos ejemplos:
 - **defaults**: Opciones predeterminadas para el montaje.
@@ -477,24 +477,24 @@ El archivo **`/etc/fstab`** en Linux contiene información sobre los sistemas de
 - **umask=0077**: Establece los permisos de los archivos y directorios en la partición (común en sistemas FAT).
 - **sw**: Indica que es una partición de intercambio (swap).
 
-5. **<dump>**
+5. **dump**
 - Especifica si el sistema de archivos debe ser respaldado por **dump** (una herramienta de respaldo para copias de seguridad).
 - **0**: No se hace respaldo.
 - **1**: Se hace respaldo.
 
-6. **<pass>**
+6. **pass**
 - Especifica el orden en que los sistemas de archivos deben ser revisados durante el arranque por **fsck** (herramienta de chequeo de sistemas de archivos).
 - **0**: No se realiza chequeo en el arranque.
 - **1**: Se realiza chequeo en la raíz (`/`).
 - **2**: Se realiza chequeo en otros sistemas de archivos después de la raíz.
 
 Resumen de lo que pueden contener los campos:
-1. **<file system>**: UUID, LABEL, /dev/sdX
-2. **<mount point>**: Directorios donde se monta.
-3. **<type>**: Tipo de sistema de archivos (ext4, vfat, swap, etc.).
-4. **<options>**: Opciones como `defaults`, `errors=remount-ro`, etc.
-5. **<dump>**: 0 o 1 para respaldo con `dump`.
-6. **<pass>**: 0 (sin chequeo), 1 (chequeo para raíz), 2 (chequeo para otras particiones).
+1. **file system**: UUID, LABEL, /dev/sdX
+2. **mount point**: Directorios donde se monta.
+3. **type**: Tipo de sistema de archivos (ext4, vfat, swap, etc.).
+4. **options**: Opciones como `defaults`, `errors=remount-ro`, etc.
+5. **dump**: 0 o 1 para respaldo con `dump`.
+6. **pass**: 0 (sin chequeo), 1 (chequeo para raíz), 2 (chequeo para otras particiones).
 
 Si tuvieramos algún error en la configuración del `/etc/fstab` debería notificarmelo por pantalla. Como no exite ningún error reiniciamos la máquina.
 
@@ -528,5 +528,6 @@ mount: /media/sdb5: no se puede encontrar UUID=2ec4832-6a90-465b-943b-d523c45b81
 
 Si no arranca el sistema ya que el archivo `/etc/fstab` está incorrectamente formado podemos hacer lo siguiente:
 1. Editamos los parametros de arranque.
-![kernel-parametros-arranque-syslinux](../imagenes/recursos/varios/kernel-parametros-arranque-syslinux.png)
 2. Modificamos `/etc/fstab` para que se produzca el arranque del sistema. Si hemos realizado el proceso como se ha indicado, tendremos el archivo inicial `/etc/fstab_VIEJO` con los datos correctos de arranque.
+
+![kernel-parametros-arranque-syslinux](../imagenes/recursos/varios/kernel-parametros-arranque-syslinux.png)
