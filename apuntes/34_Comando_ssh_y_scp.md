@@ -412,6 +412,7 @@ _*Nota*_: Como alternativa a`nc` tenemos `ncat` que ofrece como ventajas la posi
 Como web para prácticar tenemos los retos de [ssh de bandit](https://overthewire.org/wargames/bandit/bandit0.html)
 
 ```bash
+PS C:\Users\Carballeira> ssh -p 2220 bandit0@bandit.labs.overthewire.org
                          _                     _ _ _
                         | |__   __ _ _ __   __| (_) |_
                         | '_ \ / _` | '_ \ / _` | | __|
@@ -420,7 +421,11 @@ Como web para prácticar tenemos los retos de [ssh de bandit](https://overthewir
 
 
                       This is an OverTheWire game server.
+            More information on http://www.overthewire.org/wargames
+
+bandit0@bandit.labs.overthewire.org's password: bandit0
 ```
+
 
 #### bandit0 --> bandit1
 
@@ -1186,3 +1191,115 @@ The password of user bandit25 is iCi86ttT4KSNe1armKiwbQNmB3YJP3q4
 ```
 
 #### bandit25 --> bandit26
+
+```bash
+bandit25@bandit:~$ ls
+bandit26.sshkey
+
+bandit25@bandit:~$ cat bandit26.sshkey
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEApis2AuoooEqeYWamtwX2k5z9uU1Afl2F8VyXQqbv/LTrIwdW
+pTfaeRHXzr0Y0a5Oe3GB/+W2+PReif+bPZlzTY1XFwpk+DiHk1kmL0moEW8HJuT9
+ibrNklm94373kV1US/0DlZUDcQba7jz9Yp/C3dT/RlwoIw5mP3UxQCizFspNKOSe
+euPeaxUCgYEAntklXwBbokgdDup/u/3ms5Lb/bm22zDOCg2HrlWQCqKEkWkAO6R5
+/Wwyqhp/wTl8VXjxWo+W+DmewGdPHGQQ5fFdqgpuQpGUq24YZS8m66v5ANBwd76t
+IZdtF5HXs2S5CADTwniUS5mX1HO9l5gUkk+h0cH5JnPtsMCnAUM+BRY=
+-----END RSA PRIVATE KEY-----
+
+bandit25@bandit:~$ ssh -i bandit26.sshkey bandit26@localhost
+The authenticity of host 'localhost (127.0.0.1)' can't be established.
+ED25519 key fingerprint is SHA256:C2ihUBV7ihnV1wUXRb4RrEcLfXC5CXlhmAAM/urerLY.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Could not create directory '/home/bandit25/.ssh' (Permission denied).
+Failed to add the host to the list of known hosts (/home/bandit25/.ssh/known_hosts).
+
+                      This is an OverTheWire game server.
+            More information on http://www.overthewire.org/wargames
+
+!!! You are trying to log into this SSH server on port 22, which is not intended.
+
+bandit26@localhost: Permission denied (publickey).
+
+bandit25@bandit:~$ cat /etc/passwd | grep bandit26
+bandit26:x:11026:11026:bandit level 26:/home/bandit26:/usr/bin/showtext
+
+bandit25@bandit:~$ cat /usr/bin/showtext
+#!/bin/sh
+
+export TERM=linux
+
+exec more ~/text.txt
+exit 0
+```
+
+Necesitamos que carge more por lo que hacemos la pantalla lo más pequeña posible. Con la opción `v` entramos en un modo visual que nos permite ejecutar instrucciones.
+
+```bash
+Opción v en more
+Escribimos: set shell=/bin/bash
+ESC + :
+Escribimos shell y clicamos en enter
+```
+
+```bash
+bandit26@bandit:~$ ls
+bandit27-do  text.txt
+
+bandit26@bandit:~$ cat text.txt
+  _                     _ _ _   ___   __
+ | |                   | (_) | |__ \ / /
+ | |__   __ _ _ __   __| |_| |_   ) / /_
+ | '_ \ / _` | '_ \ / _` | | __| / / '_ \
+ | |_) | (_| | | | | (_| | | |_ / /| (_) |
+ |_.__/ \__,_|_| |_|\__,_|_|\__|____\___/
+bandit26@bandit:~$ cat /etc/bandit_pass/bandit26
+s0773xxkk0MXfdqOfPRVr9L3jJBUOgCZ
+
+bandit26@bandit:~$ whoami
+bandit26
+```
+
+#### bandit26 --> bandit27
+
+Sin conectarnos por ssh al usuario bandit26 ya que nos va a pasar lo mismo que antes podemos en la sesión anterior hacer lo siguiente.
+
+```bash
+bandit26@bandit:~$ ls -l
+total 20
+-rwsr-x--- 1 bandit27 bandit26 14880 Sep 19 07:08 bandit27-do
+-rw-r----- 1 bandit26 bandit26   258 Sep 19 07:08 text.txt
+
+bandit26@bandit:~$ ./bandit27-do whoami
+bandit27
+
+bandit26@bandit:~$ ./bandit27-do cat /etc/bandit_pass/bandit27
+upsNCc7vzaRDx6oZC6GiR6ERwe1MowGB
+```
+
+#### bandit27 --> bandit28
+
+```bash
+bandit27@bandit:/tmp/tmp.Ky0vnVoOeu$ git clone ssh://bandit27-git@localhost/home/bandit27-git/repo
+Cloning into 'repo'...
+Failed to add the host to the list of known hosts (/home/bandit27/.ssh/known_hosts).
+!!! You are trying to log into this SSH server on port 22, which is not intended.
+bandit27-git@localhost: Permission denied (publickey).
+fatal: Could not read from remote repository.
+...
+
+bandit27@bandit:/tmp/tmp.Ky0vnVoOeu$ git clone ssh://bandit27-git@localhost:2220/home/bandit27-git/repo
+Cloning into 'repo'...
+...
+
+bandit27@bandit:/tmp/tmp.Ky0vnVoOeu$ ls -l
+total 4
+drwxrwxr-x 3 bandit27 bandit27 4096 Feb 21 09:21 repo
+
+bandit27@bandit:/tmp/tmp.Ky0vnVoOeu$ cd repo/
+bandit27@bandit:/tmp/tmp.Ky0vnVoOeu/repo$ ls
+README
+
+bandit27@bandit:/tmp/tmp.Ky0vnVoOeu/repo$ cat README
+The password to the next level is: Yz9IpL0sBcCeuG7m9uQFt8ZNpS4HZRcN
+```
