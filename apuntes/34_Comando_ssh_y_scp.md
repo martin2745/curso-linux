@@ -1303,3 +1303,351 @@ README
 bandit27@bandit:/tmp/tmp.Ky0vnVoOeu/repo$ cat README
 The password to the next level is: Yz9IpL0sBcCeuG7m9uQFt8ZNpS4HZRcN
 ```
+
+#### bandit28 --> bandit29
+
+```bash
+bandit28@bandit:/tmp/tmp.VhgYyypi14$ cd $(mktemp -d)
+
+bandit28@bandit:/tmp/tmp.VhgYyypi14$ git clone ssh://bandit28-git@localhost:2220/home/bandit28-git/repo
+Cloning into 'repo'...
+The authenticity of host '[localhost]:2220 ([127.0.0.1]:2220)' can't be established.
+ED25519 key fingerprint is SHA256:C2ihUBV7ihnV1wUXRb4RrEcLfXC5CXlhmAAM/urerLY.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Could not create directory '/home/bandit28/.ssh' (Permission denied).
+Failed to add the host to the list of known hosts (/home/bandit28/.ssh/known_hosts).
+                         _                     _ _ _
+                        | |__   __ _ _ __   __| (_) |_
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+
+
+                      This is an OverTheWire game server.
+            More information on http://www.overthewire.org/wargames
+
+bandit28-git@localhost's password:
+remote: Enumerating objects: 9, done.
+remote: Counting objects: 100% (9/9), done.
+remote: Compressing objects: 100% (6/6), done.
+remote: Total 9 (delta 2), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (9/9), done.
+Resolving deltas: 100% (2/2), done.
+
+bandit28@bandit:/tmp/tmp.VhgYyypi14$ ls -l
+total 4
+drwxrwxr-x 3 bandit28 bandit28 4096 Feb 21 12:12 repo
+
+bandit28@bandit:/tmp/tmp.VhgYyypi14$ cd repo/
+
+bandit28@bandit:/tmp/tmp.VhgYyypi14/repo$ ls
+README.md
+
+bandit28@bandit:/tmp/tmp.VhgYyypi14/repo$ cat README.md
+# Bandit Notes
+Some notes for level29 of bandit.
+
+## credentials
+
+- username: bandit29
+- password: xxxxxxxxxx
+
+bandit28@bandit:/tmp/tmp.VhgYyypi14/repo$ git log
+commit 817e303aa6c2b207ea043c7bba1bb7575dc4ea73 (HEAD -> master, origin/master, origin/HEAD)
+Author: Morla Porla <morla@overthewire.org>
+Date:   Thu Sep 19 07:08:39 2024 +0000
+
+    fix info leak
+
+commit 3621de89d8eac9d3b64302bfb2dc67e9a566decd
+Author: Morla Porla <morla@overthewire.org>
+Date:   Thu Sep 19 07:08:39 2024 +0000
+
+    add missing data
+
+commit 0622b73250502618babac3d174724bb303c32182
+Author: Ben Dover <noone@overthewire.org>
+Date:   Thu Sep 19 07:08:39 2024 +0000
+
+    initial commit of README.md
+
+bandit28@bandit:/tmp/tmp.VhgYyypi14/repo$ git show 817e303
+commit 817e303aa6c2b207ea043c7bba1bb7575dc4ea73 (HEAD -> master, origin/master, origin/HEAD)
+Author: Morla Porla <morla@overthewire.org>
+Date:   Thu Sep 19 07:08:39 2024 +0000
+
+    fix info leak
+
+diff --git a/README.md b/README.md
+index d4e3b74..5c6457b 100644
+--- a/README.md
++++ b/README.md
+@@ -4,5 +4,5 @@ Some notes for level29 of bandit.
+ ## credentials
+
+ - username: bandit29
+-- password: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7
++- password: xxxxxxxxxx
+```
+
+```bash
+bandit28@bandit:/tmp/tmp.VhgYyypi14/repo$ git log --oneline
+817e303 (HEAD -> master, origin/master, origin/HEAD) fix info leak
+3621de8 add missing data
+0622b73 initial commit of README.md
+
+bandit28@bandit:/tmp/tmp.VhgYyypi14/repo$ git checkout 3621de8
+Note: switching to '3621de8'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 3621de8 add missing data
+bandit28@bandit:/tmp/tmp.VhgYyypi14/repo$ cat README.md
+# Bandit Notes
+Some notes for level29 of bandit.
+
+## credentials
+
+- username: bandit29
+- password: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7
+```
+
+#### bandit29 --> bandit30
+
+```bash
+bandit29@bandit:~$ cd $(mktemp -d)
+
+bandit29@bandit:/tmp/tmp.nGKwbUE97t$ git clone ssh://bandit29-git@localhost:2220/home/bandit29-git/repo
+Cloning into 'repo'...
+The authenticity of host '[localhost]:2220 ([127.0.0.1]:2220)' can't be established.
+ED25519 key fingerprint is SHA256:C2ihUBV7ihnV1wUXRb4RrEcLfXC5CXlhmAAM/urerLY.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Could not create directory '/home/bandit29/.ssh' (Permission denied).
+Failed to add the host to the list of known hosts (/home/bandit29/.ssh/known_hosts).
+                         _                     _ _ _
+                        | |__   __ _ _ __   __| (_) |_
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+
+
+                      This is an OverTheWire game server.
+            More information on http://www.overthewire.org/wargames
+
+bandit29-git@localhost's password:
+remote: Enumerating objects: 16, done.
+remote: Counting objects: 100% (16/16), done.
+remote: Compressing objects: 100% (11/11), done.
+remote: Total 16 (delta 2), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (16/16), done.
+Resolving deltas: 100% (2/2), done.
+
+bandit29@bandit:/tmp/tmp.nGKwbUE97t$ cd repo/
+
+bandit29@bandit:/tmp/tmp.nGKwbUE97t/repo$ ls
+README.md
+
+bandit29@bandit:/tmp/tmp.nGKwbUE97t/repo$ git branch --all
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/dev
+  remotes/origin/master
+  remotes/origin/sploits-dev
+bandit29@bandit:/tmp/tmp.nGKwbUE97t/repo$ git branch dev
+
+bandit29@bandit:/tmp/tmp.nGKwbUE97t/repo$ git remote -v
+origin  ssh://bandit29-git@localhost:2220/home/bandit29-git/repo (fetch)
+origin  ssh://bandit29-git@localhost:2220/home/bandit29-git/repo (push)
+
+bandit29@bandit:/tmp/tmp.nGKwbUE97t/repo$ git checkout dev
+Switched to branch 'dev'
+bandit29@bandit:/tmp/tmp.nGKwbUE97t/repo$ git branch
+* dev
+  master
+bandit29@bandit:/tmp/tmp.nGKwbUE97t/repo$ git pull origin dev
+bandit29-git@localhost's password:
+From ssh://localhost:2220/home/bandit29-git/repo
+ * branch            dev        -> FETCH_HEAD
+Updating 6ac7796..081ac38
+Fast-forward
+ README.md         | 2 +-
+ code/gif2ascii.py | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+ create mode 100644 code/gif2ascii.py
+
+ bandit29@bandit:/tmp/tmp.nGKwbUE97t/repo$ git log --oneline
+081ac38 (HEAD -> dev, origin/dev) add data needed for development
+03aa12c add gif2ascii
+6ac7796 (origin/master, origin/HEAD, master) fix username
+e65a928 initial commit of README.md
+
+bandit29@bandit:/tmp/tmp.nGKwbUE97t/repo$ cat README.md
+# Bandit Notes
+Some notes for bandit30 of bandit.
+
+## credentials
+
+- username: bandit30
+- password: qp30ex3VLz5MDG1n91YowTv4Q8l7CDZL
+```
+
+#### bandit30 --> bandit31
+
+```bash
+bandit30@bandit:~$ cd $(mktemp -d)
+
+bandit30@bandit:/tmp/tmp.QSYxCrzTjW$ git clone ssh://bandit30-git@localhost:2220/home/bandit30-git/repo
+
+bandit30@bandit:/tmp/tmp.QSYxCrzTjW$ cd repo/
+
+bandit30@bandit:/tmp/tmp.QSYxCrzTjW/repo$ ls
+README.md
+
+bandit30@bandit:/tmp/tmp.QSYxCrzTjW/repo$ cat README.md
+just an epmty file... muahaha
+
+bandit30@bandit:/tmp/tmp.QSYxCrzTjW/repo$ git tag
+secret
+
+bandit30@bandit:/tmp/tmp.QSYxCrzTjW/repo$ git show secret
+fb5S2xb7bRyFmAvQYQGEqsbhVyJqhnDy
+```
+
+#### bandit31 --> bandit32
+
+```bash
+bandit31@bandit:~$ cd $(mktemp -d)
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk$ git clone ssh://bandit31-git@localhost:2220/home/bandit31-git/repo
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk$ ls
+repo
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk$ cd repo/
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ ls
+README.md
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ cat README.md
+This time your task is to push a file to the remote repository.
+
+Details:
+    File name: key.txt
+    Content: 'May I come in?'
+    Branch: master
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ echo "May I come in?" > key.txt
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ cat key.txt
+May I come in?
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ ls -la
+total 24
+drwxrwxr-x 3 bandit31 bandit31 4096 Feb 21 12:38 .
+drwx------ 3 bandit31 bandit31 4096 Feb 21 12:33 ..
+drwxrwxr-x 8 bandit31 bandit31 4096 Feb 21 12:37 .git
+-rw-rw-r-- 1 bandit31 bandit31    6 Feb 21 12:33 .gitignore
+-rw-rw-r-- 1 bandit31 bandit31   15 Feb 21 12:38 key.txt
+-rw-rw-r-- 1 bandit31 bandit31  147 Feb 21 12:33 README.md
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ cat .gitignore
+*.txt
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ echo "" > .gitignore
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ cat .gitignore
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   .gitignore
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        key.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ git add key.txt
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        new file:   key.txt
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   .gitignore
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ git commit -m "Creado key.txt"
+[master 07bf970] Creado key.txt
+ 1 file changed, 1 insertion(+)
+ create mode 100644 key.txt
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ git log --oneline
+07bf970 (HEAD -> master) Creado key.txt
+e48235b (origin/master, origin/HEAD) initial commit
+
+bandit31@bandit:/tmp/tmp.j5ye9NlSQk/repo$ git push origin master
+Enumerating objects: 4, done.
+Counting objects: 100% (4/4), done.
+Delta compression using up to 2 threads
+Compressing objects: 100% (2/2), done.
+Writing objects: 100% (3/3), 328 bytes | 328.00 KiB/s, done.
+Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+remote: ### Attempting to validate files... ####
+remote:
+remote: .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.
+remote:
+remote: Well done! Here is the password for the next level:
+remote: 3O9RfhqyAlVBEZpVb6LYStshZoqoSx5K
+remote:
+remote: .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.
+remote:
+To ssh://localhost:2220/home/bandit31-git/repo
+ ! [remote rejected] master -> master (pre-receive hook declined)
+error: failed to push some refs to 'ssh://localhost:2220/home/bandit31-git/repo'
+```
+
+#### bandit32 --> bandit33
+
+```bash
+WELCOME TO THE UPPERCASE SHELL
+>> $0
+
+$ whoami
+bandit33
+
+$ cat /home/bandit33/README.txt
+Congratulations on solving the last level of this game!
+
+At this moment, there are no more levels to play in this game. However, we are constantly working
+on new levels and will most likely expand this game with more levels soon.
+Keep an eye out for an announcement on our usual communication channels!
+In the meantime, you could play some of our other wargames.
+
+If you have an idea for an awesome new level, please let us know!
+```
