@@ -122,3 +122,10 @@ pans
 setalpmeT
 soediV
 ```
+
+_*Nota*_: Diferencia entre `NF` y `NR` en awk.
+
+| Variable | Significado | Uso común |
+|----------|------------|-----------|
+| `NR` | Número de la línea actual | Numerar líneas, filtrar líneas específicas |
+| `NF` | Número de columnas en la línea actual | Acceder a la última columna, contar columnas |
