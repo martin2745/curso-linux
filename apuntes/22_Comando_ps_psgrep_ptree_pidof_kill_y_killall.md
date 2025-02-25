@@ -10,9 +10,24 @@ si@si-VirtualBox:~$ ps
 3734 pts/1    00:00:00 ps
 ```
 
+_*Nota*_: Diferencia entre `tty` y `pty`.
+Una TTY (Teletype Terminal) en Linux es una consola física o virtual que permite interactuar con el sistema sin necesidad de una interfaz gráfica. Se accede con Ctrl + Alt + F1 a F6 y es útil para tareas de administración, recuperación del sistema y trabajo en entornos sin GUI. Por otro lado, una PTY (Pseudo-Terminal) es una emulación de terminal utilizada en aplicaciones dentro de un entorno gráfico, como GNOME Terminal, xterm o conexiones SSH, permitiendo múltiples sesiones sin depender de una TTY física. En resumen, la TTY es una terminal real del sistema, mientras que la PTY es una terminal virtual utilizada en entornos gráficos o remotos.
+
+Para ver en qué **TTY** estás en Linux, usa el siguiente comando en la terminal:  
+
+```bash
+tty
+```
+
+🔹 Esto mostrará una salida como:  
+- **`/dev/tty1`** → Si estás en una consola física (Ctrl + Alt + F1-F6).  
+- **`/dev/pts/0`** → Si estás en una terminal virtual dentro de un entorno gráfico (PTY).  
+
+Si necesitas cambiar entre **TTYs**, usa **Ctrl + Alt + F1-F6** (en algunas distros modernas, el entorno gráfico puede estar en F2 o F7).
+
 1. **Sintaxis Estándar**: Esta es una convención comúnmente utilizada en sistemas que siguen las especificaciones de POSIX (Portable Operating System Interface), como la mayoría de las distribuciones de Linux.
 
-`ps -e` muestra los procesos de todo el sistema en cualquier terminal. La información que obtenemos por pantalla es la misma que con `ps` pero para todas las terminales.
+`ps -e` muestra los procesos de todo el sistema en cualquier terminal. La información que obtenemos por pantalla es la misma que con `ps` pero para todas las terminales, ya que por si solo, `ps` muestra los procesos de la terminal actual.
 
 ```bash
 si@si-VirtualBox:~$ ps -e
@@ -84,6 +99,58 @@ CMD                             PID    PPID     TIME USER     %CPU
 /usr/bin/Xwayland :0 -rootl    4261    3849 00:00:00 si        0.0
 /usr/libexec/packagekitd       3189       1 00:00:06 root      0.2
 ```
+
+`ps -u` muestra los procesos asociados al usuario que ejecuta el comando.
+
+```bash
+si@si-VirtualBox:~$ ps -u
+    PID TTY          TIME CMD
+   1457 pts/1    00:00:00 bash
+   1832 pts/1    00:00:00 ps
+```
+
+`ps -u usuario1,usuario2` muestra los procesos que están ejecutando los usuarios especificados.
+
+```bash
+si@si-VirtualBox:~$ ps -u si,root
+    PID TTY          TIME CMD
+   1457 pts/1    00:00:00 bash
+   1832 pts/1    00:00:00 ps
+      1 ?        00:00:02 systemd
+      2 ?        00:00:00 kthreadd
+      3 ?        00:00:00 rcu_gp
+```
+
+`ps -aux` muestra todos los procesos en ejecución en el sistema con detalles adicionales, incluyendo información sobre el usuario propietario, el uso de CPU y memoria, el tiempo de ejecución y el comando asociado.
+
+```bash
+si@si-VirtualBox:~$ ps -aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.3 167892  9420 ?        Ss   16:07   0:02 /sbin/init splash
+root         2  0.0  0.0      0     0 ?        S    16:07   0:00 [kthreadd]
+root         3  0.0  0.0      0     0 ?        I    16:07   0:00 [rcu_gp]
+root         4  0.0  0.0      0     0 ?        I    16:07   0:00 [rcu_par_gp]
+```
+
+`ps --tty pts/0` muestra los procesos asociados a la terminal `pts/0`.
+
+```bash
+si@si-VirtualBox:~$ ps --tty pts/0
+    PID TTY          TIME CMD
+   1501 pts/0    00:00:00 bash
+   1532 pts/0    00:00:00 vim
+```
+
+`ps -t pts/0` es otra forma de mostrar los procesos que están siendo ejecutados en la terminal `pts/0`.
+
+```bash
+si@si-VirtualBox:~$ ps -t pts/0
+    PID TTY          TIME CMD
+   1501 pts/0    00:00:00 bash
+   1532 pts/0    00:00:00 vim
+```
+
+Ambos comandos (`ps --tty pts/0` y `ps -t pts/0`) son equivalentes y se utilizan para ver qué procesos están activos en una terminal específica.
 
 2. **Sintaxis BSD**: Esta es una convención utilizada principalmente en sistemas derivados de BSD (Berkeley Software Distribution), como FreeBSD, OpenBSD y macOS. En la sintaxis BSD, las opciones del comando `ps` se especifican sin guiones y pueden estar combinadas.
 

@@ -3,7 +3,7 @@
 
 Listado de variables de entorno interesantes:
 
-- **SHELL**: El nombre de la shell por defecto del usuario.
+- **SHELL**: El nombre de la shell por defecto del usuario, entendiendo shell como intérprete de comandos.
 
 - **HOME**: El nombre de la ruta de tu directorio personal.
 
