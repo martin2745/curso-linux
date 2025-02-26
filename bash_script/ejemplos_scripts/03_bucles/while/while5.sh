@@ -1,5 +1,4 @@
 #/bin/bash
-# Author: Martín Gil Blanco
 
 # Bucle while
 
