@@ -1,4 +1,4 @@
-#!/bin/bash                             # Línea necesaria para saber qué shell ejecutará el script
+#!/bin/bash                             
 
 echo "Dame un número"                   # Pedimos un número
 read n1                                  # Lo que se introduce por teclado se guarda como variable n1

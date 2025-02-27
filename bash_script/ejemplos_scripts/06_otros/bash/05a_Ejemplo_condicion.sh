@@ -1,4 +1,4 @@
-#!/bin/bash                             # Línea necesaria para saber qué shell ejecutará el script
+#!/bin/bash                             
 
 
 echo "Dame un número"                   # Pedimos un número

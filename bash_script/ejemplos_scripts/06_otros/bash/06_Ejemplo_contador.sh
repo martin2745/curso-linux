@@ -1,4 +1,4 @@
-#!/bin/bash             # Línea necesaria para saber qué shell ejecutará el script
+#!/bin/bash             
 
 for i in $(seq 1 10)   # Comienza el bucle contador donde la variable i toma el valor de 1 a 10
 do                      # hacer

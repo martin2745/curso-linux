@@ -1,4 +1,4 @@
-#!/bin/bash             # Línea necesaria para saber qué shell ejecutará el script
+#!/bin/bash             
 
 i=1                     # Definimos la variable i con valor 1.
 until [ $i -ge 101 ]    # Comienza el bucle contador donde la variable i toma el valor de 1 a 100: Hasta que i sea mayor o igual a 101

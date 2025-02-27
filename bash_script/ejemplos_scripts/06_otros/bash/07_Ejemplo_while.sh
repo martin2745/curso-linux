@@ -1,4 +1,4 @@
-#!/bin/bash             # Línea necesaria para saber qué shell ejecutará el script
+#!/bin/bash             
 
 i=1                     # Definimos la variable i con valor 1.
 while [ $i -le 10 ]     # Comienza el bucle contador donde la variable i toma el valor de 1 a 10: Mientras i sea menor o igual a 10

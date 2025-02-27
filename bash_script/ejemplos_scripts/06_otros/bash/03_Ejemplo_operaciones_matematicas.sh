@@ -1,4 +1,4 @@
-#!/bin/bash             # Línea necesaria para saber qué shell ejecutará el script
+#!/bin/bash             
 
 
 expr 2 \* 2             # Realiza la operación 2*2

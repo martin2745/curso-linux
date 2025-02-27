@@ -1,4 +1,4 @@
-#!/bin/bash       # Línea necesaria para saber qué shell ejecutará el script
+#!/bin/bash       
 
 a=ls              # Definimos la variable a con el valor ls
 

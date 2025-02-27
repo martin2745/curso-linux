@@ -1,4 +1,4 @@
-#!/bin/bash             # Línea necesaria para saber qué shell ejecutará el script
+#!/bin/bash             
 
 
 echo "Dame tu nombre"    # Pedimos el nombre del usuario

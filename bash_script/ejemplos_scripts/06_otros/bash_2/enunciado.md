@@ -1,7 +1,7 @@
 ### **Enunciado del Script de Bash para Creación de Usuarios**
 
 ```csv
-#nome;contrasinal;grupo;habilitado
+#nombre;password;grupo;habilitado
 user01;abc123.;group01;N
 user02;abc123.;group01;s
 user03;abc123.;group01;n

@@ -1,4 +1,4 @@
-#!/bin/bash     # Línea necesaria para saber qué shell ejecutará el script
+#!/bin/bash     
 
 # Ejemplo de ejecución:
 # bash Ejemplo2_parametros.sh 1 2 3 4 5 6 7 8 9 a b c 
