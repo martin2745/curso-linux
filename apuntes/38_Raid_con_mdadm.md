@@ -18,11 +18,15 @@ Para hacer el montaje de un RAID 5 necesitamos 3 discos de 10G cada uno para ten
 Una vez arrancada la máquina comprobamos que existen los discos.
 
 ```bash
-root@si-VirtualBox:~# lsblk | egrep "^sd*"
-sda      8:0    0    50G  0 disk
-sdb      8:16   0    10G  0 disk
-sdc      8:32   0    10G  0 disk
-sdd      8:48   0    10G  0 disk
+root@si-VirtualBox:~# lsblk -e7
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0   50G  0 disk
+├─sda1   8:1    0    1M  0 part
+├─sda2   8:2    0  513M  0 part /boot/efi
+└─sda3   8:3    0 49,5G  0 part /
+sdb      8:16   0   10G  0 disk
+sdc      8:32   0   10G  0 disk
+sdd      8:48   0   10G  0 disk
 ```
 
 _**Nota**_: Previamente, aunque en esta práctica no es necesario ya que los discos no se han utilizado anteriormente, es recomendable realizar un borrado del sector cero.
@@ -66,6 +70,8 @@ sdd      8:48   0   10G  0 disk
 sr0     11:0    1 1024M  0 rom
 ```
 
+_*Nota*_: Tan correcto es realizarlo haciendo uso del comando `parted` como de la herramienta `fdisk`.
+
 2. Llegados a este punto tendremos que instalar la aplicación **mdadm** que permitirá gestionar nuestros RAID.
 
 ```bash
@@ -95,7 +101,7 @@ mdadm: array /dev/md0 started.
 3. Es interesante tener otra terminal con la cual poder ver cada segundo la información en detalle de `/dev/md0`.
 
 ```bash
-root@si-VirtualBox:~# watch -n1 mdadm --detail /dev/md0
+root@si-VirtualBox:~# watch -n 1 mdadm --detail /dev/md0
 ```
 
 ```bash
@@ -133,21 +139,29 @@ Consistency Policy : resync
        3       8       49        2      active sync   /dev/sdd1
 ```
 
+El comando `watch` nos permite ejecutar en bucle otro comando y le indicamos que tenga una frecuencia de actualización de 1 segundo con `-n 1`.
+
 4. Llegados a este punto tenemos creado nuestro RAID. El problema es que las configuraciones que hemos realizado no son persistentes y en próximos arranques el nombre `/dev/md0` se modificará. Para evitar esto, tenemos que ejecutar los siguientes comandos:
 
-El primer comando añadirá la fichero `/etc/mdadm/mdadm.conf` para hacer persistente la ruta `/dev/md0`.
+El primer comando añadirá la información del RAID al fichero `/etc/mdadm/mdadm.conf` para hacer persistente la ruta `/dev/md0`.
 
 ```bash
 root@si-VirtualBox:~# mdadm --detail --scan | grep md0 | tee -a /etc/mdadm/mdadm.conf
 ARRAY /dev/md0 metadata=1.2 name=si-VirtualBox:0 UUID=56175065:02460b89:83ee4102:738deb4b
 ```
 
-El siguiente comando actualiza el arranque para que mdadm se adelante al Sistema Operativo a la hora de inicializar las particiones. La salida del comando se guarda en la ruta `/boot`
+El siguiente comando actualiza el arranque para que mdadm se adelante al Sistema Operativo a la hora de inicializar las particiones. La salida del comando se guarda en la ruta `/boot`. El siguiente comando incluye esta configuración de `/dev/md0` en el initramfs, asegurando que el RAID sea detectado correctamente en el próximo reinicio.
 
 ```bash
 root@si-VirtualBox:~# update-initramfs -u
 update-initramfs: Generating /boot/initrd.img-6.5.0-35-generic
 ```
+
+_*Nota*_: Initramfs es el encargado de:
+
+- Cargar los **módulos y drivers necesarios** (RAID, LVM, cifrado, etc.).
+- Encuentrar y montar el **sistema de archivos raíz (`/`)**.
+- Una vez listo, **pasa el control al kernel**.
 
 En este punto todas nuestras particiones pertenecen al volumen lógico **md0**.
 
@@ -328,7 +342,7 @@ Consistency Policy : resync
        -       0        0        2      removed
 ```
 
-11. Tenemos crear una partición en `/dev/sde` de 10G y añadir el nuevo disco al RAID.
+11. Tenemos crear una partición en `/dev/sde` de 10G y añadir el nuevo disco al RAID. En el siguiente caso vamos a usar un disco de 20G por lo que tenemos que hacer una partición que ocupe la mitad del disco.
 
 ```bash
 root@si-VirtualBox:~# parted -s /dev/sde mklabel gpt
@@ -480,5 +494,4 @@ Consistency Policy : resync
        3       8       65        2      active sync   /dev/sde1
 
        0       8       17        -      faulty   /dev/sdb1
-
 ```
