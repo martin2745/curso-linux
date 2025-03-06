@@ -231,7 +231,7 @@ sr0      11:0    1 1024M  0 rom
 ```bash
 root@si-VirtualBox:~# cp -pv /etc/fstab /etc/fstab_VIEJO
 '/etc/fstab' -> '/etc/fstab_VIEJO'
-root@si-VirtualBox:~# echo "/dev/mnt0 /mnt/RAID5 ext4 defaults,nofail,discard 0 0" | tee -a /etc/fstab/dev/mnt0 /mnt/RAID5 ext4 defaults,nofail,discard 0 0
+root@si-VirtualBox:~# echo "/dev/md0 /mnt/RAID5 ext4 defaults,nofail,discard 0 0" | tee -a /etc/fstab
 root@si-VirtualBox:~# mount -a
 ```
 
