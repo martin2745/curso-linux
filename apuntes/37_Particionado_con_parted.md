@@ -1,6 +1,5 @@
 # Particionado con parted
 
-
 1. Asignamos el tipo de particionado.
 
 **MBR**

@@ -1,4 +1,3 @@
-
 # Entorno y variables de Entorno en Linux
 
 Listado de variables de entorno interesantes:

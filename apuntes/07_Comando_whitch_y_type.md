@@ -1,4 +1,3 @@
-
 # Comando which y type
 
 Ambos comandos, `which` y `type`, son útiles para identificar la ubicación de un comando específico y para determinar cómo se interpretará un comando en particular.

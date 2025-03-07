@@ -1,4 +1,3 @@
-
 # Comando who, whoami, id y groups
 
 - `who:` El comando `who` muestra información sobre los usuarios que están actualmente conectados al sistema. En este caso, muestra dos usuarios: "nuevo" y "si". Muestra la terminal (pts/0 y pts/1) desde la que están conectados, así como la hora y la dirección IP.
