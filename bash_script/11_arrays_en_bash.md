@@ -1,6 +1,8 @@
-### arrays en bash
+# arrays en bash
 
-#### declarar arrays
+## Teoría de arrays
+
+### declarar arrays
 
 Para declarar un array podemos hacerlo de varias maneras.
 
@@ -73,7 +75,7 @@ mi_funcion
 echo "Fuera de la función: ${array_local[@]}"  # Esto mostrará un valor vacío o error, ya que $array_local no está definido fuera de la función
 ```
 
-#### Referenciar Arrays
+### Referenciar Arrays
 
 - `${nombre[índice]}` donde nombre es el nombre del array e índice es la posición entera que contiene su valor correspondiente.
 - `${nombre[@]}` donde nombre es el nombre del array y el índice @ representa todos los elementos del vector. Devuelve una cadena con los elementos separados por espacio.
@@ -106,12 +108,12 @@ primeroZsegundoZtercero
 Es decir, a "${nombre[*]}" Le afecta el primer caracter de la variable separador de campos IFS.
 ```
 
-#### Eliminar arrays
+### Eliminar arrays
 
 - `unset nombre`: Elimina el array declarado como `nombre` siempre que no esté declarado en modo lectura.
 - `unset nombre[índice]`: Elimina el índice del array `nombre` en la posición [índice] siempre que no esté declarado en modo lectura.
 
-#### Recorrer arrays
+### Recorrer arrays
 
 - Recorre los índices del array declarado como `nombre` y muestra cada valor en pantalla. Siempre utiliza comillas dobles para evitar errores de separadores como espacios que puedan existir en los valores de los índices.
 
@@ -131,7 +133,7 @@ echo $i
 done
 ```
 
-#### Longitud de los arrays e índices
+### Longitud de los arrays e índices
 
 ```bash
 echo ${#nombre[@]}
@@ -179,7 +181,7 @@ si@si-VirtualBox:~$ echo ${#vector3[2]}
 4
 ```
 
-#### Arrays como parámetros de funciones
+### Arrays como parámetros de funciones
 
 En la llamada a la función utilizamos como parámetro la notación "nombre[@]", y dentro del cuerpo de la función utilizamos la referencia indirecta ${!número}, donde número es el número del parámetro en la llamada a la función: 1, 2, 3...
 
@@ -193,11 +195,9 @@ nombres=(Anxo Brais) # Se declara la variable array nombres con los valores Anxo
 f_nombre "nombres[@]" # Llamada a la ejecución de la función llamada f_nombre donde el primer parámetro $1 toma el valor "nombres[@]", lo cual es equivalente a los valores de todos los índices del array llamado nombres
 ```
 
----
+## Prácticas sobre arrays
 
-### Prácticas sobre arrays
-
-#### Declarar y eliminar arrays
+### Declarar y eliminar arrays
 
 Muestra el valor de la variable llamada "curso" y cómo está declarada en caso de existir.
 
@@ -257,7 +257,7 @@ unset curso[1]
 
 _*Nota: No es lo mismo pedir por teclado unos datos para el array que pedir los datos para un índice concreto del array.*_
 
-1. #### Pedir datos para un array
+1. ### Pedir datos para un array
 
 Lee desde la entrada estándar (teclado) una lista de palabras como índices en un array llamado "curso5", comenzando desde 0.
 
@@ -275,7 +275,7 @@ Muestra el mensaje 'Escriba valores del array en una lista: ' y recoge desde la 
 
 Como el valor de IFS=$' \r\n' y el número de palabras de la lista insertada es 3, se sustituyen los valores de los índices 0, 1 y 2 por estos nuevos: 1, 2 y 3 respectivamente.
 
-2. #### Pedir datos para una posición del array
+2. ### Pedir datos para una posición del array
 
 Recoge por teclado el valor del índice 1 del array llamado "curso5".
 
@@ -288,253 +288,6 @@ Asigna el valor '4 5 6' al índice 1, ya que en la asignación al índice no se 
 ```bash
 4 5 6
 ```
-
----
-
-### Comando test
-
-El comando `test` en Unix/Linux se utiliza para evaluar expresiones condicionales, normalmente dentro de scripts de shell. Permite verificar condiciones como la existencia de archivos, comparaciones de cadenas y valores numéricos, entre otras.
-
-- **Sintaxis básica**:
-  ```sh
-  test EXPRESION
-  ```
-- **Sintaxis alternativa (preferida en scripts)**:
-  ```sh
-  [ EXPRESION ]
-  ```
-
-#### Opciones `-n` y `-z`
-
-Estas opciones se utilizan para evaluar el estado de las cadenas de texto.
-
-- **`-n STRING`**: Evalúa si la longitud de `STRING` es mayor que cero (es decir, si la cadena no está vacía).
-- **`-z STRING`**: Evalúa si la longitud de `STRING` es igual a cero (es decir, si la cadena está vacía).
-
-#### Ejemplos
-
-1. **Usando `-n` para verificar si una cadena no está vacía**:
-
-   ```sh
-   cadena="Hola"
-   if [ -n "$cadena" ]; then
-     echo "La cadena no está vacía"
-   else
-     echo "La cadena está vacía"
-   fi
-   ```
-
-   - **Resultado**: `La cadena no está vacía` (porque `cadena` contiene "Hola").
-
-2. **Usando `-z` para verificar si una cadena está vacía**:
-   ```sh
-   cadena=""
-   if [ -z "$cadena" ]; then
-     echo "La cadena está vacía"
-   else
-     echo "La cadena no está vacía"
-   fi
-   ```
-   - **Resultado**: `La cadena está vacía` (porque `cadena` no contiene ningún valor).
-
-#### Ejemplos más completos
-
-3. **Comparación de cadenas**:
-
-   ```sh
-   cadena1="Hola"
-   cadena2=""
-
-   if [ -n "$cadena1" ]; then
-     echo "cadena1 no está vacía"
-   else
-     echo "cadena1 está vacía"
-   fi
-
-   if [ -z "$cadena2" ]; then
-     echo "cadena2 está vacía"
-   else
-     echo "cadena2 no está vacía"
-   fi
-   ```
-
-   - **Resultado**:
-     ```
-     cadena1 no está vacía
-     cadena2 está vacía
-     ```
-
-4. **Combinar condiciones**:
-
-   ```sh
-   cadena1="Hola"
-   cadena2="Mundo"
-
-   if [ -n "$cadena1" ] && [ -n "$cadena2" ]; then
-     echo "Ambas cadenas no están vacías"
-   else
-     echo "Una de las cadenas está vacía"
-   fi
-   ```
-
-   - **Resultado**: `Ambas cadenas no están vacías` (porque ambas cadenas contienen texto).
-
-Como resumen podemos decir que:
-
-- `test -n STRING` o `[ -n STRING ]` verifica si `STRING` no está vacía.
-- `test -z STRING` o `[ -z STRING ]` verifica si `STRING` está vacía.
-
-Estos comandos son útiles en scripts de shell para tomar decisiones basadas en el contenido de las cadenas.
-
-Existen otras opciones del comando `test` muy comunes, a continuación se muestran varios ejemplo:
-
-| **Opción** | **Descripción**                                           | **Ejemplo**                                                              |
-| ---------- | --------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `-n`       | Evalúa si la longitud de una cadena es mayor que cero.    | `[ -n "$cadena" ]` (verdadero si `cadena` no está vacía)                 |
-| `-z`       | Evalúa si la longitud de una cadena es igual a cero.      | `[ -z "$cadena" ]` (verdadero si `cadena` está vacía)                    |
-| `-r`       | Evalúa si un archivo existe y tiene permiso de lectura.   | `[ -r "$archivo" ]` (verdadero si `archivo` es legible)                  |
-| `-w`       | Evalúa si un archivo existe y tiene permiso de escritura. | `[ -w "$archivo" ]` (verdadero si `archivo` es escribible)               |
-| `-x`       | Evalúa si un archivo existe y tiene permiso de ejecución. | `[ -x "$archivo" ]` (verdadero si `archivo` es ejecutable)               |
-| `-f`       | Evalúa si un archivo existe y es un archivo regular.      | `[ -f "$archivo" ]` (verdadero si `archivo` es un archivo regular)       |
-| `-d`       | Evalúa si un archivo existe y es un directorio.           | `[ -d "$directorio" ]` (verdadero si `directorio` es un directorio)      |
-| `-e`       | Evalúa si un archivo existe.                              | `[ -e "$archivo" ]` (verdadero si `archivo` existe)                      |
-| `-s`       | Evalúa si un archivo existe y no está vacío.              | `[ -s "$archivo" ]` (verdadero si `archivo` tiene tamaño mayor que cero) |
-
-#### Ejemplos de uso
-
-1. **Verificar si una cadena no está vacía**:
-
-   ```sh
-   cadena="Hola"
-   if [ -n "$cadena" ]; then
-     echo "La cadena no está vacía"
-   fi
-   ```
-
-2. **Verificar si una cadena está vacía**:
-
-   ```sh
-   cadena=""
-   if [ -z "$cadena" ]; then
-     echo "La cadena está vacía"
-   fi
-   ```
-
-3. **Verificar si un archivo es legible**:
-
-   ```sh
-   archivo="/path/to/file"
-   if [ -r "$archivo" ]; then
-     echo "El archivo es legible"
-   fi
-   ```
-
-4. **Verificar si un archivo es escribible**:
-
-   ```sh
-   archivo="/path/to/file"
-   if [ -w "$archivo" ]; then
-     echo "El archivo es escribible"
-   fi
-   ```
-
-5. **Verificar si un archivo es ejecutable**:
-
-   ```sh
-   archivo="/path/to/file"
-   if [ -x "$archivo" ]; then
-     echo "El archivo es ejecutable"
-   fi
-   ```
-
-6. **Verificar si un archivo es un archivo regular**:
-
-   ```sh
-   archivo="/path/to/file"
-   if [ -f "$archivo" ]; then
-     echo "El archivo es un archivo regular"
-   fi
-   ```
-
-7. **Verificar si un archivo es un directorio**:
-
-   ```sh
-   directorio="/path/to/directory"
-   if [ -d "$directorio" ]; then
-     echo "El directorio existe"
-   fi
-   ```
-
-8. **Verificar si un archivo existe**:
-
-   ```sh
-   archivo="/path/to/file"
-   if [ -e "$archivo" ]; then
-     echo "El archivo existe"
-   fi
-   ```
-
-9. **Verificar si un archivo no está vacío**:
-   ```sh
-   archivo="/path/to/file"
-   if [ -s "$archivo" ]; then
-     echo "El archivo no está vacío"
-   fi
-   ```
-
-Estas opciones son muy útiles para escribir scripts de shell que necesiten realizar comprobaciones de condiciones antes de ejecutar ciertas operaciones.
-
----
-
-### Variables locales y globales en un script
-
-En un script de shell en Linux, puedes definir variables locales y globales dentro de una función de la siguiente manera:
-
-#### Sin especificar nada (implícitamente global):
-
-```bash
-mi_funcion() {
-    variable_global="Hola"
-}
-```
-
-- **Descripción:** La variable `variable_global` será global y accesible desde cualquier parte del script después de llamar a `mi_funcion()`.
-
-#### Con `local`:
-
-```bash
-mi_funcion() {
-    local variable_local="Mundo"
-}
-```
-
-- **Descripción:** `variable_local` será local a la función `mi_funcion()` y no estará disponible fuera de ella.
-
-#### Con `declare`:
-
-```bash
-mi_funcion() {
-    declare variable_local="Linux"
-}
-```
-
-- **Descripción:** Similar a `local`, `variable_local` será local a la función `mi_funcion()` y no estará disponible fuera de ella. `declare` es una forma más explícita de declarar variables en Bash.
-
-#### Con `declare -g`:
-
-```bash
-mi_funcion() {
-    declare -g variable_global="Adiós"
-}
-```
-
-- **Descripción:** `variable_global` será global, incluso si se define dentro de una función, y será accesible desde cualquier parte del script después de llamar a `mi_funcion()`.
-
-#### Resumen:
-
-- **Global (implícito):** Sin ninguna palabra clave, la variable es global.
-- **Local:** Se define usando `local` o `declare` dentro de la función.
-- **Global explícito:** Se usa `declare -g` para declarar una variable global dentro de una función.
 
 ---
 
@@ -555,9 +308,3 @@ A continuación se muestra una breve descripción de cada una de estas variables
 | `${@:4:2}`    | Expansión que devuelve dos argumentos empezando desde el cuarto (el cuarto y el quinto argumento).                                      | `echo "${@:4:2}"`    |
 
 Estas variables son fundamentales para manipular la entrada, salida y estado de un script de shell en ejecución.
-
----
-
-#### En la siguiente ruta podrá encontrar explicaciones relacionadas con scripting en bash
-
-[Apuntes de Linux y bash](../libros%20de%20linux/APUNTES_LINUX.md)
