@@ -1,5 +1,4 @@
-
-### declare, typeset y readonly
+# declare, typeset y readonly
 
 `declare e typeset` son sinónimos por lo que todos los siguientes ejemplos funcionan del mismo modo con los dos comandos. Permiten declarar variables.
 
