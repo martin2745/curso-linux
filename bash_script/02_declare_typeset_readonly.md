@@ -1,7 +1,7 @@
 
 ### declare, typeset y readonly
 
-`declare e typeset` son sinónimos. Permiten declarar variables.
+`declare e typeset` son sinónimos por lo que todos los siguientes ejemplos funcionan del mismo modo con los dos comandos. Permiten declarar variables.
 
 ```bash
 si@si-VirtualBox:~$ declare var1='AAA'
