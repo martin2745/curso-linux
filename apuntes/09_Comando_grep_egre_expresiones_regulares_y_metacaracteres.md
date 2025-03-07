@@ -51,6 +51,14 @@ Las expresiones regulares (regex o regexp) son patrones utilizados para encontra
 
 #### Clases de Caracteres POSIX
 
+**POSIX** (*Portable Operating System Interface for Unix*) es un **estándar** que define cómo deben comportarse los sistemas operativos tipo **Unix** (como Linux, macOS y BSD) para garantizar compatibilidad entre ellos.  
+
+🔹 **Objetivo:** Permitir que los programas sean **portables** y funcionen en diferentes sistemas sin cambios importantes.  
+🔹 **Incluye:** Comandos, utilidades, programación en shell (`sh`), llamadas al sistema (API).  
+🔹 **Ejemplo:** Un script POSIX-compatible se ejecutará en Bash, Dash y otros shells sin problemas.  
+
+Podemos concluir que **POSIX** es una norma que unifica el comportamiento de sistemas Unix para mejorar la compatibilidad y portabilidad.
+
 Las clases de caracteres POSIX son atajos para definir conjuntos de caracteres comunes:
 
 - **[:lower:]**: [a-z].
