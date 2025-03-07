@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Engade unha liña no ficheiro .bashrc do usuario para que o prompt que lle apareza
-# sexa “Bos dias, loginUsuario >”
+# Añadir una línea en el archivo .bashrc del usuario para que el prompt que le aparezca
+# sea “Buenos días, loginUsuario >”
 
-# export PS1="Bos dias, \u> "
-export PS1="Bos dias, ${USER}> "
+# export PS1="Buenos días, \u> "
+export PS1="Buenos días, ${USER}> "

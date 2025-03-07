@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Facer un script que acepte como argumentos os nomes dos ficheiros e mostre o
-# contido de cada un deles, precendendo a cada un dunha liña: “Contido do ficheiro x”
+# Hacer un script que acepte como argumentos los nombres de los archivos y muestre el
+# contenido de cada uno de ellos, precediendo a cada uno de una línea: “Contenido del archivo x”
 
 for i in ${@}; do
         if [ -f ${i} ]; then

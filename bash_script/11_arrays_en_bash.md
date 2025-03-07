@@ -47,7 +47,7 @@ Hola
 
 ```bash
 si@si-VirtualBox:~$ declare -p vectorUno
-declare -a vectorUno=([0]="nuevo" [1]="nuevo2" [3]="3")
+declare -a vectorUno=([0]="nuevo" [1]="nuevo2" [3]="nuevo3")
 ```
 
 - `local` es una palabra clave que se utiliza dentro de funciones para declarar variables locales. Esto significa que las variables definidas como locales solo son visibles y accesibles dentro de la función donde se declaran, y no afectan a variables con el mismo nombre fuera de la función. Por ejemplo:
@@ -124,7 +124,7 @@ echo $i
 done
 ```
 
-- Recorre los índices del array declarado como `nombre` y muestra cada valor en pantalla. Siempre utiliza comillas dobles para evitar errores de separadores como espacios que puedan existir en los valores de los índices.
+- Recorre los índices del array declarado como `nombre` y muestra cada valor en pantalla. Siempre utiliza comillas dobles para evitar errores de separadores como espacios que puedan existir en los valores de los índices. Si empleamos el "${nombre[@]}", con independencia del IFS siempre tendremos los elementos separados por espacio.
 
 ```bash
 for i in "${nombre[@]}"

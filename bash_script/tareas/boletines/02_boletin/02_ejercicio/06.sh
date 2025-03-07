@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Realizar un script que recibe un directorio como parámetro e mostra dos seus ficheiros o nome, e os seus permisos.
+# Realizar un script que recibe un directorio como parámetro y muestra de sus archivos el nombre y sus permisos.
 
 if [ -d $1 ]; then
         echo -e "El directorio ${1}\n"

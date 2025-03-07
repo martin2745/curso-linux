@@ -1,27 +1,26 @@
 #!/bin/bash
 
-# Realizar un script que deberá mostrar o seguinte menú:
-# 1. Listar o contido do directorio actual
-# 2. Listar o contido do directorio actual en formato largo
-# 3. Sair
+# Realizar un script que deberá mostrar el siguiente menú:
+# 1. Listar el contenido del directorio actual
+# 2. Listar el contenido del directorio actual en formato largo
+# 3. Salir
 
-# Se se introducir un valor diferente, o script mostrará a mensaxe “erro na selección”.
-# Se repetirá o menú ata que o usuario introduza a opción 3 (sair)
+# Si se introduce un valor diferente, el script mostrará el mensaje “Error en la selección”.
+# Se repetirá el menú hasta que el usuario introduzca la opción 3 (salir).
 
 function f_menu() {
-echo "1. Listar o contido de directorio actual"
-echo "2. Listar o contido do directorio actual en formato longo"
-echo "3. Saír"
+    echo "1. Listar el contenido del directorio actual"
+    echo "2. Listar el contenido del directorio actual en formato largo"
+    echo "3. Salir"
 
-read -p "Opción: " sair
+    read -p "Opción: " salir
 
-case $sair in
+    case $salir in
         1) ls && f_menu;;
         2) ls -l && f_menu;;
         3) ;;
-        *) echo "Erro na selección" && f_menu;;
-esac
+        *) echo "Error en la selección" && f_menu;;
+    esac
 }
 
 f_menu
-

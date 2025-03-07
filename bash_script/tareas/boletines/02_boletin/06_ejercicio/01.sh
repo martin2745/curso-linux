@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Crear un script que dea todos os permisos de lectura e escritura aos ficheiros do
-# directorio que se pasa como parámetro, e só de lectura e execución aos
+# Crear un script que dé todos los permisos de lectura y escritura a los archivos del
+# directorio que se pasa como parámetro, y solo de lectura y ejecución a los
 # subdirectorios.
 
 cd ${1}
