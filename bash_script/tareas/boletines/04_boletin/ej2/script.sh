@@ -8,12 +8,12 @@ while read linea; do
         SACTIVO=$(echo /bin/bash)
         INACTIVO=$(echo /bin/false)
         if [ ${SHELLS} = ${INACTIVO} ]; then
-                echo "${USERS}. Usuario inactivo, bórrase a súa conta."
+                echo "${USERS}. Usuario inactivo, se borra su cuenta."
                 userdel -r ${USERS}
         elif [ ${HOMES} = ${HACTIVO} -a ${SHELLS} = ${SACTIVO} ]; then
-                echo "${USERS}. Usuario activo, copiando o seu /HOMES en /var/tmp/${USERS}"
+                echo "${USERS}. Usuario activo, copiando su /HOMES en /var/tmp/${USERS}"
                 tar cvfz /var/tmp/${USERS}.tar.gz ${HACTIVO}
         else
-                echo "${USERS}. Usuario non matriculado"
+                echo "${USERS}. Usuario no matriculado"
         fi
 done < /etc/passwd.txt

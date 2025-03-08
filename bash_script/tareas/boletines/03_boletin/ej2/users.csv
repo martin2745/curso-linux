@@ -1,4 +1,4 @@
-"Usuario","Contrasinal","Shell","Directorio de entrada ao sistema"
+"Usuario","Password","Shell","Directorio de entrada al sistema"
 "user1","p1","/bin/bash","/tmp"
 "user2","p2","/bin/false","/home/user2"
 "user3","p3","/bin/bash","/home/user3"

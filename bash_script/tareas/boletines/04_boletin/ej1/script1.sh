@@ -3,7 +3,7 @@
 oldIFS=${IFS}
 IFS=$'\n'
 
-RUTA='/tmp/renomear'
+RUTA='/tmp/renombrar'
 
 for i in $(ls "${RUTA}"); do
         A=$(echo ${i} | tr -d ' ')

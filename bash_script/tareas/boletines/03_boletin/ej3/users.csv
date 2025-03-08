@@ -1,4 +1,4 @@
-"Usuario","Contrasinal","Shell","Cartafol","Enable"
+"Usuario","Password","Shell","Directorio","Enable"
 "user1","p1","/bin/bash","/tmp","off"
 "user2","p2","/bin/false","/home/user2","off"
 "user3","p3","/bin/bash","/home/user3","on"
