@@ -8,6 +8,8 @@ El cliente (comando ssh) posee una configuración predeterminada que podemos mod
 - Opciones invocadas a través del archivo perteneciente a cada usuario situado en la ruta `~/.ssh/config`
 - Opciones invocadas a través del archivo de configuración global del sistema en `/etc/ssh/ssh_config`
 
+_*Nota*_: por otra parte, existe el archivo `/etc/ssh/sshd_config` donde se establece la configuración del servidor.
+
 Una vez que nos hemos conectado por ssh en el cliente se crea la carpeta `.ssh/known_hosts` con las claves públicas de los servidores a los que te has conectado anteriormente a través de SSH. Estas claves públicas se utilizan para verificar la identidad del servidor cuando te conectas nuevamente, asegurando que no haya ningún intento de suplantación de identidad (ataque de tipo "Man-in-the-middle").
 
 Comando ssh:
@@ -35,7 +37,21 @@ _*Nota*_: En la siguiente sección se detalla el uso de [netcat](#netcat).
 
 ### StrickHostKeyChecking
 
-El parámetro `StrictHostKeyChecking` en SSH (Secure Shell) se utiliza para definir cómo el cliente SSH trata las claves de host al conectarse a un servidor por primera vez o cuando la clave del servidor cambia. Esta directiva es importante para evitar ataques de tipo "man-in-the-middle" (MITM), donde un atacante podría interceptar la conexión y hacerse pasar por el servidor legítimo. A continuación se definen cada uno de los valores que puedes asignar a `StrictHostKeyChecking`:
+La primera vez que nos conectamos a un servidor se realiza una pregunta:
+
+```bash
+The authenticity of host '192.168.100.3 (192.168.100.3)' can't be established.
+ED25519 key fingerprint is SHA256:Ei+jyMSuP40ZKrFLQGIugsjpiOeCu7MvxpJjSl4caEc.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+```
+
+En caso de aceptar se creará en el cliente una carpeta oculta `.ssh` con los archivos `known_hosts` y `known_hosts.old`.
+- `Archivo known_hosts`: Este archivo se crea para almacenar las claves públicas (no los fingerprints) de los servidores SSH a los que te conectas. Sirve como una base de datos para verificar que el servidor es el mismo en futuras conexiones, evitando ataques como man-in-the-middle.
+- `Archivo known_hosts.old`: Es una copia de seguridad del archivo known_hosts, creada automáticamente cuando se modifica el original (por ejemplo, al actualizar o eliminar entradas). Esto permite restaurar información en caso de errores.
+- `Fingerprint`: Es un hash generado a partir de la clave pública del servidor. Se muestra la primera vez que te conectas para que confirmes la autenticidad del servidor. No se guarda directamente en known_hosts, ahí se almacena un cálculo resultante de este y otros datos como la clave pública del servidor.
+
+Por otra parte existe el parámetro `StrictHostKeyChecking` en SSH (Secure Shell) se utiliza para definir cómo el cliente SSH trata las claves de host al conectarse a un servidor por primera vez o cuando la clave del servidor cambia. Esta directiva es importante para evitar ataques de tipo "man-in-the-middle" (MITM), donde un atacante podría interceptar la conexión y hacerse pasar por el servidor legítimo. A continuación se definen cada uno de los valores que puedes asignar a `StrictHostKeyChecking`:
 
 1. **ask**:
 
@@ -63,31 +79,32 @@ ssh -o StrictHostKeyChecking=no -p 9999 kali@192.168.120.100
 
 ### Redirección gráfica por SSH
 
-El siguiente comando permitirá que nos conectemos por ssh y lanzará el navegador firefox en el cliente.
+El siguiente comando permitirá que nos conectemos por ssh y lanzará la aplicación xeyes en el cliente.
 
 ```bash
-ssh -X si@192.168.120.101 firefox
+ssh -X si@192.168.120.101 xeyes
 ```
 
-`X11Forwarding` ➜ Directiva que determina si la redirección gráfica es posible mediante conexiones SSH. Solo puede tomar 2 valores: yes/no.
+Existen una serie de variables que tienen que editarse en el servidor ssh para poder realizar este proceso. La configuración del servidor está en la ruta ` /etc/ssh/sshd_config`:
 
-- X11Forwarding no ➜ es el valor por defecto. Deshabilita la redirección gráfica del servidor SSH.
+```bash
+cat -n /etc/ssh/sshd_config | grep X11
+    90  X11Forwarding yes
+    91  X11DisplayOffset 10
+    92  X11UseLocalhost yes
+```
 
-- X11Forwarding yes ➜ Habilita la redirección gráfica del servidor SSH.
+`X11Forwarding`: Directiva que determina si la redirección gráfica es posible mediante conexiones SSH. Solo puede tomar 2 valores: yes/no.
+- `X11Forwarding no`: es el valor por defecto. Deshabilita la redirección gráfica del servidor SSH.
+- `X11Forwarding yes`: Habilita la redirección gráfica del servidor SSH.
 
-`X11DisplayOffset` ➜ Directiva que determina el número del display donde espera el servidor gráfico. Por defecto es 10, para evitar interferencias con servidores X11 reales.
+`X11DisplayOffset`: Directiva que determina el número del display donde espera el servidor gráfico. Por defecto es 10, para evitar interferencias con servidores X11 reales.
+- `X11DisplayOffset 10`: es el valor por defecto. Indica el número de display donde espera el servidor gráfico para conexiones SSH.
+- `X11DisplayOffset 100`: Indica el número de display 100 donde espera el servidor gráfico para conexiones SSH.
 
-- X11DisplayOffset 10 ➜ es el valor por defecto. Indica el número de display donde espera el servidor gráfico para conexiones SSH.
-
-- X11DisplayOffset 100 ➜ Indica el número de display 100 donde espera el servidor gráfico para conexiones SSH.
-
-- X11Forwarding yes ➜ Habilita la redirección gráfica del servidor SSH.
-
-`X11UseLocalhost` ➜ Directiva que determina si la redirección gráfica es posible en la dirección loopback o en cualquier dirección:
-
-- X11UseLocalhost yes ➜ es el valor por defecto. Permite la redirección gráfica a la dirección loopback y define la variable de entorno DISPLAY a localhost, lo cual previene conexiones remotas no permitidas al display.
-
-- X11UseLocalhost no ➜ Habilita la redirección gráfica a todas las interfaces de red.
+`X11UseLocalhost`: Directiva que determina si la redirección gráfica es posible en la dirección loopback o en cualquier dirección:
+- `X11UseLocalhost yes`: es el valor por defecto. Permite la redirección gráfica a la dirección loopback y define la variable de entorno DISPLAY a localhost, lo cual previene conexiones remotas no permitidas al display.
+- `X11UseLocalhost no`: Habilita la redirección gráfica a todas las interfaces de red.
 
 ### Comando SSH + contraseña
 
@@ -99,7 +116,35 @@ sshpass -p 'abc123.' ssh si@192.168.120.101
 
 ### Cifrado asimétrico
 
-Generamos en el cliente el par de claves pública/privada en la ruta `~/.ssh/id_rsa`.
+Una conexión usando el protocolo SSH es de por sí segura (más segura que una conexión no cifrada, como telnet) pero presenta ciertos inconvenientes. El primero de ellos hace referencia al uso de contraseñas normales que, como viajan cifradas, no se podrán cifrar. Sin embargo, aunque las claves fuertes de los usuarios podrían limitar el impacto de seguridad, se deja abierta la posibilidad de hacer ataques de fuerza bruta que, si tienen éxito podrían culminar con efectos graves. 
+
+Ante este desafío con SSH se creó un mecanismo de autentificación basado en desafío y en criptografía asimétrica. El cliente cuenta con una clave privada. La clave pública correspondiente se configura en todos los usuarios de servidores remotos que se van a autenticar con la misma clave privada. Ya en el proceso de autenticación el cliente envía información sobre su clave pública al servidor. El servidor busca si para el usuario requerido se ha instalado pública del cliente. Si la encuentra, se envía un desafío al cliente que consiste en un valor aleatorio cifrado con la clave pública del cliente. El cliente, para completar la autenticación satisfactoriamente, debe descifrar el desafío con su clave privada y devolver el valor al servidor. El servidor comprobará si el desafío se ha resuelto correctamente y permitirá el inicio de sesión si así ha sido. 
+
+Bajo este esquema de autenticación, un par de claves (pública/privada) permite la autentificación en todos los servidores. Como el desafío es aleatorio, un ataque de fuerza bruta es mucho más difícil. Estas son las principales ventajas de este mecanismo de autentificación. Generamos en el cliente el par de claves pública/privada en la ruta `~/.ssh/id_rsa`.
+
+En primer lugar, el usuario creará su identidad digital generando el par de claves privada-pública. Como ya se explicó en la **criptografía asimétrica**, la clave privada debe mantenerse segura a toda costa, mientras que la pública puede distribuirse. La clave privada puede protegerse mediante una *passphrase* (frase de contraseña), lo que significa que, al usarla, habrá que introducir dicha contraseña. Es importante señalar que, al escribir la *passphrase*, el texto no será visible en pantalla.  
+
+**Advertencia clave**:  
+- Si olvidas la *passphrase*, la clave privada no podrá utilizarse, ya que no se podrá descifrar. El cifrado que hace seguro el sistema SSH también hace que la clave sea irrecuperable. La solución en este caso sería generar una nueva clave y distribuir la nueva clave pública en los equipos remotos.  
+
+#### Uso de claves con y sin *passphrase*:  
+- **Con *passphrase***: Es la opción más segura, ideal para uso personal.  
+- **Sin *passphrase***: Útil para scripts automatizados, ya que no requiere intervención manual.  
+
+#### Comando `ssh-keygen`:  
+Para generar el par de claves, se utiliza el comando `ssh-keygen` con las siguientes opciones principales:  
+- **`-t `**: Especifica el tipo de clave (RSA, DSA, ECDSA, etc.).  
+- **`-b `**: Define el tamaño de la clave (ejemplo: 4096 bits).  
+  - *Nota*: Estas claves solo se usan para autenticación, por lo que aumentar su tamaño no afectará al rendimiento de la CPU durante transferencias SSH.  
+- **`-C ""`**: Añade un comentario para identificar la clave (ejemplo: "clave_servidor").  
+- **`-f `**: Especifica la ruta y nombre de los archivos de claves (ejemplo: `~/.ssh/clave_personal`).  
+
+#### Ejemplo de uso:  
+```bash
+ssh-keygen -t rsa -b 4096 -C "clave_para_servidor" -f ~/.ssh/clave_servidor
+```
+
+Este comando generará una clave RSA de 4096 bits con un comentario identificativo y la guardará en `~/.ssh/clave_servidor`.
 
 ```bash
 ┌──(kali㉿kaliA)-[~]
