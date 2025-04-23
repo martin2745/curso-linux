@@ -1,4 +1,4 @@
-### Proceso de arranque
+# Secuencia de Arranque
 
 El proceso de arranque de una máquina linux se define a continuación en la siguiente imagen.
 
@@ -40,6 +40,14 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
       - Diseño modular.  
       - Opción de “arranque seguro” (Secure Boot).
 
+   A diferencia de BIOS, UEFI presenta la partición *ESP* (EFI System Partition), la cual contiene la información del *gestor de arranque* o gestores, en este caso la partición ESP es la `/dev/sda2`. En caso de estar el **Secure boot* activado, estos gestores tienen que estar firmados digitalmente para no tener problemas con malware.
+
+   ```bash
+      # UEFI
+      /dev/sda3      ext4     49G    12G   35G  26% /
+      /dev/sda2      vfat    512M   6,1M  506M   2% /boot/efi
+   ```
+
 3. **Detectar dispositivos:**  
    El sistema verifica la presencia de hardware conectado, identificando el disco que contiene el sistema operativo y otros dispositivos relevantes.
 
@@ -50,18 +58,23 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
    GRUB (GRand Unified Bootloader) lee su archivo de configuración (habitualmente en `/etc/grub2.cfg` o similar). GRUB carga el núcleo (kernel) de Linux y las bibliotecas necesarias para inicializar el sistema, y transfiere el control al kernel.
 
 6. **Ejecución de systemd (primer proceso en espacio de usuario):**  
-   Una vez cargado el kernel, este inicializa el sistema en el espacio de usuario ejecutando el primer proceso, generalmente `systemd` (PID 1). `systemd` coordina el inicio de todos los servicios necesarios para el funcionamiento del sistema.
+   
+   El núcleo del sistema operativo abrirá el *initramfs* (initial RAM filesystem). Initramfs es un archivo que contiene un sistema de archivos utilizado como un sistema de archivos raíz temporal durante el proceso de arranque. El objetivo principal de un archivo initramfs es proporcionar los módulos necesarios para que el núcleo pueda acceder al sistema de archivos raíz "real" del sistema operativo. Tan pronto como el sistema de archivos raíz esté disponible, el núcleo montará todos los sistemas de archivos configurados en `/etc/fstab` y luego ejecutará el primer programa, una utilidad llamada init. 
+   
+   El programa init es responsable de ejecutar todos los scripts de inicialización y demonios del sistema. Existen implementaciones distintas de tales iniciadores de sistemas aparte del *init* tradicional, como systemd y Upstart. Una vez que se carga el programa init, initramfs se elimina de la RAM.
+   
+   En resumen, una vez cargado el kernel, este inicializa el sistema en el espacio de usuario ejecutando el primer proceso, generalmente `systemd` (PID 1). `systemd` coordina el inicio de todos los servicios necesarios para el funcionamiento del sistema.
 
 7. **Ejecución de targets de systemd:**  
    `systemd` gestiona *targets* (objetivos), que agrupan servicios y procesos para distintas configuraciones del sistema. Ejemplos de targets son:
    - `default.target`: configuración estándar.
    - `multi-user.target`: modo multiusuario sin entorno gráfico.
    - `getty.target`: gestión de terminales de texto.
-   - `ssh.service`: acceso remoto por SSH.
+
+   _*Nota*_: Estos targets 
 
 8. **Ejecución de scripts de inicio:**  
    `systemd` ejecuta scripts que inicializan servicios y preparan el entorno para los usuarios, incluyendo configuraciones como `/systemd-logind`, `/etc/profile` (global), y `~/.bashrc` (específica del usuario).
 
 9. **Inicio de sesión de usuarios:**  
    Tras completar todos los pasos anteriores, el sistema está listo para que los usuarios inicien sesión, ya sea mediante terminales locales o conexiones remotas como SSH.
-
