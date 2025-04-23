@@ -316,3 +316,32 @@ usuario@usuario:~$ lsusb -t
 /:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=ohci-pci/12p, 12M
     |__ Port 1: Dev 2, If 0, Class=Human Interface Device, Driver=usbhid, 12M
 ```
+
+## Comando lsmod, comandos de gestión de módulos del kernel
+
+Enfocado en el listado de módulos del kernel tenemos este comando. Los módulos son partes del kernel que podemos activar o desactivar para añadir o quitar funcionalidades. Tiene una relación muy estrecha con los driver.
+
+Son archivos terminados con la extensión .ko que se almacenan en la ubicación `/lib/modules/<versión_del_kernel>/`
+
+```bash
+root@usuario:~# lsmod | grep floppy
+root@usuario:~# find / -name floppy.ko 2> /dev/null
+/usr/lib/modules/6.8.0-49-generic/kernel/drivers/block/floppy.ko
+/usr/lib/modules/6.8.0-40-generic/kernel/drivers/block/floppy.ko
+root@usuario:~# uname -r
+6.8.0-49-generic
+```
+
+- **lsmod**: Muestra módulos cargados en el sistema.
+- **modinfo**: Amplia información de un módulo.  
+- **insmod**: Carga un fichero .ko en el sistema.  
+- **rmmod**: Quita un módulo del sistema.
+  -w : Espera a que deje de utilizarse.  
+  -f : Fuerza el borrado.  
+
+Por otro lado tenemos el comando **modprobe**, el cual carga o borra módulos y resuelve las dependencias entre éstos. Como parámetros a destacar.
+- f : Fuerza la carga del módulo aunque la versión del kernel no coincida con la que espera encontrar.  
+- r : Elimina el módulo.  
+- v : Muestra información adicional de lo que realiza.  
+- n : Hace una simulación pero no inserta el módulo.
+
