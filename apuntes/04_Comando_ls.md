@@ -239,6 +239,10 @@ usuario@usuario:~$ lspci -s 00:03.0 -k
         Kernel modules: e1000
 ```
 
+_*Nota*_: Diferencia entre **kernel driver** y **kernel module**.
+- Kernel driver: Código encargado de controlar hardware específico.
+- Kernel module: Fragmento de código que puede añadirse o quitarse del kernel en caliente y tiene como objetivo en este contexto, implementar un driver.
+
 ## Comando lsusb
 
 El comando `lsusb` muestra información sobre los buses USB y los dispositivos conectados a ellos, como memorias USB, impresoras, cámaras, etc.
