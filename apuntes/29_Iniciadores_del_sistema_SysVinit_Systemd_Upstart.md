@@ -140,37 +140,29 @@ update-rc.d network-manager disable 2
 
 ## `systemd`
 
-- Se ejecuta un único programa `systemd` que utilizará ficheros de configuración para
-  cada elemento a gestionar llamados `unidades`, que pueden ser de diversos tipos: automount, device, mount, path, **service**, snapshot, socket y target.
+- Se ejecuta un único programa `systemd` que utilizará ficheros de configuración para cada elemento a gestionar llamados `unidades`, que pueden ser de diversos tipos: automount, device, mount, path, **service**, snapshot, socket y target.
 - Las `unidades`, es decir, los ficheros de configuración, se agrupan en diferentes `target`, donde también podemos definir el orden de ejecución y las dependencias con otros target o services. Son los equivalentes a los runlevels en SysVinit (hay target compatibles con estos). A continuación se adjunta una equivalencia aproximada entre los runlevels en SysVinit y los targets en systemd:
 
 - **Runlevel 0**: Apagado del sistema.
-
-  - **Systemd Target**: `poweroff.target`
+  - **Systemd Target**: `poweroff.target`.
 
 - **Runlevel 1**: Modo de rescate o de un solo usuario.
-
-  - **Systemd Target**: `rescue.target`
+  - **Systemd Target**: `rescue.target`.
 
 - **Runlevel 2**: Multiusuario sin red.
-
-  - **Systemd Target**: `multi-user.target`
+  - **Systemd Target**: `multi-user.target`.
 
 - **Runlevel 3**: Multiusuario con red.
-
-  - **Systemd Target**: `multi-user.target`
+  - **Systemd Target**: `multi-user.target`.
 
 - **Runlevel 4**: Reservado para un uso personalizado.
-
   - **Systemd Target**: No tiene un equivalente directo, se puede personalizar según las necesidades.
 
 - **Runlevel 5**: Multiusuario con interfaz gráfica (GUI).
-
-  - **Systemd Target**: `graphical.target`
+  - **Systemd Target**: `graphical.target`.
 
 - **Runlevel 6**: Reinicio del sistema.
-
-  - **Systemd Target**: `reboot.target`
+  - **Systemd Target**: `reboot.target`.
 
 ![sysvinit vs systemd](../imagenes/recursos/sysvinit_vs_systemd/sysvinit_vs_systemd.png)
 
@@ -226,3 +218,189 @@ lrwxrwxrwx 1 root root   16 feb  2 17:48 /usr/lib/systemd/system/runlevel5.targe
 drwxr-xr-x 2 root root 4096 nov 10 01:25 /usr/lib/systemd/system/runlevel5.target.wants
 lrwxrwxrwx 1 root root   13 feb  2 17:48 /usr/lib/systemd/system/runlevel6.target -> reboot.target
 ```
+
+## systemctl
+
+**systemctl** es la herramienta principal para gestionar la mayoría de los aspectos de  *systemd*. A continuación se describen algunos de los comandos más utilizados:
+
+- **get-default**: Muestra el *target* (objetivo) por defecto que se utiliza al iniciar el sistema. A continuación podemos ver que el target por defecto es graphical.target que equivale al runlevel 5.
+
+```bash
+root@usuario:~# systemctl get-default
+graphical.target
+```
+
+- **start/stop/status/etc... unit[.service]**: Permite iniciar, detener, reiniciar, recargar o consultar el estado de una unidad de servicio.  
+
+```bash
+root@usuario:~# systemctl status ssh
+● ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)
+     Active: active (running) since Wed 2025-04-23 23:50:58 CEST; 3min 27s ago
+       Docs: man:sshd(8)
+             man:sshd_config(5)
+    Process: 773 ExecStartPre=/usr/sbin/sshd -t (code=exited, status=0/SUCCESS)
+   Main PID: 789 (sshd)
+      Tasks: 1 (limit: 9438)
+     Memory: 7.4M
+        CPU: 1.454s
+     CGroup: /system.slice/ssh.service
+             └─789 "sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups"
+
+abr 23 23:50:56 usuario systemd[1]: Starting OpenBSD Secure Shell server...
+abr 23 23:50:58 usuario sshd[789]: Server listening on 0.0.0.0 port 22.
+abr 23 23:50:58 usuario systemd[1]: Started OpenBSD Secure Shell server.
+abr 23 23:50:58 usuario sshd[789]: Server listening on :: port 22.
+abr 23 23:51:26 usuario sshd[1295]: Accepted password for usuario from 10.0.2.2 port 49974 ssh2
+abr 23 23:51:27 usuario sshd[1295]: pam_unix(sshd:session): session opened for user usuario(uid=1000)
+```
+
+- **isolate unit.target**: Cambia el sistema al *target* especificado, deteniendo los servicios no requeridos por ese target.
+
+```bash
+root@usuario:~# systemctl isolate rescue.target --> Este comando cambia al modo de rescate o runlevel 1.
+```
+
+- **list-units [--type=service]**: Lista todas las unidades cargadas actualmente.  
+  Puedes filtrar por tipo, por ejemplo, solo servicios.
+
+```bash
+root@usuario:~# systemctl list-units --type=service
+  UNIT                                                  LOAD   ACTIVE SUB     DESCRIPTION                                          
+  accounts-daemon.service                               loaded active running Accounts Service
+  acpid.service                                         loaded active running ACPI event daemon
+  alsa-restore.service                                  loaded active exited  Save/Restore Sound Card State
+  apparmor.service                                      loaded active exited  Load AppArmor profiles
+  apport.service                                        loaded active exited  LSB: automatic crash report generation
+```
+
+- **enable/disable**: Habilita o deshabilita una unidad para que se inicie automáticamente al arrancar el sistema. Ejemplo:  
+  
+```bash
+systemctl enable apache2
+systemctl disable apache2
+```
+
+- **cat**: Muestra el contenido del archivo de definición de la unidad.  
+
+```bash
+root@usuario:~# systemctl cat ssh
+# /lib/systemd/system/ssh.service
+[Unit]
+Description=OpenBSD Secure Shell server
+Documentation=man:sshd(8) man:sshd_config(5)
+After=network.target auditd.service
+ConditionPathExists=!/etc/ssh/sshd_not_to_be_run
+
+[Service]
+EnvironmentFile=-/etc/default/ssh
+ExecStartPre=/usr/sbin/sshd -t
+ExecStart=/usr/sbin/sshd -D $SSHD_OPTS
+ExecReload=/usr/sbin/sshd -t
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartPreventExitStatus=255
+Type=notify
+RuntimeDirectory=sshd
+RuntimeDirectoryMode=0755
+
+[Install]
+WantedBy=multi-user.target
+Alias=sshd.service
+```
+
+- **list-dependencies**: Muestra un árbol con las dependencias de una unidad específica.  
+  
+```bash
+root@usuario:~# systemctl list-dependencies
+default.target
+● ├─accounts-daemon.service
+● ├─apport.service
+● ├─gdm.service
+● ├─power-profiles-daemon.service
+● ├─switcheroo-control.service
+○ ├─systemd-update-utmp-runlevel.service
+● ├─udisks2.service
+● └─multi-user.target
+○   ├─anacron.service
+●   ├─apport.service
+●   ├─avahi-daemon.service
+●   ├─console-setup.service
+●   ├─cron.service
+●   ├─cups-browsed.service
+●   ├─cups.path
+●   ├─cups.service
+●   ├─dbus.service
+○   ├─dmesg.service
+○   ├─e2scrub_reap.service
+○   ├─grub-common.service
+○   ├─grub-initrd-fallback.service
+●   ├─irqbalance.service
+```
+
+## Comando journalctl
+
+El comando **journalctl** consultar los log del sistema.
+
+- **-S -U** : permite especificar desde (since) y/o hasta cuando (until)
+  - Formatos válidos: YYYY-MM-DD [HH:MM:SS], yesterday, today, tomorrow, N day ago, -/+ NhMmin (-1h15min)
+  - Ejemplos:
+    - `journalctl --since "2025-04-23 12:00:00" --until "2025-04-24 00:00:00"`
+    - `journalctl --since yesterday`
+    - `journalctl --since -1h15min`  
+```bash
+root@usuario:~# journalctl -S "2025-04-24 00:00:00" -U "2025-04-24 00:00:17"
+Journal file /var/log/journal/ccc919360d074cafa07dd54cccbd0c8d/system@000628ff2354e91e-7bd4b14e740efb67.journal~ is truncated, ignoring file.
+abr 24 00:00:16 usuario systemd[1]: Starting Daily dpkg database backup service...
+abr 24 00:00:16 usuario systemd[1]: Starting Rotate log files...
+abr 24 00:00:16 usuario systemd[1]: Stopping Make remote CUPS printers available locally...
+abr 24 00:00:16 usuario systemd[1]: cups-browsed.service: Deactivated successfully.
+abr 24 00:00:16 usuario systemd[1]: Stopped Make remote CUPS printers available locally.
+abr 24 00:00:16 usuario systemd[1]: Stopping CUPS Scheduler...
+abr 24 00:00:16 usuario systemd[1]: cups.service: Deactivated successfully.
+abr 24 00:00:16 usuario systemd[1]: Stopped CUPS Scheduler.
+abr 24 00:00:16 usuario systemd[1]: cups.path: Deactivated successfully.
+abr 24 00:00:16 usuario systemd[1]: Stopped CUPS Scheduler.
+abr 24 00:00:16 usuario systemd[1]: Stopping CUPS Scheduler...
+abr 24 00:00:16 usuario systemd[1]: Started CUPS Scheduler.
+abr 24 00:00:16 usuario systemd[1]: cups.socket: Deactivated successfully.
+abr 24 00:00:16 usuario systemd[1]: Closed CUPS Scheduler.
+abr 24 00:00:16 usuario systemd[1]: Stopping CUPS Scheduler...
+abr 24 00:00:16 usuario systemd[1]: Listening on CUPS Scheduler.
+abr 24 00:00:16 usuario systemd[1]: Starting CUPS Scheduler...
+abr 24 00:00:16 usuario kernel: audit: type=1400 audit(1745445616.781:64): apparmor="DENIED" operation="capable" class="cap" profile="/usr/sbin/cupsd" pid=3097 comm="cupsd" capability=12  capname="net_admin"
+abr 24 00:00:16 usuario audit[3097]: AVC apparmor="DENIED" operation="capable" class="cap" profile="/usr/sbin/cupsd" pid=3097 comm="cupsd" capability=12  capname="net_admin"
+abr 24 00:00:16 usuario systemd[1]: Started CUPS Scheduler.
+abr 24 00:00:16 usuario systemd[1]: Started Make remote CUPS printers available locally.
+abr 24 00:00:16 usuario systemd[1]: logrotate.service: Deactivated successfully.
+abr 24 00:00:16 usuario systemd[1]: Finished Rotate log files.
+```
+
+- **-u unit** : muestra los mensajes de una unidad en concreto  
+  - Ejemplo: `journalctl -u apache2.service`
+```bash
+root@usuario:~# journalctl -u ssh.service
+Journal file /var/log/journal/ccc919360d074cafa07dd54cccbd0c8d/system@000628ff2354e91e-7bd4b14e740efb67.journal~ is truncated, ignoring file.
+dic 10 22:52:39 usuario systemd[1]: Starting OpenBSD Secure Shell server...
+dic 10 22:52:39 usuario sshd[34262]: Server listening on 0.0.0.0 port 22.
+dic 10 22:52:39 usuario sshd[34262]: Server listening on :: port 22.
+dic 10 22:52:39 usuario systemd[1]: Started OpenBSD Secure Shell server.
+-- Boot b8dff8ef5d344b2fa2308933a4b80166 --
+dic 11 15:08:56 usuario systemd[1]: Starting OpenBSD Secure Shell server...
+dic 11 15:08:56 usuario sshd[798]: Server listening on 0.0.0.0 port 22.
+dic 11 15:08:56 usuario sshd[798]: Server listening on :: port 22.
+```
+- **-k** : muestra solo los mensajes del kernel  
+  - Ejemplo: `journalctl -k`
+- **-p** : filtra por tipo de prioridad (emerg, alert, crit, err, warning, notice, info, debug)
+  - Ejemplo: `journalctl -p err`
+- **PARAM=VALUE** : permite filtrar por parámetros como _PID, _UID, _COMM, etc.
+  - Ejemplo: `journalctl _PID=1234`
+  - Para ver todos los campos disponibles: `man systemd.journal-fields`
+
+## Comando dmesg
+Al arrancar el sistema se muestran mensajes según se van cargando controladores o funciones del sistema. Para revisarlos se usa dmesg y es equivalente a journalctl -b -k Opciones:
+- T : Muestra las marcas de tiempo más claramente
+- k : Sólo mensajes del kernel
+- l : filtra por niveles de aviso (warn, err, etc..)
