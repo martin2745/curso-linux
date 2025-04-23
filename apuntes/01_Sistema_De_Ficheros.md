@@ -17,6 +17,7 @@ Directorio estático que incluye los archivos necesarios para el proceso de arra
 # /dev
 Incluye todos los dispositivos de almacenamiento conectados al sistema y que este entienda como un volumen lódigo de almacenamiento.
 - **/dev/**: archivos de dispositivo.
+- _*Nota*_: El demonio que se encarga de crear y eliminar los ficheros que representan los dispositivos según estén disponibles o no se conoce como **udev**, es decir, detecta cuando un dispositivo se conecta o desconecta y actua en consecuencia.
 
 # /etc
 Almacena los archivos de configuración tanto a nivel de componentes del sistema operativo como de los programas instalados a posteriori. Debería tener unicamente archivos de configuración y no debería contener binarios.
@@ -48,8 +49,28 @@ Para almacenar archivos del sistema y aplicaciones de terceros.
 
 # /proc y /sys
 **/sys** se enfoca en la configuración y el hardware del sistema, mientras que **/proc** contiene información de los procesos y aplicaciones que se están ejecutando en un momento dado en el sitema.
-- **/sys**: Contiene información y configuraciones del sistema y del núcleo (kernel), expuestas en tiempo real. Permite interactuar con parámetros del hardware y configuraciones del sistema.
+- **/sys**: Contiene información y configuraciones del sistema a nivel de hardware y del núcleo (kernel), expuestas en tiempo real. Permite interactuar con parámetros del hardware y configuraciones del sistema.
 - **/proc**: Es un sistema de archivos virtual que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos en uso.
+
+A continuación podemos ver un ejemplo del fichero speed de la tarjeta de red enp0s3 de una máquina linux. Podemos ver que es una tarjeta  Ethenet ya que su velocidad es de 1000. La información de los dispositivos de red está en la ruta `/sys/class/net`.
+
+```bash
+usuario@usuario:/sys/class/net$ ls
+enp0s3  lo
+usuario@usuario:/sys/class/net$ cat enp0s3/speed
+1000
+```
+
+Por otra parte, podemos ver que si hacemos un listado del directorio `/proc` encontraremos una gran cantidad de directorios numéricos creados en tiempo de ejecución, estos números corresponden con el PID de los procesos.
+
+```bash
+usuario@usuario:/proc$ ls
+1     21    2350  2525  2747  4183  59   66   92             fs             partitions
+10    22    2355  2542  28    4188  592  68   94             interrupts     pressure
+11    2236  2361  2553  2802  4194  593  69   95             iomem          schedstat
+111   2241  2365  2555  281   4234  598  691  96             ioports        scsi
+...
+```
 
 # /srv
 Almacena información propia de servidores en forma de archivo que puedan estar instalados en el sistema.
