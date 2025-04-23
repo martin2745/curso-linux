@@ -1,4 +1,4 @@
-# Particionado en Linux con fdisk
+# Particionado con fdisk
 
 ## Tipos de particionado
 
@@ -34,50 +34,7 @@ En pocas palabras:
 - **MBR**: Usa el **BIOS** y una **partición activa** para arrancar, donde se carga el cargador de arranque desde el primer sector del disco.
 - **GPT**: Usa **UEFI** y una **partición EFI** para arrancar, donde se almacenan los archivos necesarios para iniciar el sistema desde una partición separada.
 
-![MBR](../imagenes/recursos/particionado/mbr.jpg)
-![GPT](../imagenes/recursos/particionado/gpt.png)
-
-### Proceso de arranque con MBR
-
-Configuración de disco MBR con 3 particiones primarias y 1 extendida:
-
-1. **Partición 1**: **Windows**  
-   - Contiene los archivos del sistema de Windows, incluyendo el cargador de arranque de Windows (**bootmgr**).
-   
-2. **Partición 2**: **Linux (root /)**  
-   - Contiene el **kernel de Linux** (por ejemplo: `/vmlinuz`).
-   
-3. **Partición 3**: **Partición extendida**  
-   - Dentro de la extendida, tienes particiones lógicas, como `/home` en Linux (si las tienes).
-
-4. **Partición 4** (activa): **GRUB (Gestor de arranque)**  
-   - Contiene el cargador de arranque **GRUB 2** y la configuración para seleccionar entre Linux y Windows.
-
-### **Proceso de arranque:**
-
-1. **BIOS** carga el **MBR** (sector 0 del disco). **MBR** contiene tanto el código de arranque como la tabla de particiones.
-2. **MBR** carga el **código de arranque**.
-- El código de arranque es un pequeño programa que inicia el proceso de arranque, buscando y cargando el cargador de arranque del sistema operativo desde el disco.
-- **MBR** busca la **partición activa** (generalmente donde está **GRUB 2**).
-3. **GRUB 2** se carga desde la **partición 4** (donde está GRUB 2).
-4. **GRUB 2** muestra el menú y seleccionas el sistema operativo (Linux o Windows).
-5. Si seleccionas **Linux**:
-- **GRUB 2** carga el **kernel de Linux** desde la **partición 2** (root `/`).
-- Arranca Linux.
-6. Si seleccionas **Windows**:
-- **GRUB 2** pasa el control al **bootmgr** en la **partición 1** (Windows).
-- Arranca Windows.
-
-En resumen:
-
-- **Partición 1**: Windows (contiene **bootmgr**).
-- **Partición 2**: Linux (contiene el **kernel de Linux**).
-- **Partición 3**: Partición extendida (con particiones lógicas).
-- **Partición 4**: GRUB 2 (gestor de arranque).
-
-En pocas palabras:
-- **MBR**: Usa el **BIOS** y una **partición activa** para arrancar, donde se carga el cargador de arranque desde el primer sector del disco.
-- **GPT**: Usa **UEFI** y una **partición EFI** para arrancar, donde se almacenan los archivos necesarios para iniciar el sistema desde una partición separada.
+![MBR vs GPT](../imagenes/recursos/particionado/MBRvsGPT.png)
 
 ## Estado de partida
 
@@ -531,3 +488,85 @@ Si no arranca el sistema ya que el archivo `/etc/fstab` está incorrectamente fo
 2. Modificamos `/etc/fstab` para que se produzca el arranque del sistema. Si hemos realizado el proceso como se ha indicado, tendremos el archivo inicial `/etc/fstab_VIEJO` con los datos correctos de arranque.
 
 ![kernel-parametros-arranque-syslinux](../imagenes/recursos/varios/kernel-parametros-arranque-syslinux.png)
+
+# Particionado con parted
+
+1. Asignamos el tipo de particionado.
+
+**MBR**
+
+```bash
+root@si-VirtualBox:~# parted -s /dev/sdb mklabel msdos
+```
+
+**GPT**
+
+```bash
+root@si-VirtualBox:~# parted -s /dev/sdb mklabel gpt
+```
+
+2. Creamos particiones primarias, extendidas y lógicas.
+
+```bash
+root@si-VirtualBox:~# parted -s /dev/sdb mkpart primary 0% 5G
+root@si-VirtualBox:~# parted -s /dev/sdb mkpart primary 5G 5G
+root@si-VirtualBox:~# parted -s /dev/sdb mkpart extended 10G 100%
+root@si-VirtualBox:~# parted -s /dev/sdb mkpart logical 10G 13G
+root@si-VirtualBox:~# parted -s /dev/sdb print
+Model: ATA VBOX HARDDISK (scsi)
+Disk /dev/sdb: 26,8GB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags:
+
+Number  Start   End     Size    Type      File system  Flags
+ 1      1049kB  5000MB  4999MB  primary
+ 2      5000MB  5001MB  1049kB  primary
+ 3      10,0GB  26,8GB  16,8GB  extended               lba
+ 5      10,0GB  13,0GB  2999MB  logical
+```
+
+_*Nota*_: A diferencia de MBR, en GPT no hay distinción entre particiones primarias, extendidas o lógicas. Todas las particiones son "primarias".
+
+3. Tambien puedo eliminar particiones de la siguiente forma.
+
+```bash
+root@si-VirtualBox:~# parted -s /dev/sdb rm 1
+```
+
+4. Proceso de montado.
+   Una vez realizado todo este proceso, lo siguiente sería realizar el montado de las particiones o realizar las modificaciones en el `/etc/fstab` para que se cargen en el inicio.
+
+### Ejercicio
+
+Crear un script bash llamado **`particionar.sh`** que realice las siguientes acciones:
+
+1. Crear una tabla de particiones **GPT** en el disco **`/dev/sdb`**.
+2. Crear tres particiones de tipo **ext4** con las siguientes distribuciones:
+   - **Partición 1**: 0% a 50% del disco.
+   - **Partición 2**: 50% a 75% del disco.
+   - **Partición 3**: 75% a 100% del disco.
+3. Formatear cada partición recién creada con el sistema de archivos **ext4**.
+4. Mostrar la tabla de particiones del disco **`/dev/sdb`**.
+
+Notas:
+
+1. El script debe ejecutarse con permisos de administrador, ya que se manipula un disco.
+2. Añadir comentarios explicativos para cada comando que se ejecute.
+3. El script debe ser ejecutado con el siguiente comando: `sudo bash particionar.sh`
+
+#### Solución:
+
+```bash
+#!/bin/bash
+parted -s /dev/sdb mklabel gpt
+parted -s /dev/sdb mkpart primary ext4 0% 50%
+parted -s /dev/sdb mkpart primary ext4 50% 75%
+parted -s /dev/sdb mkpart primary ext4 75% 100%
+parted -s /dev/sdb print
+
+# Formatear las particiones
+mkfs.ext4 /dev/sdb1
+mkfs.ext4 /dev/sdb2
+mkfs.ext4 /dev/sdb3
+```
