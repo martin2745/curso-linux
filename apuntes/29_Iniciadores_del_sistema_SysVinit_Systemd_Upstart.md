@@ -404,3 +404,18 @@ Al arrancar el sistema se muestran mensajes según se van cargando controladores
 - T : Muestra las marcas de tiempo más claramente
 - k : Sólo mensajes del kernel
 - l : filtra por niveles de aviso (warn, err, etc..)
+
+## Otros comandos del sistema de apagado y reinicio
+
+Desde el terminal podemos enviar comandos para la parada o reinicio del sistema, veamos cuales son:
+
+- halt : apaga el sistema sin enviar señal ACPI de apagado de alimentación eléctrica.
+- poweroff : apaga el sistema con señal ACPI.
+- reboot : reinicia el sistema.
+- shutdown [opción] TIEMPO [mensaje] : apaga el sistema de forma planificada. Opciones
+  - c: Cancela una orden programada de shutdown.
+  - k: Envia mensajes pero no apaga.
+  - _*Nota*_: El tiempo se puede expresar en horas y minutos (HH:MM), en el tiempo en
+minutos que faltan para el apagado: +M o con la palabra now.
+- wall: Envia un mensaje a todos los terminales.
+- mesg: Gestiona la admisión o recepción de mensajes: y (si), n (no). Si lo ejecutamos sin parámetros consultar el valor, si le pasamos y o n lo modifica.
