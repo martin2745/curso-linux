@@ -156,7 +156,7 @@ prueba
 snap
 ```
 
-## Comando lspci
+# Comando lspci
 
 El comando **lspci** muestra información sobre los dispositivos PCI conectados al sistema (tarjetas de red, gráficas, etc.).
 
@@ -243,7 +243,7 @@ _*Nota*_: Diferencia entre **kernel driver** y **kernel module**.
 - Kernel driver: Código encargado de controlar hardware específico.
 - Kernel module: Fragmento de código que puede añadirse o quitarse del kernel en caliente y tiene como objetivo en este contexto, implementar un driver.
 
-## Comando lsusb
+# Comando lsusb
 
 El comando `lsusb` muestra información sobre los buses USB y los dispositivos conectados a ellos, como memorias USB, impresoras, cámaras, etc.
 
@@ -317,7 +317,7 @@ usuario@usuario:~$ lsusb -t
     |__ Port 1: Dev 2, If 0, Class=Human Interface Device, Driver=usbhid, 12M
 ```
 
-## Comando lsmod, comandos de gestión de módulos del kernel
+# Comando lsmod, comandos de gestión de módulos del kernel
 
 Enfocado en el listado de módulos del kernel tenemos este comando. Los módulos son partes del kernel que podemos activar o desactivar para añadir o quitar funcionalidades. Tiene una relación muy estrecha con los driver.
 
