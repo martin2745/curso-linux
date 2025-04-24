@@ -339,9 +339,39 @@ root@usuario:~# uname -r
   -w : Espera a que deje de utilizarse.  
   -f : Fuerza el borrado.  
 
+Vamos a eliminar el módulo *psmouse* ya que no es necesario para nuestra máquina. 
+
+```bash
+root@usuario:~# lsmod | grep psmouse
+psmouse               217088  0
+root@usuario:~# rmmod psmouse
+root@usuario:~# lsmod | grep psmouse
+```
+
+Instalamos el módulo *psmouse* de nuevo. En caso de que existan dependencias tendremos un error y tendremos que gestionar las dependencias una por una.
+
+```bash
+root@usuario:~# uname -r
+6.8.0-49-generic
+root@usuario:~# cd /lib/modules/6.8.0-49-generic/
+root@usuario:/lib/modules/6.8.0-49-generic# find -name psmouse.ko
+./kernel/drivers/input/mouse/psmouse.ko
+root@usuario:/lib/modules/6.8.0-49-generic# insmod $(find -name psmouse.ko) && lsmod | grep psmouse
+psmouse               217088  0
+```
+
 Por otro lado tenemos el comando **modprobe**, el cual carga o borra módulos y resuelve las dependencias entre éstos. Como parámetros a destacar.
 - f : Fuerza la carga del módulo aunque la versión del kernel no coincida con la que espera encontrar.  
 - r : Elimina el módulo.  
 - v : Muestra información adicional de lo que realiza.  
 - n : Hace una simulación pero no inserta el módulo.
 
+Elimino el módulo *psmouse* y lo instalo de nuevo. En este caso *psmouse* no requiere dependencias de otros módulos pero si fuera el caso las instalaría.
+
+```bash
+root@usuario:~# modprobe -r psmouse
+root@usuario:~# lsmod | grep psmouse
+root@usuario:~# modprobe psmouse
+root@usuario:~# lsmod | grep psmouse
+psmouse               217088  0
+```
