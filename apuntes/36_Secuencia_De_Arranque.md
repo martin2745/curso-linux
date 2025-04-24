@@ -40,7 +40,7 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
       - Diseño modular.  
       - Opción de “arranque seguro” (Secure Boot).
 
-   A diferencia de BIOS, UEFI presenta la partición *ESP* (EFI System Partition), la cual contiene la información del *gestor de arranque* o gestores, en este caso la partición ESP es la `/dev/sda2`. En caso de estar el **Secure boot* activado, estos gestores tienen que estar firmados digitalmente para no tener problemas con malware. *Secure Boot* es una función propia de UEFI que verifica la autenticidad del software al iniciar el equipo, asegurando que solo se cargue código confiable y protegiendo contra amenazas.
+   A diferencia de BIOS, UEFI presenta la partición *ESP* (EFI System Partition), la cual contiene la información del *gestor de arranque* o gestores, en este caso la partición ESP es la `/dev/sda2` que es la partición de arranque. En caso de estar el **Secure boot* activado, estos gestores tienen que estar firmados digitalmente para no tener problemas con malware. *Secure Boot* es una función propia de UEFI que verifica la autenticidad del software al iniciar el equipo, asegurando que solo se cargue código confiable y protegiendo contra amenazas.
 
    ```bash
       # UEFI
@@ -78,3 +78,16 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
 
 9. **Inicio de sesión de usuarios:**  
    Tras completar todos los pasos anteriores, el sistema está listo para que los usuarios inicien sesión, ya sea mediante terminales locales o conexiones remotas como SSH.
+
+A modo de resumen:
+1. Arranque eléctrico una vez pulsado el botón de encender.
+2. BIOS/UEFI.
+3. Lectura del MBR del Boot Loader que carga el Gestor de arranque (GRUBv2).
+4.  Opción A
+    1.  Se carga el Kernel, lo que implica lanzar el *Initial Ramdisk o initrd* para cargar los módulos necesarios.
+    2.  Inicia el proceso init (PID 1) en SysVinit o el proceso systemd.
+5.  Opción B
+    1.  Se carga el cargador de arranque de otro Sistema Operativo.
+    2.  Carga el Kernel del otro Sistema Operativo.
+
+![secuencia-arranque-secuencia](../imagenes/recursos/arranque/secuencia-arranque-resumen.png)
