@@ -29,12 +29,23 @@ Directorios destinados a almacenar los archivos de los usuarios. Tambien incluye
 - **/root/**: archivos personales del administrador (root).
 
 # /lib
-Incluye las bibliotecas esenciales para que se puedan ejecutar correctamente todos los binarios de los directorios /bin y /sbin así como los módulos propios del kernel. Tenemos tambien los /lib32 y /lib64 para aquellas bibliotecas propias de arquitecturas de 32 y 64 bits respectivamente.
+Incluye las bibliotecas esenciales para que se puedan ejecutar correctamente todos los binarios de los directorios /bin y /sbin así como los módulos propios del kernel que están en la ruta `/lib/modules`. Tenemos tambien los /lib32 y /lib64 para aquellas bibliotecas propias de arquitecturas de 32 y 64 bits respectivamente.
 - **/lib/**: bibliotecas básicas.
 ```bash
 lrwxrwxrwx   1 root root     7 Feb 10 11:41 lib -> usr/lib
 lrwxrwxrwx   1 root root     9 Feb 10 11:41 lib32 -> usr/lib32
 lrwxrwxrwx   1 root root     9 Feb 10 11:41 lib64 -> usr/lib64
+```
+- Para ver los módulos del kernel podemos ver la ruta `/lib/modules` y para saber nuestro kernel disponemos del comando **uname -r**.
+```bash
+root@usuario:~# uname -r
+6.8.0-49-generic
+root@usuario:~# cd /lib/modules/6.8.0-49-generic/
+root@usuario:/lib/modules/6.8.0-49-generic# ls
+build          modules.alias.bin          modules.builtin.modinfo  modules.order        vdso
+initrd         modules.builtin            modules.dep              modules.softdep
+kernel         modules.builtin.alias.bin  modules.dep.bin          modules.symbols
+modules.alias  modules.builtin.bin        modules.devname          modules.symbols.bin
 ```
 
 # /media y /mnt
@@ -50,7 +61,11 @@ Para almacenar archivos del sistema y aplicaciones de terceros.
 # /proc y /sys
 **/sys** se enfoca en la configuración y el hardware del sistema, mientras que **/proc** contiene información de los procesos y aplicaciones que se están ejecutando en un momento dado en el sitema.
 - **/sys**: Contiene información y configuraciones del sistema a nivel de hardware y del núcleo (kernel), expuestas en tiempo real. Permite interactuar con parámetros del hardware y configuraciones del sistema.
-- **/proc**: Es un sistema de archivos virtual que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos en uso.
+- **/proc**: Es un sistema de archivos temporal que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos hardware del sistema.
+  - **/proc/interrupts**: Información que corresponde a los IRQ o interrupciones del sistema, es decir, canales (presentan un identificador numérico) que necesitan los dispositivos hardware para comunicarse con la CPU. En el directorio `/proc/interrupts` podemos ver la relación entre dispositivo hardware e interrupción.
+  - **/proc/ioports**: Directorio donde se encuentran las localizaciones en memoria reservadas para la comunicación entre CPU y dispositivos hardware.
+  - **/proc/dma**: Canales de acceso directo a memoria.
+  - **/proc/sys**: Contiene información del Kernel, contiene información similar al propio directior `/sys`.
 
 A continuación podemos ver un ejemplo del fichero speed de la tarjeta de red enp0s3 de una máquina linux. Podemos ver que es una tarjeta  Ethenet ya que su velocidad es de 1000. La información de los dispositivos de red está en la ruta `/sys/class/net`.
 
