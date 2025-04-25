@@ -570,3 +570,42 @@ mkfs.ext4 /dev/sdb1
 mkfs.ext4 /dev/sdb2
 mkfs.ext4 /dev/sdb3
 ```
+
+# Partición de swap
+
+La partición o espacio swap en Linux es un área del disco duro que el sistema usa como extensión de la memoria RAM. Cuando la RAM se llena, Linux mueve datos menos usados a la swap para liberar memoria y evitar que el sistema se quede sin recursos, aunque acceder a swap es mucho más lento que a la RAM física.
+
+En el sistema, según la salida de los comandos:
+
+- No tienes una partición swap dedicada (no aparece ninguna partición con tipo "swap" en `lsblk` ni en `df -Th`).
+- En cambio, tienes un archivo de swap llamado `/swapfile` de 2 GB y que actualmente al no tener ningún servicio o estar en ejecución una gran cantidad de datos está vacio, que es el que está activo según el comando `swapon`:
+
+```bash
+root@usuario:/# swapon
+NAME      TYPE SIZE USED PRIO
+/swapfile file   2G   0B   -2
+root@usuario:/# ls -l swapfile 
+-rw------- 1 root root 2147483648 dic 10 22:25 swapfile
+```
+
+Este archivo swap (`/swapfile`) se encuentra en la raíz del sistema de archivos, es decir, está almacenado dentro de la partición `/dev/sda3`, que es la partición principal montada en `/`. Por tanto, el swap en tu sistema corresponde a un archivo y no a una partición, y reside en el disco `/dev/sda`, dentro de la partición `/dev/sda3`. Podemos ver y modificar el swap con los comandos `swapon`, `swapoff`, y editar su configuración en `/etc/fstab` si lo necesitas.
+
+```bash
+<file system> <mount point>  <type>  <options>  <dump>  <pass>
+/swapfile      none           swap    sw           0       0
+```
+
+Si quisieramos configurar una partición como swap tendriamos que hacer lo siguiente:
+- Desactiva el swap actual (opcional, recomendado si hay swap activa).
+```bash
+swapoff -a | swapoff /swapfile
+```
+- Prepara la partición /dev/sdb1 como swap.
+```bash
+mkswap /dev/sdb1
+```
+- Activa la partición swap.
+```bash
+swapon /dev/sdb1
+```
+- A mayores tendríamos que editar el `/etc/fstab` para poder añadir la partición de swap en el arranque.
