@@ -40,7 +40,7 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
       - Diseño modular.  
       - Opción de “arranque seguro” (Secure Boot).
 
-   A diferencia de BIOS, UEFI presenta la partición *ESP* (EFI System Partition), la cual contiene la información del *gestor de arranque* o gestores, en este caso la partición ESP es la `/dev/sda2` que es la partición de arranque. En caso de estar el **Secure boot* activado, estos gestores tienen que estar firmados digitalmente para no tener problemas con malware. *Secure Boot* es una función propia de UEFI que verifica la autenticidad del software al iniciar el equipo, asegurando que solo se cargue código confiable y protegiendo contra amenazas.
+   A diferencia de BIOS, UEFI presenta la partición *ESP* (EFI System Partition), la cual contiene la información del *gestor de arranque* o gestores, en este caso la partición ESP es la `/dev/sda2` que es la partición de arranque, es decir, anteriormente toda la información de arranque se almacenaba en el MBR pero debido a la mayor cantidad de información es necesaria una partición especial conocida como partición *ESP*. En caso de estar el **Secure boot* activado, estos gestores tienen que estar firmados digitalmente para no tener problemas con malware. *Secure Boot* es una función propia de UEFI que verifica la autenticidad del software al iniciar el equipo, asegurando que solo se cargue código confiable y protegiendo contra amenazas.
 
    ```bash
       # UEFI
