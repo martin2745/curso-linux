@@ -1,4 +1,4 @@
-# Comando ip e ifconfig
+# Configuración de red
 
 Aunque `ip` como comando ha terminado por desbancar al popular `ifconfig` para las configuraciones a nivel de red en linux, se presenta a continuación el conjunto de comandos `ifconfig` con su equivalencia a comando `ip`.
 

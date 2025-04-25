@@ -16,7 +16,7 @@ En SysVinit el fichero `/etc/inittab` tiene la configuración básica como el ni
 A continuación se adjunta una descripción general de los runlevels tradicionales en sistemas que utilizan System V init:
 
 - **Runlevel 0**: Apagado del sistema.
-- **Runlevel 1**: Monousuario sin red para rescate del sistema operativo. Solo se ejecuta un conjunto mínimo de servicios y no se inicia el entorno gráfico.
+- **Runlevel 1 o S**: Monousuario sin red para rescate del sistema operativo. Solo se ejecuta un conjunto mínimo de servicios y no se inicia el entorno gráfico.
 - **Runlevel 2**: Multiusuario sin red. Similar al nivel de ejecución 3, pero sin servicios de red.
 - **Runlevel 3**: Multiusuario con red. El sistema arranca en modo multiusuario y se inician todos los servicios necesarios para permitir conexiones de red.
 - **Runlevel 4**: Reservado para un uso personalizado. Por lo general, no se utiliza en las distribuciones estándar de Linux.
@@ -27,18 +27,18 @@ A continuación se adjunta una descripción general de los runlevels tradicional
 
 En SysVinit partiendo de la configuración del `/etc/inittab`.
 
-El script `rc` ejecuta los ficheros que existen en `/etc/rcN.d` siendo `N` el nivel de ejecución. Estos ficheros serán enlaces a /etc/init.d que comenzarán por `S` para iniciar el servicio o `K` para terminar con el servicio.
+El script `rc` ejecuta los ficheros que existen en `/etc/rcN.d` siendo `N` el nivel de ejecución. Estos ficheros serán enlaces a /etc/init.d que comenzarán por `S` para iniciar el servicio o `K` para terminar con el servicio, en un primer momento se detienen los procesos que comienzan por `K` y a continuación se arrancan aquellos que comienzan por `S`. Como podemos ver los servicios son enlaces simbólicos a la dirección `/etc/init.d` y la nomenclaruta de estos servicios siempre es *S|K[orden numérica][nombre servicio]*
 
 ```bash
 root@debian12:/# ls -ld /etc/rc*
 drwxr-xr-x 2 root root 4096 abr 13 14:05 /etc/rc0.d
 drwxr-xr-x 2 root root 4096 abr 13 14:05 /etc/rc1.d
+drwxr-xr-x 2 root root 4096 feb  2 17:52 /etc/rcS.d
 drwxr-xr-x 2 root root 4096 abr 13 14:05 /etc/rc2.d
 drwxr-xr-x 2 root root 4096 abr 13 14:05 /etc/rc3.d
 drwxr-xr-x 2 root root 4096 abr 13 14:05 /etc/rc4.d
 drwxr-xr-x 2 root root 4096 abr 13 14:05 /etc/rc5.d
 drwxr-xr-x 2 root root 4096 abr 13 14:05 /etc/rc6.d
-drwxr-xr-x 2 root root 4096 feb  2 17:52 /etc/rcS.d
 
 root@debian12:/# ls -l /etc/rc*
 
@@ -133,7 +133,7 @@ root@usuario:~# telinit 6
 Connection to localhost closed by remote host.
 Connection to localhost closed.
 ```
-- Con el comando **update-rc.d** puedo indicar si quiero habilitar o deshabilitar un servicio concreto para un runlevel.
+- Con el comando **update-rc.d** puedo indicar si quiero habilitar o deshabilitar un servicio concreto para un runlevel. Este comando genera los enlaces simbólicos a las carpetas correspondientes de `rcN.d`. Este comando se emplea en distribuciones Debian, su equivalencia en distribuciones Red Hat es **chkconfig**.
 ```bash
 update-rc.d network-manager disable 2
 ```
@@ -167,7 +167,12 @@ update-rc.d network-manager disable 2
 ![sysvinit vs systemd](../imagenes/recursos/sysvinit_vs_systemd/sysvinit_vs_systemd.png)
 
 - Es importante tener en cuenta que, aunque hay una cierta correspondencia entre los runlevels de SysVinit y los targets de systemd, systemd es más flexible y puede tener una configuración diferente en diferentes distribuciones y sistemas. Además, systemd introduce conceptos adicionales como "targets especiales" (`default.target`, `emergency.target`, etc.) que no tienen un equivalente directo en SysVinit.
-- Cada unidad se define en un fichero con el nombre de dicha unidad y en la extensión se indica el tipo de unidad, por ejemplo ssh.service que se encuentra en `/etc/systemd/system`. Destacamos `/usr/lib/systemd/system`, `/lib/systemd/system` y `/etc/systemd/system`.
+- Cada unidad se define en un fichero con el nombre de dicha unidad y en la extensión se indica el tipo de unidad, por ejemplo ssh.service que se encuentra en `/etc/systemd/system`. Destacamos `/usr/lib/systemd/system`, `/lib/systemd/system` y `/etc/systemd/system` siendo esta última la de máxima prioridad. Destacamos:
+  - `/etc/systemd/system`: Máxima prioridad.
+  - `/run/systemd/system`: Ampliar o modificar la base de datos.
+  - `/lib/systemd/system`: Base de units.
+  - `/etc/systemd/system/name.unit.d/*.conf`: Ampliación de configuraciones para una unidad.
+  - `/etc/systemd/system/name.unit.wants/*.conf`: Requisitos para arrancar una unidad.
 
 ```bash
 root@debian12:/# cat /etc/systemd/system/sshd.service
@@ -228,6 +233,9 @@ lrwxrwxrwx 1 root root   13 feb  2 17:48 /usr/lib/systemd/system/runlevel6.targe
 ```bash
 root@usuario:~# systemctl get-default
 graphical.target
+
+root@usuario:/etc/systemd/system# ls -l /usr/lib/systemd/system/default.target
+lrwxrwxrwx 1 root root 16 dic 10 22:26 /usr/lib/systemd/system/default.target -> graphical.target
 ```
 
 - **start/stop/status/etc... unit[.service]**: Permite iniciar, detener, reiniciar, recargar o consultar el estado de una unidad de servicio.  
@@ -253,6 +261,13 @@ abr 23 23:50:58 usuario systemd[1]: Started OpenBSD Secure Shell server.
 abr 23 23:50:58 usuario sshd[789]: Server listening on :: port 22.
 abr 23 23:51:26 usuario sshd[1295]: Accepted password for usuario from 10.0.2.2 port 49974 ssh2
 abr 23 23:51:27 usuario sshd[1295]: pam_unix(sshd:session): session opened for user usuario(uid=1000)
+```
+
+_*Nota*_: En las distribuciones donde se hace uso de SysVinit este proceso se realiza mediante el comando **service** o con la ruta del servicio.
+
+```bash
+service ssh [start|stop|restart...]
+/etc/init.d/nombre_servicio [start|stop|restart...]
 ```
 
 - **isolate unit.target**: Cambia el sistema al *target* especificado, deteniendo los servicios no requeridos por ese target.
@@ -338,6 +353,20 @@ default.target
 ○   ├─grub-initrd-fallback.service
 ●   ├─irqbalance.service
 ```
+
+## Comparación entre Systemd y SysVinit
+
+| Característica            | systemd                                 | SysV (SysVinit)                       |
+|---------------------------|-----------------------------------------|---------------------------------------|
+| Concepto principal        | Unidades (*units*)                      | Scripts de inicio                     |
+| Organización de estados   | *Targets* (objetivos)                   | *Runlevels* (niveles de ejecución)    |
+| Archivos principales      | Archivos *.service, *.target, etc.      | Scripts en /etc/init.d/ y enlaces en /etc/rc*.d/ |
+| Ejecución de servicios    | Basada en dependencias y paralelismo    | Secuencial según orden en scripts     |
+| Gestión de recursos       | Soporte nativo para dependencias, cgroups, sockets, etc. | No soporta dependencias ni recursos avanzados |
+| Ejemplo de estado multiusuario | multi-user.target                       | runlevel 3                            |
+| Ejemplo de estado gráfico | graphical.target                        | runlevel 5                            |
+| Personalización           | Se pueden crear nuevos targets y unidades fácilmente | Personalización mediante scripts y enlaces simbólicos |
+| Herramienta de gestión    | systemctl                               | service, chkconfig, update-rc.d       |
 
 ## Comando journalctl
 
