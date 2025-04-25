@@ -13,6 +13,16 @@ lrwxrwxrwx   1 root root     8 Feb 10 11:41 sbin -> usr/sbin
 ## /boot
 Directorio estático que incluye los archivos necesarios para el proceso de arranque del sistema. Deberían ser utilizados antes de que el kernel comience a dar las instrucciones de arranque de los diferentes módulos del sistema.
 - **/boot/**: núcleo Linux y otros archivos necesarios para las primeras etapas del proceso de arranque.
+- Destacamos el directorio `/boot/grub` donde se contiene la información del GRUB y existen archivos como el `grub.cnf` donde está la información del menú del gestor de arranque.
+
+```bash
+root@usuario:/boot/grub# ls
+fonts             grubenv  unicode.pf2
+gfxblacklist.txt  i386-pc  x86_64-efi
+grub.cfg          locale
+root@usuario:/boot/grub# ls -l grub.cfg
+-rw-rw-r-- 1 root root 9986 dic 10 22:36 grub.cfg
+```
 
 # /dev
 Incluye todos los dispositivos de almacenamiento conectados al sistema y que este entienda como un volumen lódigo de almacenamiento.
@@ -46,6 +56,23 @@ build          modules.alias.bin          modules.builtin.modinfo  modules.order
 initrd         modules.builtin            modules.dep              modules.softdep
 kernel         modules.builtin.alias.bin  modules.dep.bin          modules.symbols
 modules.alias  modules.builtin.bin        modules.devname          modules.symbols.bin
+```
+
+Por otra parte, existe la posibilidad de tener librerias compartidas a utilizar por diferentes programas o binarios del sistema. Para poder acceder a ellas se tienen que configurar en el fichero de configuración `/etc/ld.so.conf` o preferiblemente en el directorio `/etc/ld.so.conf.d` mediante ficheros con extensión `.conf`. Posteriormente tenemos que hacer uso del comando **ldconfig** para que la cache de librerias se actualice y los programas sepan que hay una nueva ruta con diferentes librerias.
+
+Por otra parte, existe la variable de entorno *$LD_LIBRARY_PATH* donde se pueden asignar la ruta de las librerias compartidas. La información de esta variable tiene preferencia sobre la información del fichero de configuración.
+
+Para saber las librerias de un ejecutable concreto tenemos el comando *ldd*.
+
+```bash
+root@usuario:/usr# which ls
+/usr/bin/ls
+root@usuario:/usr# ldd $(which ls)
+        linux-vdso.so.1 (0x00007ffe2911e000)
+        libselinux.so.1 => /lib/x86_64-linux-gnu/libselinux.so.1 (0x000078f496675000)
+        libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000078f496400000)
+        libpcre2-8.so.0 => /lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x000078f496369000)
+        /lib64/ld-linux-x86-64.so.2 (0x000078f4966d6000)
 ```
 
 # /media y /mnt
@@ -141,3 +168,10 @@ drwxr-xr-x  15 root root  4096 Feb 10 11:47 usr
 drwxr-xr-x  12 root root  4096 Feb 10 11:51 var
 lrwxrwxrwx   1 root root    25 Feb 10 11:47 vmlinuz -> boot/vmlinuz-6.11.2-amd64
 ```
+
+_*Nota*_: Directorios como el `/etc`, `/bin`, `/sbin`, `/lib` y `/dev` nunca deberían asignarse a una partición separada de la del sistema. 
+_*Nota*_: Directorios separables serían:
+- `/boot`: Se tiene que separar si usamos LVM.
+- `/boot/efi`: Partición ESP para UEFI, recomendable que esté formateada en FAT.
+- `/usr`: Si se van a instalar muchos programas que no son parte del sistema.
+- `/var`, `/tmp` y `/home`: En sistemas multiusuario.
