@@ -149,6 +149,22 @@ find $HOME -type f -iname "*.png" -mtime +3 -mtime -5 -perm 644 -size +2M -user 
 data -a ! -group root -exec ls -lah {} \; 2>/dev/null
 ```
 
+7. **atime, mtime, ctime**
+
+- -atime: busca en la fecha del último acceso (access time). Un acceso puede ser la lectura del archivo, pero también el simple hecho de listarlo de manera específica.
+- -mtime: busca en la fecha de la última modificación (modification time). Se trata de la modificación del contenido. 
+- -ctime: busca en la fecha de modificación (change time, en realidad la fecha de última modificación del número de inodo).
+
+Estos tres criterios sólo trabajan con días (periodos de 24 horas). 0 es el mismo día; 1, ayer; 2, antes de ayer, etc. El valor n colocado después del criterio corresponde, por lo tanto, a n*24 horas. Este rango no es fijo, ya que "ayer" significa entre 24 y 48 horas... 
+
+Los signos + o - permiten precisar los términos "de más" y "de menos":
+find / -type f -mtime 1: archivos modificados ayer  (entre 24 y 48 horas). 
+ 
+-mtime -3: archivos modificados hace menos de tres días (72 horas).
+-atime +4: archivos accedios hace más de cuatro días (más de 96 horas).
+
+_*Nota*_: Para trabajar con minutos tenemos los parámetros `amin`, `-mmin` y `-cmin`.
+
 ## Diferencia entre exec y xargs
 
 Para el siguiente caso:
@@ -184,3 +200,17 @@ La diferencia entre los tres comandos radica en cómo pasan los resultados del c
 En resumen:
 - El primer y segundo comando usan `xargs` para pasar múltiples archivos a `ls -l` a la vez, pero el primero tiene un control más detallado sobre cada archivo (`-I a`).
 - El tercero usa `-exec` para ejecutar `ls -l` sobre cada archivo individualmente.
+
+_*Nota*_: Es muy común el uso de `xargs` en casos como el siguiente donde no podemos hacer la eliminación de muchos archivos ya que sobrepasamos el tamaño del buffer del comando `rm` por lo que los pasamos uno por uno al `xargs.`
+
+```bash
+ls *.logs | xargs rm -rf
+```
+  
+_*Nota*_: A mayores de `-exec` existe el parámetro `-ok`, su diferencia es que este último es es idéntico a la opción -exec, pero, para cada coincidencia, se le requiere una confirmación al usuario.
+
+```bash
+find / -type f -name "*.mp3" -ok rm -rf {} \;
+```
+
+En el comando anterior se buscan todos los archivos con extensión .mp3 y se pide confirmación para eliminar cada ocurrencia, con independencia de que haya la opción `-f` del comando `rm`, se pedirá confirmación para eliminar cada archivo.
