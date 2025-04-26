@@ -27,6 +27,7 @@ Parámetros bien conocidos:
 - -a: Archivos ocultos.
 - -r: Inverso.
 - -v: Ordena la salida.
+- -t: Según el orden de modificación en lugar de orden alfabético.
 - --sort: Para ordenar.
 - --size: En función del tamaño.
 - --format: Para dar un formato a la salida.
