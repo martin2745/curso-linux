@@ -93,6 +93,11 @@ Para almacenar archivos del sistema y aplicaciones de terceros.
   - **/proc/ioports**: Directorio donde se encuentran las localizaciones en memoria reservadas para la comunicación entre CPU y dispositivos hardware.
   - **/proc/dma**: Canales de acceso directo a memoria.
   - **/proc/sys**: Contiene información del Kernel, contiene información similar al propio directior `/sys`.
+  - **/proc/meminfo**: Muestra detalles sobre el uso de la memoria del sistema.
+  - **/proc/cpuinfo**: Muestra información sobre el procesador.
+  - **/proc/partitions**: Lista las particiones de discos.
+  - **/proc/mounts**: Muestra los sistemas de archivos montados actualmente.
+  - **/proc/swaps**: Muestra información sobre las áreas de intercambio (swap) activas.
 
 A continuación podemos ver un ejemplo del fichero speed de la tarjeta de red enp0s3 de una máquina linux. Podemos ver que es una tarjeta  Ethenet ya que su velocidad es de 1000. La información de los dispositivos de red está en la ruta `/sys/class/net`.
 
