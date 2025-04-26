@@ -280,3 +280,176 @@ lrwxrwxrwx   1 root root    25 Feb 10 11:47 vmlinuz -> boot/vmlinuz-6.11.2-amd64
 
 ---
 
+```bash
+root@debian:/tmp# mkdir uno
+root@debian:/tmp# mkdir -p uno/dos/tres/cuatro
+```
+
+**Explicación:** El comando `mkdir` permite crear directorios de trabajo y con el parámetro `-p` se crea la estructura de directorios indicada.
+
+---
+
+**Explicación:** el comando `cat` muestra el archivo completo.
+**Explicación:** el comando `more` muestra el archivo por páginas, solo hacia adelante.
+**Explicación:** el comando `less` muestra el archivo por páginas, permite moverse hacia adelante y atrás.
+**Explicación:** el comando `tac` muestra el archivo en orden inverso, desde la última línea hasta la primera.
+
+--- 
+
+```bash
+vagrant@debian:~$ manpath
+/usr/local/man:/usr/local/share/man:/usr/share/man
+```
+
+**Explicación**: El comando `man ls` nos mostraría ayuda sobre el comando ls y la información de las páginas del comando man se encuentra en la ruta `/usr/share/man` y el resto de rutas son enlaces simbólicos a esta ruta.
+
+```bash
+manpath          # donde se encuentran las paginas del comando man
+man -f  passwd   # vemos las secciones asociadas
+man -f  passwd
+sslpasswd (1ssl) # - compute password hashes
+passwd (5)       # - password file
+passwd (1)       # - update user's authentication tokens
+man -f  passwd   #  Descripción: Muestra una breve descripción de las secciones del manual donde se menciona el comando passwd
+man -s 5 passwd  # Descripción: Muestra la página del manual para passwd en la sección 5, que trata sobre los archivos de configuración relacionados con el comando, en este caso el archivo
+man -s 1 passwd  # Descripción: Muestra la página del manual para passwd en la sección 1, que trata sobre los comandos de usuario. Aquí se explica cómo usar el comando passwd para cambiar las contraseñas de usuarios.
+```
+
+_*Nota*_: Tambien existen otras opciones como `<comando> --help` o `apropos [palabra_clave]` que aportan información del comando en cuestión.
+
+---
+
+```bash
+[vagrant@rockylinux8 ~]$ w
+ 13:10:15 up  1:25,  1 user,  load average: 0,08, 0,07, 0,02
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+vagrant  pts/0    192.168.33.1     11:46    2.00s  0.15s  0.00s w
+```
+
+**Explicación**: El comando `w` me muestra información de los usuarios conectados a mi sistema. Otros comandos como `loginctl` muestran las sesiones iniciadas.
+
+--- 
+
+```bash
+[vagrant@rockylinux8 ~]$ tty
+/dev/tty/0
+```
+
+**Explicación**: El comando `tty` muestra la terminal o pseudoterminal abierta. 
+
+_*Nota*_: Podemos enviar mensajes a otras terminales, como por ejemplo enviarlo a la pseudoterminal /dev/pts/0 de la siguiente manera.
+
+```bash
+[vagrant@rockylinux8 ~]$ echo "Envio mensaje" > /dev/pts/0
+```
+
+```bash
+[vagrant@rockylinux8 ~]$ Envio mensaje
+```
+
+Por otra parte, el comando `wall` en Linux se utiliza para enviar un mensaje a todos los usuarios que están conectados al sistema. Es una forma sencilla de difundir un mensaje, generalmente utilizado por los administradores del sistema para advertencias, notificaciones o mensajes importantes.
+
+```bash
+[vagrant@rockylinux8 ~]$ wall hola
+
+Mensaje de difusión general (broadcast) de vagrant@rockylinux8 (pts/0) (Sat Ap
+
+hola
+```
+
+---
+
+```bash
+[root@rockylinux8 ~]# cal
+     abril 2025     
+lu ma mi ju vi sá do
+    1  2  3  4  5  6
+ 7  8  9 10 11 12 13
+14 15 16 17 18 19 20
+21 22 23 24 25 26 27
+28 29 30
+```
+
+**Explicación**: El comando `cal` muestra el calendario.
+
+Resumen de comandos:
+- cal: Muestra el calendario del mes actual.
+- cal [año]: Muestra el calendario del año especificado.
+- cal [mes] [año]: Muestra el calendario de un mes y año específicos.
+- cal -y: Muestra el calendario del año actual.
+- cal -3: Muestra el mes actual y los meses anterior y posterior.
+- cal 2024: Calendario todo el año
+- cal 10 2024: Muestra el mes de octure del 2024
+
+---
+
+```bash
+date
+date --set "2014-11-13 9:30:01"
+date -s "2014-11-13 9:30:01"
+date +%D
+```
+
+El comando `date` sin argumentos, despliega la fecha en la salida estándar del sistema. El formato de salida se puede especificar precedido por un +. La opción -u es para utilizar la hora universal (Greenwich). El único
+usuario que puede cambiar la fecha del sistema es root.
+
+A continuación, se muestra una lista completa de los especificadores de formato que puedes utilizar con el comando date para personalizar la salida:
+
+- %a: Nombre abreviado del día de la semana (ej.: "lun").
+- %A: Nombre completo del día de la semana (ej.: "lunes").
+- %b: Nombre abreviado del mes (ej.: "ene").
+- %B: Nombre completo del mes (ej.: "enero").
+- %c: Fecha y hora completas según la configuración regional.
+- %C: Siglo (los dos primeros dígitos del año, ej.: "20" para 2025).
+- %d: Día del mes con dos dígitos (01-31).
+- %D: Fecha en formato mm/dd/aa (equivalente a %m/%d/%y).
+- %e: Día del mes sin cero a la izquierda (espacio en lugar de cero).
+- %F: Fecha en formato ISO 8601: aaaa-mm-dd (equivalente a %Y-%m-%d).
+- %g: Últimos dos dígitos del año correspondiente a la semana ISO.
+- %G: Año correspondiente a la semana ISO.
+- %h: Equivalente a %b.
+- %H: Hora en formato 24 horas (00-23).
+- %I: Hora en formato 12 horas (01-12).
+- %j: Día del año (001-366).
+- %k: Hora en formato 24 horas sin cero a la izquierda (espacio en lugar de cero).
+- %l: Hora en formato 12 horas sin cero a la izquierda.
+- %m: Mes (01-12).
+- %M: Minutos (00-59).
+- %n: Salto de línea.
+- %N: Nanosegundos (000000000-999999999).
+- %p: Indicador AM/PM en mayúsculas.
+- %P: Indicador am/pm en minúsculas.
+- %r: Hora en formato de 12 horas (equivalente a %I:%M:%S %p).
+- %R: Hora en formato 24 horas con minutos (equivalente a %H:%M).
+- %s: Segundos transcurridos desde 1970-01-01 00:00:00 UTC (Epoch).
+- %S: Segundos (00-60, incluyendo segundos intercalados).
+- %t: Carácter de tabulación.
+- %T: Hora en formato 24 horas con segundos (equivalente a %H:%M:%S).
+- %u: Día de la semana (1-7), donde 1 es lunes.
+- %U: Número de semana del año (00-53), considerando el domingo como primer día de la semana.
+- %V: Número de semana ISO (01-53).
+- %w: Día de la semana (0-6), donde 0 es domingo.
+- %W: Número de semana del año (00-53), considerando el lunes como primer día de la semana.
+- %x: Fecha en formato local.
+- %X: Hora en formato local.
+- %y: Año sin siglo (00-99).
+- %Y: Año completo con siglo (ej.: 2025).
+- %z: Desplazamiento respecto a UTC en formato +hhmm (ej.: -0500).
+- %Z: Zona horaria (ej.: CET, EST).
+- %%: Carácter de porcentaje literal (%).
+
+---
+
+```bash
+root@debian:~# uname
+Linux
+root@debian:~# uname -a
+Linux debian 6.1.0-23-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.99-1 (2024-07-15) x86_64 GNU/Linux
+root@debian:~# uname -r
+6.1.0-23-amd64
+```
+
+**Explicación**: El comando `uname` muestra información sobre el sistema.
+
+_*Nota*_: En la ruta `/etc/debian_version` o `/etc/redhat-release` puedo ver la versión del sistema operativo.
+_*Nota*_: Con el comando `arch` se puede ver la arquitectura del sistema.
