@@ -234,6 +234,28 @@ groupdel dam
 **chfn**: Permite editar los datos personales del usuario.
 **chsh**: Permite editar la shell del usuario.
 
+## Campo tipo
+
+Antes de la terna de permisos tendremos un caracter que indica el tipo de archivo en cuestión. Como resumen del campo tipo tenemos:
+- -: Archivo regular.
+- d: Directorio.
+- l: Enlace simbólico.
+- b: Dispositivo de bloque.
+- c: Dispositivo de carácter.
+- p: Pipe con nombre.
+- s: Socket.
+
+```bash
+root@debian:~# ls
+-rw-r--r--: archivo.txt              es un archivo regular.
+drwxr-xr-x: directorio               carpeta es un directorio.
+lrwxrwxrwx: enlace -> directorio     es un enlace simbólico que apunta a archivo.txt.
+brw-rw----: /dev/sda                 es un dispositivo de bloque (probablemente un disco duro).
+crw-rw-rw-: /dev/tty0                es un dispositivo de carácter (un terminal).
+prw-r--r--: pipe                     es un pipe con nombre.
+srwxrwxrwx: socket                   es un socket.
+```
+
 ## Permisos
 
 A continuación se van a explicar los permisos que pueden existir en un fichero o directorio y como editarlos. Supongamos que tienes un archivo llamado "documento.txt".
