@@ -40,15 +40,6 @@ kali adm dialout cdrom floppy sudo audio dip video plugdev users netdev bluetoot
 ```
 **Explicación:** El comando `sudo su` permite al usuario cambiar a la cuenta de `root` (superusuario) después de ingresar la contraseña.
 
-### Comando whoami
-
-```bash
-┌──(root㉿kali)-[/home/kali]
-└─# whoami
-root
-```
-**Explicación:** Después de ejecutar `sudo su`, el comando `whoami` ahora muestra que el usuario actual es `root`.
-
 ### Comando exit
 
 ```bash
