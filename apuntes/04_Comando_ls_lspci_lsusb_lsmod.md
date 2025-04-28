@@ -376,3 +376,8 @@ root@usuario:~# modprobe psmouse
 root@usuario:~# lsmod | grep psmouse
 psmouse               217088  0
 ```
+
+A mayores, existe el comando **dmesg** en Linux que muestra los mensajes del buffer del kernel, incluyendo información sobre hardware, dispositivos, errores y eventos del sistema. Para ejecutarlo en una terminal podemos realizar:
+- dmesg: Muestra todos los mensajes del buffer del kernel.
+- dmesg --level=err: Muestra errores del kernel.
+- dmesg -T: Nos muestra los mensajes del kernel en una fecha legible para humanos.
