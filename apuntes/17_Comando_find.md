@@ -54,30 +54,25 @@ find /ruta -iname "*.txt"
 3. **-perm:**
 
 - Utilizado para buscar archivos por permisos.
-- Ejemplo: Buscar archivos con permisos de lectura, escritura y ejecución para el propietario. El `/700` encontraría archivos con al menos todos los permisos para root y cualquier otro permiso para go.
+
+1. Permisos exactos: Buscar archivos con permisos exactamente 644:
 
 ```bash
-find /ruta -perm 700
-find /ruta -perm /700
+find . -perm 644
 ```
 
-Buscar archivos con exactamente permisos 222
+2. Al menos esos permisos: Buscar archivos con al menos permisos 644:
 
 ```bash
-$ find . -perm 222
+find . -perm -644
 ```
 
-Buscar archivos donde TODOS en ugo posean permisos 2, es decir, u de ugo debe poseer permiso de escritura, g de ugo debe poseer permiso de escritura y o de ugo debe poseer permiso de escritura.
+3. Cualquiera de esos permisos: Buscar archivos que tengan alguno de los permisos de 222:
 
 ```bash
-$ find . -perm -222
+find . -perm /644
 ```
 
-Buscar archivos donde CUALQUIERA en ugo posean permisos de escritura, es decir, ya sea u de ugo, g de ugo o o de ugo deben poseer permiso de escritura.
-
-```bash
-$ find . -perm /222
-```
 
 ```bash
 $ touch file1 file2 file3
@@ -101,11 +96,9 @@ $ find . -perm /222 #Buscar archivos donde CUALQUIERA en ugo posean permisos de 
 ./file3
 ./file2
 ./file1
-$ find . -perm +222 #La opción + está DESCONTINUADA, se debe usar find . -perm /222 en su lugar
-find: modo inválido ‘+222’
 ```
 
-4. **-maxdepth:**
+1. **-maxdepth:**
 
 - Especifica la profundidad máxima de búsqueda en el árbol de directorios.
 - Ejemplo: Buscar archivos en el directorio actual y un nivel hacia abajo.
