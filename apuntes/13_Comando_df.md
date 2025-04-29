@@ -20,7 +20,9 @@ tmpfs               5120        4      5116   1% /run/lock
 /dev/sda2         524252     6220    518032   2% /boot/efi
 tmpfs             400100       80    400020   1% /run/user/128
 tmpfs             400100       68    400032   1% /run/user/1000
+```
 
+```bash
 si@si-VirtualBox:/tmp$ df -h
 Filesystem      Size  Used Avail Use% Mounted on
 tmpfs           391M  1,5M  390M   1% /run
@@ -30,7 +32,9 @@ tmpfs           5,0M  4,0K  5,0M   1% /run/lock
 /dev/sda2       512M  6,1M  506M   2% /boot/efi
 tmpfs           391M   80K  391M   1% /run/user/128
 tmpfs           391M   68K  391M   1% /run/user/1000
+```
 
+```bash
 si@si-VirtualBox:/tmp$ df -Th
 Filesystem     Type   Size  Used Avail Use% Mounted on
 tmpfs          tmpfs  391M  1,5M  390M   1% /run
@@ -40,7 +44,9 @@ tmpfs          tmpfs  5,0M  4,0K  5,0M   1% /run/lock
 /dev/sda2      vfat   512M  6,1M  506M   2% /boot/efi
 tmpfs          tmpfs  391M   80K  391M   1% /run/user/128
 tmpfs          tmpfs  391M   68K  391M   1% /run/user/1000
+```
 
+```bash
 si@si-VirtualBox:/tmp$ df -Tih
 Filesystem     Type  Inodes IUsed IFree IUse% Mounted on
 tmpfs          tmpfs   489K   999  488K    1% /run

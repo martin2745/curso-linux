@@ -234,6 +234,28 @@ groupdel dam
 **chfn**: Permite editar los datos personales del usuario.
 **chsh**: Permite editar la shell del usuario.
 
+## Campo tipo
+
+Antes de la terna de permisos tendremos un caracter que indica el tipo de archivo en cuestión. Como resumen del campo tipo tenemos:
+- -: Archivo regular.
+- d: Directorio.
+- l: Enlace simbólico.
+- b: Dispositivo de bloque.
+- c: Dispositivo de carácter.
+- p: Pipe con nombre.
+- s: Socket.
+
+```bash
+root@debian:~# ls
+-rw-r--r--: archivo.txt              es un archivo regular.
+drwxr-xr-x: directorio               carpeta es un directorio.
+lrwxrwxrwx: enlace -> directorio     es un enlace simbólico que apunta a archivo.txt.
+brw-rw----: /dev/sda                 es un dispositivo de bloque (probablemente un disco duro).
+crw-rw-rw-: /dev/tty0                es un dispositivo de carácter (un terminal).
+prw-r--r--: pipe                     es un pipe con nombre.
+srwxrwxrwx: socket                   es un socket.
+```
+
 ## Permisos
 
 A continuación se van a explicar los permisos que pueden existir en un fichero o directorio y como editarlos. Supongamos que tienes un archivo llamado "documento.txt".
@@ -494,6 +516,63 @@ si@si-VirtualBox:~$ tree /tmp/sticky/
 ```
 
 _*Nota*_: Tambien podríamos hacerlo con `chmod +t`.
+
+### Comando install
+
+
+El comando `install` en Linux se utiliza para **copiar archivos y establecer permisos** en el sistema de archivos. Aunque su nombre puede ser confuso, no se utiliza para instalar paquetes, sino para mover o copiar archivos de manera controlada.
+
+install [opciones] origen destino
+
+- -d	Crea directorios, similar a mkdir -p.
+- -m	Establece los permisos de archivo (por ejemplo, 755).
+- -o	Especifica el propietario del archivo.
+- -g	Especifica el grupo del archivo.
+- -t	Especifica el directorio de destino.
+- -v	Muestra información detallada del proceso.
+- -p	Preserva los tiempos de acceso y modificación.
+
+1. Copiar un Archivo con Permisos Específicos:
+```bash
+sudo install -m 755 script.sh /usr/local/bin
+```
+
+Copia el archivo script.sh al directorio /usr/local/bin.
+Establece permisos 755 (ejecutable para todos, escritura solo para el propietario).
+
+2. Crear un Directorio con Permisos:
+```bash
+sudo install -d -m 755 /opt/mi_directorio
+```
+
+Crea el directorio /opt/mi_directorio con permisos 755.
+
+3. Copiar un Archivo con Propietario y Grupo Específicos:
+```bash
+sudo install -o root -g root -m 644 archivo.txt /etc/mi_archivo.txt
+```
+
+Copia el archivo archivo.txt a /etc/mi_archivo.txt.
+El propietario y grupo serán root, y los permisos serán 644.
+
+4. Copiar Múltiples Archivos a un Directorio:
+```bash
+sudo install -v archivo1 archivo2 archivo3 -t /usr/local/bin
+```
+
+Copia varios archivos al directorio /usr/local/bin.
+La opción -v muestra detalles de la copia.
+
+#### Usos Comunes:
+Instalación Manual de Scripts: Colocar scripts en directorios como /usr/local/bin.
+Despliegue de Archivos de Configuración: Copiar archivos de configuración con permisos específicos.
+Creación de Estructura de Directorios: Crear rutas completas para aplicaciones.
+
+#### Ejemplo Completo: Despliegue de un Script
+Imagina que tienes un script llamado mi_script.sh que deseas copiar a /usr/local/bin con permisos ejecutables para todos:
+```bash
+sudo install -m 755 mi_script.sh /usr/local/bin
+```
 
 ### `chattr` y `lsattr`
 

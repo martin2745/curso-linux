@@ -1,42 +1,61 @@
 # Comando du
 
-El comando `du`, que significa "disk usage" (uso de disco), se utiliza para estimar el espacio utilizado por archivos y directorios en el sistema de archivos.
+El comando `du` (disk usage) en sistemas Unix/Linux se utiliza para estimar y mostrar el espacio que ocupa un archivo o directorio en el sistema de archivos. 
 
-- **Uso básico**: La forma más básica de utilizar `du` es simplemente invocarlo con el nombre de un directorio:
+**Opciones comunes**:
+
+- `-h` (human-readable): Muestra los tamaños en un formato legible para humanos, utilizando unidades como KB, MB o GB.
+- `-s` (summarize): Muestra solo el total ocupado por el archivo o directorio especificado, en lugar de listar el tamaño de cada subdirectorio.
+
+**Ejemplos de uso**:
+
+- `du -h fichero`: Muestra el tamaño de un archivo en formato legible para humanos.
+- `du -hs /directorio`: Muestra el tamaño total de un directorio (de forma resumida) en formato legible para humanos.
+
+**Resumen de las opciones utilizadas**:
+
+| Opción     | Descripción                                                                 |
+|------------|-----------------------------------------------------------------------------|
+| `-h`       | Formato legible para humanos (KB, MB, GB)                                   |
+| `-s`       | Muestra solo el total ocupado por el archivo/directorio especificado        |
 
 ```bash
-du directorio
+root@debian:~# du /tmp
+4       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8/tmp
+8       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8
+4       /tmp/.ICE-unix
+4       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-systemd-logind.service-Bvohlw/tmp
+8       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-systemd-logind.service-Bvohlw
+root@debian:~# du /tmp
+4       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8/tmp
+8       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8
+4       /tmp/.ICE-unix
+4       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-systemd-logind.service-Bvohlw/tmp
+8       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-systemd-logind.service-Bvohlw
+4       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-chrony.service-eqmIPM/tmp
+8       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-chrony.service-eqmIPM
+4       /tmp/.font-unix
+4       /tmp/.XIM-unix
+4       /tmp/.X11-unix
+48      /tmp
 ```
 
-Esto mostrará el espacio utilizado por ese directorio y sus subdirectorios. Por ejemplo:
-
 ```bash
-du /home/usuario
+root@debian:~# du -h /tmp
+4,0K    /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8/tmp
+8,0K    /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8
+4,0K    /tmp/.ICE-unix
+4,0K    /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-systemd-logind.service-Bvohlw/tmp
+8,0K    /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-systemd-logind.service-Bvohlw
+4,0K    /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-chrony.service-eqmIPM/tmp
+8,0K    /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-chrony.service-eqmIPM
+4,0K    /tmp/.font-unix
+4,0K    /tmp/.XIM-unix
+4,0K    /tmp/.X11-unix
+48K     /tmp
 ```
 
-Esto mostrará el espacio utilizado por el directorio `/home/usuario` y sus subdirectorios.
-
-- **Opciones adicionales**: `du` puede tomar varias opciones para personalizar su salida. Por ejemplo, `-h` (human-readable) muestra los tamaños de una manera más legible para los humanos, mientras que `-a` muestra el tamaño de cada archivo en un directorio:
-
 ```bash
-si@si-VirtualBox:/tmp$ du -h prueba/
-64K prueba/
-
-si@si-VirtualBox:/tmp$ du -ah prueba/
-4,0K prueba/fichero1.txt
-4,0K prueba/fichero9.txt
-4,0K prueba/fichero13.txt
-4,0K prueba/fichero6.txt
-4,0K prueba/fichero4.txt
-4,0K prueba/fichero10.txt
-4,0K prueba/fichero2.txt
-4,0K prueba/fichero7.txt
-4,0K prueba/fichero8.txt
-4,0K prueba/fichero11.txt
-4,0K prueba/fichero15.txt
-4,0K prueba/fichero12.txt
-4,0K prueba/fichero3.txt
-4,0K prueba/fichero14.txt
-4,0K prueba/fichero5.txt
-64K prueba/
+root@debian:~# du -hs /tmp
+48K     /tmp
 ```

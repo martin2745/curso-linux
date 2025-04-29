@@ -96,6 +96,10 @@ martin@debian12:/tmp/temporal$ ls -c
 ```
 
 `touch` en Linux es un comando que se utiliza para crear archivos vacíos o actualizar las marcas de tiempo de archivos existentes. Se usa principalmente para crear archivos nuevos o actualizar las fechas de acceso y modificación de archivos existentes sin cambiar su contenido.
+-a Cambia la fecha de acceso del archivo
+-m Cambia la fecha de modificación
+-r archivo Toma la fecha del archivo como referencia
+-t time Valor de la fecha en decimal. Formato: *aaaaMMddHHmm.ss*
 
 ```bash
 martin@debian12:/tmp/temporal$ touch fichero.txt
