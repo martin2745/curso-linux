@@ -157,6 +157,10 @@ prueba
 snap
 ```
 
+# Comandos lspic, lsusb y lsmod
+
+Los comandos lspci, lsusb y lsmod actúan como interfaz para leer la información del dispositivo almacenada por el sistema operativo. Este tipo de información se guarda en archivos especiales en los directorios /proc y /sys. Estos directorios son puntos de montaje para sistemas de archivos que no están presentes en una partición de dispositivo, sino solo en el espacio RAM utilizado por el núcleo del sistema operativo para almacenar la configuración en tiempo de ejecución y la información sobre los procesos en ejecución.
+
 # Comando lspci
 
 El comando **lspci** muestra información sobre los dispositivos PCI conectados al sistema (tarjetas de red, gráficas, etc.).
@@ -320,9 +324,11 @@ usuario@usuario:~$ lsusb -t
 
 # Comando lsmod, comandos de gestión de módulos del kernel
 
-Enfocado en el listado de módulos del kernel tenemos este comando. Los módulos son partes del kernel que podemos activar o desactivar para añadir o quitar funcionalidades. Tiene una relación muy estrecha con los driver.
+Enfocado en el listado de módulos del kernel tenemos este comando. Los módulos tienen un papel primordial ya que muchas de las funcionas básicas se gestionan en forma de módulos. Si un kernel no dispone de los módulos necesarios para el funcionamiento del sistema, las funciones simplemente no estarán disponibles.
 
-Son archivos terminados con la extensión .ko que se almacenan en la ubicación `/lib/modules/<versión_del_kernel>/`
+Los módulos son archivos con extensión .ko que se cargan en memoria en función de las necesidades. Existen a nuestra disposición una serie de comandos que permiten listar los módulos cargados, retirarlos de memoria o cargar otros nuevos.
+
+Son archivos terminados con la extensión .ko que se almacenan en la ubicación `/lib/modules/<versión_del_kernel>/`. Existen módulos monolíticos que siempre permanecen cargados y otros que se cargan en función de si son dependencias de estos módulos.
 
 ```bash
 root@usuario:~# lsmod | grep floppy
