@@ -244,3 +244,96 @@ prueba/archivo8.txt
 prueba/archivo1.txt
 prueba/archivo9.txt
 ```
+
+## Otras cuestiones y comandos de compresión
+
+| Comando | Compresor | Finalidad |
+| ------- | --------- | --------- |
+| zcat    | gzip      | Muestra el contenido de un fichero de texto comprimido .gz. |
+| zless   | gzip      | Pagina el contenido de un fichero de texto comprimido .gz. |
+| bzcat   | bzip2     | Muestra el contenido de un fichero de texto comprimido .bz2. |
+| bzless  | bzip2     | Pagina el contenido de un fichero de texto comprimido .bz2. |
+| xzcat   | xz        | Muestra el contenido de un fichero de texto comprimido .xz. |
+| xzless  | xz        | Pagina el contenido de un fichero de texto comprimido .xz. |
+
+```bash
+root@debian:/tmp# zcat prueba.tar.gz 
+prueba/0000755000000000000000000000000015004102071011020 5ustar  rootrootprueba/arch9.txt0000644000000000000000000000002115004102071012560 0ustar  rootrootSoy el fichero 9
+prueba/arch7.txt0000644000000000000000000000002115004102071012556 0ustar  rootrootSoy el fichero 7
+prueba/arch8.txt0000644000000000000000000000002115004102071012557 0ustar  rootrootSoy el fichero 8
+prueba/arch5.txt0000644000000000000000000000002115004102071012554 0ustar  rootrootSoy el fichero 5
+prueba/arch2.txt0000644000000000000000000000002115004102071012551 0ustar  rootrootSoy el fichero 2
+prueba/arch6.txt0000644000000000000000000000002115004102071012555 0ustar  rootrootSoy el fichero 6
+prueba/arch1.txt0000644000000000000000000000002115004102071012550 0ustar  rootrootSoy el fichero 1
+prueba/arch4.txt0000644000000000000000000000002115004102071012553 0ustar  rootrootSoy el fichero 4
+prueba/arch3.txt0000644000000000000000000000002115004102071012552 0ustar  rootrootSoy el fichero 3
+prueba/arch10.txt0000644000000000000000000000002215004102071012631 0ustar  rootrootSoy el fichero 10
+```
+
+# Comando zip
+
+El comando zip permite comprimir y descomprimir archivos con extensión `.zip`. Puede darse la necesidad de tener que instalarlo con `sudo apt install zip -y`.
+
+```bash
+root@debian:/tmp# zip -r prueba.zip prueba
+  adding: prueba/ (stored 0%)
+root@debian:/tmp# file prueba.zip 
+prueba.zip: Zip archive data, at least v1.0 to extract, compression method=store
+```
+
+Para el proceso de descomprimir zip en linux lo realizamos de la siguiente forma:
+
+```bash
+root@debian:/tmp# rm -r prueba
+root@debian:/tmp# unzip prueba.zip 
+Archive:  prueba.zip
+   creating: prueba/
+ extracting: prueba/arch9.txt        
+ extracting: prueba/arch7.txt        
+ extracting: prueba/arch8.txt        
+ extracting: prueba/arch5.txt        
+ extracting: prueba/arch2.txt        
+ extracting: prueba/arch6.txt        
+ extracting: prueba/arch1.txt        
+ extracting: prueba/arch4.txt        
+ extracting: prueba/arch3.txt        
+ extracting: prueba/arch10.txt       
+root@debian:/tmp# ls prueba
+arch10.txt  arch1.txt  arch2.txt  arch3.txt  arch4.txt  arch5.txt  arch6.txt  arch7.txt  arch8.txt  arch9.txt
+```
+
+_*Nota*_: Si queremos indicar la ruta de destino con *unzip* tenemos el parámetro *-d* para indicar el directorio de destino.
+
+```bash
+root@debian:/tmp# unzip -d prueba.zip /root 
+unzip:  cannot find or open /root, /root.zip or /root.ZIP.
+root@debian:/tmp# unzip -d /root prueba.zip 
+Archive:  prueba.zip
+   creating: /root/prueba/
+ extracting: /root/prueba/arch9.txt  
+ extracting: /root/prueba/arch7.txt  
+ extracting: /root/prueba/arch8.txt  
+ extracting: /root/prueba/arch5.txt  
+ extracting: /root/prueba/arch2.txt  
+ extracting: /root/prueba/arch6.txt  
+ extracting: /root/prueba/arch1.txt  
+ extracting: /root/prueba/arch4.txt  
+ extracting: /root/prueba/arch3.txt  
+ extracting: /root/prueba/arch10.txt  
+root@debian:/tmp# ls /root
+prueba
+root@debian:/tmp# ls /root/prueba/
+arch10.txt  arch1.txt  arch2.txt  arch3.txt  arch4.txt  arch5.txt  arch6.txt  arch7.txt  arch8.txt  arch9.txt
+```
+
+# Comando rar
+
+Para comprimir .rar, debemos utilizar
+```bash
+rar -a archivo.rar /carpeta/archivos
+```
+
+Para descomprimir .rar, debemos utilizar:
+```bash
+rar -x archivo.rar
+```
