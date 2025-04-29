@@ -125,7 +125,9 @@ usuario@usuario:/proc$ ls
 ...
 ```
 
-_*Nota*_: Estos directorios `/proc`, `/sys` y `/dev` son cruciales para la administración de sistemas y proporcionan interfaces muy poderosas para la gestión de procesos, hardware, y recursos del sistema.
+_*Nota*_: Estos directorios `/proc`, `/sys` y `/dev` son cruciales para la administración de sistemas y proporcionan interfaces muy poderosas para la gestión de procesos, hardware, y recursos del sistema. A modo de resumen podemos decir que los archivos dentro del directorio /sys tienen roles similares a los de /proc. Sin embargo, el directorio /sys tiene el propósito específico de almacenar información del dispositivo y datos del núcleo del sistema operativo relacionados con el dispositivo, mientras que /proc también contiene información sobre varias estructuras de datos  del núcleo del sistema operativo, incluidos los procesos en ejecución y la configuración.
+
+_*Nota*_: Es importante saber que el directorio `/proc` permite enviar parámetros en caliente que permiten personalizar el sistema operativo. Un ejemplo típico es modificar el contenido de `/proc/sys/net/ipv4/icmp_echo_ignore_all`, el cual por defecto es 0, al modificar el parámetro por un 1, se deja de permitir la respuesta de paquetes ICMP por lo que ante un ping mi máquina no responde. Gracias a esto estamos modificando los parámetros del kernel del Linux.
 
 ## /srv
 Almacena información propia de servidores en forma de archivo que puedan estar instalados en el sistema.
