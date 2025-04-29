@@ -11,7 +11,7 @@ lrwxrwxrwx   1 root root     8 Feb 10 11:41 sbin -> usr/sbin
 ```
 
 ## /boot
-Directorio estático que incluye los archivos necesarios para el proceso de arranque del sistema. Deberían ser utilizados antes de que el kernel comience a dar las instrucciones de arranque de los diferentes módulos del sistema.
+Directorio estático que incluye los archivos necesarios para el proceso de arranque del sistema. Deberían ser utilizados antes de que el kernel comience a dar las instrucciones de arranque de los diferentes módulos del sistema. En este directorio podemos encontrar archivos como los `/boot/vmlinuz`, los cuales son archivos *Linux kernel x86 boot executable bzImage*.
 - **/boot/**: núcleo Linux y otros archivos necesarios para las primeras etapas del proceso de arranque.
 - Destacamos el directorio `/boot/grub` donde se contiene la información del GRUB y existen archivos como el `grub.cnf` donde está la información del menú del gestor de arranque.
 
@@ -24,21 +24,16 @@ root@usuario:/boot/grub# ls -l grub.cfg
 -rw-rw-r-- 1 root root 9986 dic 10 22:36 grub.cfg
 ```
 
-# /dev
-Incluye todos los dispositivos de almacenamiento conectados al sistema y que este entienda como un volumen lódigo de almacenamiento.
-- **/dev/**: archivos de dispositivo.
-- _*Nota*_: El demonio que se encarga de crear y eliminar los ficheros que representan los dispositivos según estén disponibles o no se conoce como **udev**, es decir, detecta cuando un dispositivo se conecta o desconecta y actua en consecuencia.
-
-# /etc
+## /etc
 Almacena los archivos de configuración tanto a nivel de componentes del sistema operativo como de los programas instalados a posteriori. Debería tener unicamente archivos de configuración y no debería contener binarios.
 - **/etc/**: archivos de configuración.
 
-# /home y /root
+## /home y /root
 Directorios destinados a almacenar los archivos de los usuarios. Tambien incluye archivos temporales de aplicaciones ejecutadas en modo usuario que sirven para guardar las configuraciones de programas.
 - **/home/**: archivos personales de los usuarios.
 - **/root/**: archivos personales del administrador (root).
 
-# /lib
+## /lib
 Incluye las bibliotecas esenciales para que se puedan ejecutar correctamente todos los binarios de los directorios /bin y /sbin así como los módulos propios del kernel que están en la ruta `/lib/modules`. Tenemos tambien los /lib32 y /lib64 para aquellas bibliotecas propias de arquitecturas de 32 y 64 bits respectivamente.
 - **/lib/**: bibliotecas básicas.
 ```bash
@@ -75,20 +70,31 @@ root@usuario:/usr# ldd $(which ls)
         /lib64/ld-linux-x86-64.so.2 (0x000078f4966d6000)
 ```
 
-# /media y /mnt
+## /media y /mnt
 Punto de montaje de los volumenes lógicos que se montan en el sistema de forma temporal.
 - **/media/**: puntos de montaje para dispositivos removibles (CD-ROM, llaves USB, etc.).
 - **/mnt/**: punto de montaje temporal.
 
-# /usr y /opt
+## /usr y /opt
 Para almacenar archivos del sistema y aplicaciones de terceros.
 - **/usr**: Es donde se almacenan los archivos del sistema que son compartidos entre todos los usuarios, como bibliotecas, programas y documentación. Es la ubicación estándar para software que se instala desde los repositorios del sistema o por el administrador del sistema.Este directorio está subdividido en bin, sbin, lib siendo estos enlaces débiles somo se mostraba anteriormente. Su nombre viene de _user system resources_.
 - **/opt**: Se utiliza para instalar software adicional que no forma parte del sistema base. Aquí suelen ir programas o aplicaciones de terceros que no siguen la estructura estándar del sistema. Es común en aplicaciones grandes que se instalan por fuera del gestor de paquetes del sistema. 
 
-# /proc y /sys
+## /dev
+Incluye todos los dispositivos de almacenamiento conectados al sistema y que este entienda como un volumen lódigo de almacenamiento.
+- **/dev/**: archivos de dispositivo.
+- El demonio que se encarga de crear y eliminar los ficheros que representan los dispositivos según estén disponibles o no se conoce como **udev**, es decir, detecta cuando un dispositivo se conecta o desconecta y actua en consecuencia.
+- Ejemplos de dispositivos en esta ruta serían:
+  - /dev/fd0: Disqueteras.
+  - /dev/hda: Controladoras de disco IDE
+  - /dev/sda: Disco controladoras scsi
+  - /dev/sr0: Dvd scsci
+  - /dev/eth0 o /dev/enp0s3: Interfaz de red
+
+## /proc y /sys
 **/sys** se enfoca en la configuración y el hardware del sistema, mientras que **/proc** contiene información de los procesos y aplicaciones que se están ejecutando en un momento dado en el sitema.
 - **/sys**: Contiene información y configuraciones del sistema a nivel de hardware y del núcleo (kernel), expuestas en tiempo real. Permite interactuar con parámetros del hardware y configuraciones del sistema.
-- **/proc**: Es un sistema de archivos temporal que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos hardware del sistema.
+- /proc: Es un sistema de archivos temporal que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos hardware del sistema. El demonio encargado de generar el tiempo de ejecución el contenido de `/proc` es *procfs*.
   - **/proc/interrupts**: Información que corresponde a los IRQ o interrupciones del sistema, es decir, canales (presentan un identificador numérico) que necesitan los dispositivos hardware para comunicarse con la CPU. En el directorio `/proc/interrupts` podemos ver la relación entre dispositivo hardware e interrupción.
   - **/proc/ioports**: Directorio donde se encuentran las localizaciones en memoria reservadas para la comunicación entre CPU y dispositivos hardware.
   - **/proc/dma**: Canales de acceso directo a memoria.
@@ -119,15 +125,17 @@ usuario@usuario:/proc$ ls
 ...
 ```
 
-# /srv
+_*Nota*_: Estos directorios `/proc`, `/sys` y `/dev` son cruciales para la administración de sistemas y proporcionan interfaces muy poderosas para la gestión de procesos, hardware, y recursos del sistema.
+
+## /srv
 Almacena información propia de servidores en forma de archivo que puedan estar instalados en el sistema.
 - **/srv/**: datos utilizados por los servidores en este sistema.
 
-# /tmp
+## /tmp
 Su uso está enfocado en almacenar contenido temporal de poca duración.
 - **/tmp/**: archivos temporales. Generalmente se vacía este directorio durante el arranque.
 
-# /var
+## /var
 Contiene información del sistema actuando a modo de registro del sistema.
 - **/var/**: datos variables administrados por demonios. Esto incluye archivos de registro, colas, cachés, bases de datos y otros archivos que cambian con el tiempo. El contenido de esta carpeta puede cambiar con la actividad del sistema, y su tamaño puede aumentar debido a la acumulación de registros y otros datos generados dinámicamente.
 Ejemplos comunes:
@@ -136,14 +144,13 @@ Ejemplos comunes:
   - **/var/spool**: contiene colas de trabajos que se van a procesar, como correos electrónicos o trabajos de impresión.
   - **/var/tmp**: archivos temporales que deberían sobrevivir a reinicios del sistema.
 
-# /run
+## /run
 Para almacenar en tiempo de ejecución datos no persistemtes para el funcionamiento del sistema.
 - **/run/**: datos volátiles en tiempo de ejecución que no persisten entre reinicios. Los archivos dentro de esta carpeta son necesarios para el funcionamiento del sistema mientras está en ejecución, pero no se mantienen después de un reinicio. Esta carpeta contiene información crítica sobre el estado del sistema, como identificadores de procesos (PID), información de red, sesiones de usuario, y otros archivos temporales que se recrean después de reiniciar el sistema.
 Ejemplos comunes:
   - **/run/lock**: archivos de bloqueo que previenen la ejecución simultánea de procesos que podrían interferir entre sí.
   - **/run/user/**: directorios específicos para cada usuario, donde se almacenan datos temporales relacionados con las sesiones de usuario.
   - **/run/systemd/**: contiene información sobre el sistema de inicio (systemd) y su estado durante el arranque.
-
 
 ```bash
 ┌──(kali㉿kali)-[/]
