@@ -8,7 +8,7 @@ Podemos encontrar tres tipos de procesos encargados de iniciar y gestionar los s
 
 En SysVinit el fichero `/etc/inittab` tiene la configuración básica como el nivel de ejecución por defecto y las acciones a tomar en determinadas situaciones. 
 
-- Se definen niveles de ejecución y qué se hará en cada uno de ellos. Se invoca al script rc que puede estar en `/etc/rc.d/` , `/etc/init.d/` (depende de la distribución), pasándole por parámetro el nivel de ejecución.
+- Se definen niveles de ejecución y qué se hará en cada uno de ellos. Se invoca al script rc que puede estar en `/etc/rc.d/` , `/etc/init.d/` (depende de la distribución), pasándole por parámetro el nivel de ejecución. En `/etc/init.d/` están los scripts reales para gestionar los servicios del sistema. Los enlaces en `/etc/rcN.d/` apuntan a estos scripts y determinan qué servicios se inician o detienen en cada nivel de ejecución
 - rc ejecuta los ficheros que hay en el directorio `/etc/rcN.d/` por orden numérico (siendo N el nivel de ejecución). Estos ficheros serán enlaces que empiezan por S o K y que apuntan a script que están en `/etc/init.d/`
 - Si el enlace empieza por S, rc le pasará el comando start y si empieza por K le pasará stop.
 - Los runlevels (niveles de ejecución) son una característica del sistema init de Unix y  Linux que determinan qué servicios y procesos se ejecutan en un momento dado. En sistemas modernos basados en systemd, que es el caso de muchas distribuciones recientes, los runlevels tradicionales han sido reemplazados por "targets". Sin embargo, la idea general sigue siendo la misma: diferentes niveles de ejecución representan diferentes configuraciones del sistema.
@@ -133,9 +133,33 @@ root@usuario:~# telinit 6
 Connection to localhost closed by remote host.
 Connection to localhost closed.
 ```
-- Con el comando **update-rc.d** puedo indicar si quiero habilitar o deshabilitar un servicio concreto para un runlevel. Este comando genera los enlaces simbólicos a las carpetas correspondientes de `rcN.d`. Este comando se emplea en distribuciones Debian, su equivalencia en distribuciones Red Hat es **chkconfig**.
+- Con el comando **update-rc.d** puedo indicar si quiero habilitar o deshabilitar un servicio concreto para un runlevel. Este comando genera los enlaces simbólicos a las carpetas correspondientes de `rcN.d`. Este comando se emplea en distribuciones Debian, su equivalencia en distribuciones Red Hat es **chkconfig**. El comando chkconfig es una herramienta utilizada en sistemas Linux basados en SysVinit (como algunas distribuciones antiguas de Red Hat) para gestionar la configuración de los servicios (daemons) en los diferentes niveles de ejecución (runlevels).
+ 
 ```bash
 update-rc.d network-manager disable 2
+```
+
+A mayores, en distribuciones debian se puede crear el enlance de forma manual
+```bash
+cd /etc/rc3.d
+ln -s /etc/init.d/iniciar-supervisamem /etc/rc3.d/S99iniciar-supervisamem
+```
+
+```bash
+Borrar el enlance de forma manual por ejemplo en debian:
+rm -rf  /etc/rc3.d/S99iniciar-supervisamem
+```
+
+En distribuciones red-hat tenemos el comando *chkconfig*.
+
+```bash
+chkconfig --list  network
+
+chkconfig --level 3 httpd on
+/etc/rc3/S85httpd --> /etc/init.d/httpd
+
+chkconfig --level 3 httpd off
+/etc/rc3/K85httpd --> /etc/init.d/httpd
 ```
 
 ## `systemd`
