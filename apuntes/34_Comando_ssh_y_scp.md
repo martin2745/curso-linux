@@ -1,5 +1,33 @@
 # Comando ssh y scp
 
+## Comandos para instalar el servidor SSH en Debian
+
+Para instalar y configurar un servidor SSH en Debian, sigue estos pasos básicos desde la terminal:
+
+**1. Actualiza los repositorios:**
+```bash
+sudo apt update
+```
+
+**2. Instala el servidor SSH (paquete openssh-server):**
+```bash
+sudo apt install openssh-server
+```
+
+
+**3. Verifica que el servicio SSH esté activo:**
+```bash
+sudo systemctl status ssh
+```
+
+
+**4. (Opcional) Inicia, habilita y reinicia el servicio SSH para que arranque automáticamente:**
+```bash
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo systemctl restart ssh
+```
+
 ## ssh
 
 El cliente (comando ssh) posee una configuración predeterminada que podemos modificar. El orden de prioridad de esa configuración es:
@@ -26,14 +54,6 @@ scp -r [-P port] user@hostname:remote_path local_path #Copiar directorios recurs
 scp [-P port] local_path user@hostname:remote_path #Copiar ficheros
 scp -r [-P port] local_path user@hostname:remote_path #Copiar directorios recursivamente
 ```
-
-Para comprobar el estado del servicio ssh pondemos hacer uso del comando `nc` (netcat) con las opciones `-v`: verbose y `-z`: nos devuelve el PROMPT del sistema.
-
-```bash
-nc -vz localhost 22
-```
-
-_*Nota*_: En la siguiente sección se detalla el uso de [netcat](#netcat).
 
 ### StrickHostKeyChecking
 
