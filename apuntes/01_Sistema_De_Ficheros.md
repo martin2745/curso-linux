@@ -94,7 +94,7 @@ Incluye todos los dispositivos de almacenamiento conectados al sistema y que est
 ## /proc y /sys
 **/sys** se enfoca en la configuración y el hardware del sistema, mientras que **/proc** contiene información de los procesos y aplicaciones que se están ejecutando en un momento dado en el sitema.
 - **/sys**: Contiene información y configuraciones del sistema a nivel de hardware y del núcleo (kernel), expuestas en tiempo real. Permite interactuar con parámetros del hardware y configuraciones del sistema.
-- /proc: Es un sistema de archivos temporal que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos hardware del sistema. El demonio encargado de generar el tiempo de ejecución el contenido de `/proc` es *procfs*.
+- **/proc**: Es un sistema de archivos temporal que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos hardware del sistema. El demonio encargado de generar el tiempo de ejecución el contenido de `/proc` es *procfs*.
   - **/proc/interrupts**: Información que corresponde a los IRQ o interrupciones del sistema, es decir, canales (presentan un identificador numérico) que necesitan los dispositivos hardware para comunicarse con la CPU. En el directorio `/proc/interrupts` podemos ver la relación entre dispositivo hardware e interrupción.
   - **/proc/ioports**: Directorio donde se encuentran las localizaciones en memoria reservadas para la comunicación entre CPU y dispositivos hardware.
   - **/proc/dma**: Canales de acceso directo a memoria.
