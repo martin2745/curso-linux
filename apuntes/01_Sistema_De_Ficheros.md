@@ -53,7 +53,10 @@ kernel         modules.builtin.alias.bin  modules.dep.bin          modules.symbo
 modules.alias  modules.builtin.bin        modules.devname          modules.symbols.bin
 ```
 
-Por otra parte, existe la posibilidad de tener librerias compartidas a utilizar por diferentes programas o binarios del sistema. Para poder acceder a ellas se tienen que configurar en el fichero de configuración `/etc/ld.so.conf` o preferiblemente en el directorio `/etc/ld.so.conf.d` mediante ficheros con extensión `.conf`. Posteriormente tenemos que hacer uso del comando **ldconfig** para que la cache de librerias se actualice y los programas sepan que hay una nueva ruta con diferentes librerias.
+Por otra parte, existe la posibilidad de tener librerias compartidas a utilizar por diferentes programas o binarios del sistema. Para poder acceder a ellas se tienen que configurar en el fichero de configuración `/etc/ld.so.conf` o preferiblemente en el directorio `/etc/ld.so.conf.d` mediante ficheros con extensión `.conf`. Posteriormente tenemos que hacer uso del comando **ldconfig** para que la cache de librerias se actualice y los programas sepan que hay una nueva ruta con diferentes librerias. El comando **ldconfig**:
+- Actualiza la caché para las rutas definidas en `/etc/ld.so.conf` y asociadas, así como para `/usr/lib` y `/lib`.
+- Actualiza los vínculos simbólicos en las librerías.
+- Permite también listar las librerías conocidas en la caché.
 
 Por otra parte, existe la variable de entorno *$LD_LIBRARY_PATH* donde se pueden asignar la ruta de las librerias compartidas. La información de esta variable tiene preferencia sobre la información del fichero de configuración.
 
