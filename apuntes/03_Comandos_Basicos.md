@@ -91,8 +91,21 @@ inetsim:x:127:
 ┌──(kali㉿kali)-[~]
 └─$ echo $PATH
 /home/kali/.local/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/home/kali/.dotnet/tools
+
+root@debian:~# echo -e "Hola\n que tal\t estás"
+Hola
+ que tal         estás
 ```
 **Explicación:** El comando `echo $PATH` muestra la variable de entorno `PATH`, que contiene los directorios en los que el sistema busca los ejecutables de los comandos. Aquí, se muestra una lista de directorios como `/home/kali/.local/bin`, `/usr/bin`, etc.
+
+_*Nota*_: Muy importante es el uso de las comillas en el comando *echo*.
+
+```bash
+root@debian:~# echo "$PWD"
+/root
+root@debian:~# echo '$PWD'
+$PWD
+```
 
 ### Comando pwd
 
@@ -162,6 +175,32 @@ root@debian:/tmp# mkdir -p uno/dos/tres/cuatro
 **Explicación:** el comando `more` muestra el archivo por páginas, solo hacia adelante.
 **Explicación:** el comando `less` muestra el archivo por páginas, permite moverse hacia adelante y atrás.
 **Explicación:** el comando `tac` muestra el archivo en orden inverso, desde la última línea hasta la primera.
+
+### Comando head y tail
+
+```bash
+root@debian:~# head -n 3 /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+
+root@debian:~# head -3 /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+
+root@debian:~# tail -n 3 /etc/passwd
+vboxadd:x:999:1::/var/run/vboxadd:/bin/false
+_chrony:x:104:109:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
+usuario:x:1001:1001::/home/usuario:/bin/bash
+
+root@debian:~# tail -3 /etc/passwd
+vboxadd:x:999:1::/var/run/vboxadd:/bin/false
+_chrony:x:104:109:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
+usuario:x:1001:1001::/home/usuario:/bin/bash
+```
+
+**Explicación**: Los comandos `head` y `tail` permiten mostrar por defecto las 10 primeras o últimas lineas de un fichero. Se puede ajustar el número con el parámetro *-n* o indicandolo con el número de lineas a mostrar.
 
 ### Comando man, manpath, --help
 
