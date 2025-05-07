@@ -52,7 +52,60 @@ tmpfs          tmpfs   795M    72K  795M   1% /run/user/1000
 tmpfs          tmpfs   795M    84K  795M   1% /run/user/128
 ```
 
+Es conveniente indicar que en un sistema Linux podemos tener los siguientes indicadores de particiones.
+
+Tipo de particiones para GPT ---> UEFI --> con gdisk.
+- *8300* : partición de tipo Linux (datos).
+- *8200* : partición de tipo swap.
+- *fd00* : partición de tipo RAID. 
+- *8e00* : partición de tipo LVM.
+ 
+Tipo de particiones MBR --> BIOS-->fdisk.
+- *83* : partición de tipo Linux (datos).
+- *82* : partición de tipo swap. 
+- *fd* : partición de tipo RAID.
+- *8e* : partición de tipo LVM.
+
+```bash
+root@debian:/tmp# fdisk -l /dev/sda
+Disco /dev/sda: 64 GiB, 68719476736 bytes, 134217728 sectores
+Modelo de disco: VBOX HARDDISK   
+Unidades: sectores de 1 * 512 = 512 bytes
+Tamaño de sector (lógico/físico): 512 bytes / 512 bytes
+Tamaño de E/S (mínimo/óptimo): 512 bytes / 512 bytes
+Tipo de etiqueta de disco: dos
+Identificador del disco: 0x82270e73
+
+Disposit.  Inicio Comienzo     Final  Sectores Tamaño Id Tipo
+/dev/sda1  *          2048    999423    997376   487M 83 Linux
+/dev/sda2          1001470 134215679 133214210  63,5G  5 Extendida
+/dev/sda5          1001472 134215679 133214208  63,5G 8e Linux LVM
+```
+
 ## lsblk
+
+Nos muestra información relevante de los dispositivos de almacenamiento.
+- *-f*: Muestra información del sistema de archivos, como el tipo (xfs, ext4), el UUID, y la etiqueta (LABEL).
+- *-p*: Muestra la ruta completa del dispositivo, como `/dev/sda1` en lugar de *sda1*.
+
+```bash
+root@debian:/tmp/prueba# lsblk
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0   64G  0 disk
+├─sda1                      8:1    0  487M  0 part /boot
+├─sda2                      8:2    0    1K  0 part
+└─sda5                      8:5    0 63,5G  0 part
+  ├─debian--12--vg-root   254:0    0 62,6G  0 lvm  /
+  └─debian--12--vg-swap_1 254:1    0  980M  0 lvm  [SWAP]
+```
+
+- *NAME*: Nombre del dispositivo.
+- *MAJ:MIN*: Número mayor y menor del dispositivo.
+- *RM*: 1 si es extraíble, 0 si no lo es.
+- *SIZE*: Tamaño del dispositivo.
+- *RO*: 1 si es de solo lectura.
+- *TYPE*: Tipo de dispositivo (disk, part, rom, lvm, etc.).
+- *MOUNTPOINT*: Punto de montaje del dispositivo.
 
 ### Dispositivos `loop`  
 Un dispositivo `loop` es un disco virtual que permite montar un archivo como si fuera un dispositivo de almacenamiento real. Se usa para acceder a archivos de imagen (ISO, IMG) o paquetes Snap sin necesidad de grabarlos en un disco físico. 
@@ -334,7 +387,7 @@ root@si-VirtualBox:~# blkid | grep sdb
 
 El paso final para poder leer y escribir de particiones es montarlas en una ruta del sistema de archivos para lo cual utilizaremos el comando mount:
 - `mount /dev/sdb1 /media/datos1` Monta la partición 1 del disco /dev/sdb en la ruta /media/datos1.
-- `umount /dev/sdb1` Desmonta la partición 1 del disco /dev/sdb de donde esté montada.
+- `umount /media/datos1` Desmonta la partición 1 del disco /dev/sdb de donde esté montada.
 
 Vamos a montar la partición en la ruta `/media/datos1`. Una vez montada podremos crear contenido en su interior que se guardará en el dispositivo `/dev/sdb1`.
 
@@ -450,8 +503,10 @@ Resumen de lo que pueden contener los campos:
 2. **mount point**: Directorios donde se monta.
 3. **type**: Tipo de sistema de archivos (ext4, vfat, swap, etc.).
 4. **options**: Opciones como `defaults`, `errors=remount-ro`, etc.
-5. **dump**: 0 o 1 para respaldo con `dump`.
+5. **dump**: 0 o 1 para respaldo con `dump`, es decir, si hay un fallo en disco se almacena en un log dicha información.
 6. **pass**: 0 (sin chequeo), 1 (chequeo para raíz), 2 (chequeo para otras particiones).
+
+_*Nota*_: Este funcionamiento era el empleado en SystemV, actualmente con SystemD esto ha quedado desactualizado y los campos 5 y 6 deben ser 0.
 
 Si tuvieramos algún error en la configuración del `/etc/fstab` debería notificarmelo por pantalla. Como no exite ningún error reiniciamos la máquina.
 
@@ -575,6 +630,16 @@ mkfs.ext4 /dev/sdb3
 
 La partición o espacio swap en Linux es un área del disco duro que el sistema usa como extensión de la memoria RAM. Cuando la RAM se llena, Linux mueve datos menos usados a la swap para liberar memoria y evitar que el sistema se quede sin recursos, aunque acceder a swap es mucho más lento que a la RAM física.
 
+En sistemas con gran cantidad de memoria RAM, el uso de swap puede ser innecesario y, en algunos casos perjudicial para el rendimiento. No hay una regla estricta, pero generalmente se recomienda desactivar swap a partir de los 32/64 GB de RAM en adelante, dependiendo del caso de uso.
+
+| Cantidad de RAM     | Swap Recomendada           | Notas                                                      |
+|---------------------|---------------------------|------------------------------------------------------------|
+| 0 - 2 GB            | 2 veces la RAM            | Sistemas con poca memoria requieren swap.                  |
+| 2 - 8 GB            | Igual o 1.5 veces la RAM  | Uso moderado de swap en cargas ligeras.                    |
+| 8 - 16 GB           | Igual a la RAM            | Solo para hibernación o picos de carga.                    |
+| 16 - 32 GB          | 4 - 8 GB de swap          | Útil en servidores de aplicaciones.                        |
+| 64 GB o más         | Desactivada o 4 GB        | Swap puede ser innecesaria salvo cargas pesadas.           |
+
 En el sistema, según la salida de los comandos:
 
 - No tienes una partición swap dedicada (no aparece ninguna partición con tipo "swap" en `lsblk` ni en `df -Th`).
@@ -609,3 +674,29 @@ mkswap /dev/sdb1
 swapon /dev/sdb1
 ```
 - A mayores tendríamos que editar el `/etc/fstab` para poder añadir la partición de swap en el arranque.
+
+Por otra parte, para ampliar una partición de swap a través de una partición de nuestro disco `/dev/sdb` con 2GB:
+
+```bash
+free -h
+#Creo la particion /dev/sdb1, la creo  y el tipo 82:
+fdisk /dev/sdb
+
+#se dará formato como partición de memoria de intercambio
+mkswap -c /dev/sdb1
+
+#En el siguiente ejemplo se activa como partición de memoria de intercambio a la partición /dev/sdb1:
+swapon /dev/sdb1
+free -h
+
+##Desactivo la swap del /dev/sdb1
+swapoff /dev/sdb1
+free -h
+
+##Persistir la swap en el fstab:
+vim /etc/fstab
+/dev/sdb1  swap  swap  defaults  0 0
+
+#Resumen de todas las áreas de swap activas en el sistema.
+swapon -s
+```

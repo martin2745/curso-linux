@@ -364,10 +364,34 @@ root@debian:~# uname -r
 _*Nota*_: En la ruta `/etc/debian_version` o `/etc/redhat-release` puedo ver la versión del sistema operativo.
 _*Nota*_: Con el comando `arch` se puede ver la arquitectura del sistema.
 
+### Comando split
+
+```bash
+root@debian:/tmp/split# ls -lh
+total 4,0K
+-rw-r--r-- 1 root root 1,4K abr 28 12:14 passwd
+
+root@debian:/tmp/split# split -l 10 passwd ./linea/passwd-
+root@debian:/tmp/split# ls -l linea/
+total 12
+-rw-r--r-- 1 root root 424 may  6 10:40 passwd-aa
+-rw-r--r-- 1 root root 564 may  6 10:40 passwd-ab
+-rw-r--r-- 1 root root 412 may  6 10:40 passwd-ac
+
+root@debian:/tmp/split# split -b 512 passwd ./bloque/passwd-
+root@debian:/tmp/split# ls -l bloque/
+total 12
+-rw-r--r-- 1 root root 512 may  6 10:42 passwd-aa
+-rw-r--r-- 1 root root 512 may  6 10:42 passwd-ab
+-rw-r--r-- 1 root root 376 may  6 10:42 passwd-ac
+```
+
+**Explicación**: El comando `split` permite dividir un fichero en un conjunto de ficheros sucesivos donde le indicamos por cuanto dividimos, pudiendo dividir por linea con el parámetro *-l* o por bloque con el parámetro *-b*.
+
 ### Comando ln
 
 ```bash
-
+root@debian:/tmp# ln test/ enlace-duro-test
 ```
 
 **Explicación**: El comando `ln` sirve para crear enlaces en Linux. Aquí tenemos que explicar que existen dos tipos de enlaces.

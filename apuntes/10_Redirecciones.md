@@ -1,5 +1,14 @@
 # Redirecciones
 
+Se puede considerar un canal como un archivo que posee su propio descriptor por defecto, y en el cual se puede leer o escribir.
+- El canal de entrada estándar se llama stdin y lleva el descriptor 0. 
+- El canal de salida estándar se llama stdout y lleva el descriptor 1. 
+- El canal de error estándar se llama stderr y lleva el descriptor 2.
+
+Se puede redireccionar el canal de error hacia otro archivo.
+Puede redireccionar los dos canales de salida a un único archivo poniéndolos en relación. Para ello, se utiliza el >&. 
+También es importante saber en qué sentido el shell interpreta las redirecciones. El shell busca primero los caracteres <, >, >> al final de la línea, ya que las redirecciones suelen estar al final de comando. Por lo tanto, si quiere agrupar los dos canales de salida y de error en un mismo archivo, hay que proceder como a continuación. 
+
 ```bash
 martin@debian12:~$ ls -l > fichero.txt
 martin@debian12:~$ ls -l >> fichero.txt
@@ -253,6 +262,39 @@ whoami >&3
 zsh: 3: bad file descriptor
 ```
 Explicación: Como el descriptor de archivo 3 se cerró previamente, ya no se puede escribir en él.
+
+
+### Diferencia entre && y ||
+
+En Linux el *&&* permite que se ejecute la siguiente instrucción si la previa ha sido exitosa.
+
+```bash
+root@debian:/tmp# id ; pwd
+uid=0(root) gid=0(root) grupos=0(root)
+/tmp
+
+root@debian:/tmp# id && pwd
+uid=0(root) gid=0(root) grupos=0(root)
+/tmp
+
+root@debian:/tmp# idesdfg ; pwd
+-bash: idesdfg: orden no encontrada
+/tmp
+
+root@debian:/tmp# idesdfg && pwd
+-bash: idesdfg: orden no encontrada
+```
+
+Por otra parte, en Linux *||* permite que se ejecute o una u otra instrucción en función de si la previa falla o no.
+
+```bash
+root@debian:/tmp# id || pwd
+uid=0(root) gid=0(root) grupos=0(root)
+
+root@debian:/tmp# idhj || pwd
+-bash: idhj: orden no encontrada
+/tmp
+```
 
 ---
 
