@@ -24,6 +24,16 @@ martin:x:1000:1000:martin,23,666777888,981234567:/home/martin:/bin/bash```
 martin:$6$QeYgJjn3$WUebH8Ku2cb3ZOUVpqA3c.zrCzH38hJrM7m3cE8HQitQBr6FF/4Ussq/gnGzBomMBmCxgjyQamLE8V3GHe.rn1:18792:0:99999:7:::
 ```
 
+1. `martin`: Nombre de usuario.
+2. `$6$QeYgJjn3$WUebH8Ku2cb3ZOUVpqA3c.zrCzH38hJrM7m3cE8HQitQBr6FF/4Ussq/gnGzBomMBmCxgjyQamLE8V3GHe.rn1`: Contraseña cifrada (hash de la contraseña, incluye información sobre el algoritmo de cifrado y la sal).
+3. `18792`: Fecha del último cambio de contraseña (en días desde el 1 de enero de 1970).
+4. `0`: Días mínimos requeridos antes de poder cambiar la contraseña nuevamente.
+5. `99999`: Días máximos que puede usarse la contraseña antes de que expire.
+6. `7`: Días de aviso antes de que la contraseña expire.
+7. ``: Días de inactividad permitidos después de que la contraseña ha expirado (vacío significa sin restricción).
+8. ``: Fecha de expiración de la cuenta (vacío significa que la cuenta no expira).
+9. ``: Campo reservado para uso futuro.
+
 - **/etc/group**: Guarda información sobre los grupos del sistema, incluyendo nombres de grupo y listas de usuarios asociados a cada grupo.
 
 ```bash
@@ -127,6 +137,8 @@ root@debian12:~# groups
 root
 ```
 
+_*Nota*_: Nótese que el grupo root tiene el id 0.
+
 **passwd**: Permite modificar la contraseña. Los parametros destacables son:
 
 - l: Bloquea el acceso al sistema al usuario (usermod -L). Se pone un ! en el campo de contraseña en el `/etc/shadow`.
@@ -203,6 +215,8 @@ mysql:x:137:
 alumno:x:1001:
 ```
 
+_*Nota*_: Mótese que hay varios usuarios con el shell como `/bin/false` ya que están pensados para no conectarse al sistema sino ser los propios usuarios de los servicios y no precisan conectarse ni interpretar comandos. Actualmente es más común encontrarse con `/sbin/nologin`.
+
 **usermod**: Permite modificar las propiedades de un usuario existente en el sistema.
 
 ```bash
@@ -231,8 +245,32 @@ groupdel dam
 
 #### chfn, chsh
 
+**chage**: Permite modificar todos los datos del usuario.
 **chfn**: Permite editar los datos personales del usuario.
 **chsh**: Permite editar la shell del usuario.
+
+_*Nota*_: Supongamos que creamos un usuario y queremos que en el próximo inicio de sesión, el usuario modifique su password. Para ello podemos usar los comandos `chage -d 0 usuario` o `passwd -e usuario`.
+
+#### gpasswd
+
+Este comando establece la contraseña del grupo y lo administra pudiendo agregar o eliminar un usuario de un grupo. Los usuarios y grupos deben existir.
+- *-r*: Elimina la contraseña.
+- *-a*: Añade usuario al grupo.
+- *-d*: Elimina usuario del grupo.
+- *-A*: Añade un administrador o varios al grupo, el cual va a poder agregar o eliminar usuarios del grupo, modificar la contraseña del grupo
+
+La contraseña de grupo le permite a los usuarios añadirse al mismo y poder usar los permisos de este, para ello pueden hacer uso del comando *newgrp*.
+
+#### ulimit
+
+Este comando da control sobre los recursos que dispone el shell y los procesos lanzando por ella. Se puede inicializar en `/etc/profile` o en `~/.bashrc` de cada usuario.
+
+- *-a*: Despliega todas las limitaciones.
+- *-f*: Cantidad máxima de archivos creados por la shell.
+- *-n*: Cantidad máxima de archivos abiertos.
+- *-u*: Cantidad máxima de procesos por usuario.
+
+_*Nota*_: Se pueden establecer límites blandos y duros, en el caso de los blandos nos saldrá una alerta de advertencia diciendo que excedemos dicho límite.
 
 ## Campo tipo
 
