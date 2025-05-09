@@ -1135,6 +1135,39 @@ ERROR, ya no se puede modificar de esta forma el /etc/passwd
 
 Especialmente interesante es el recurso [gtfobins](https://gtfobins.github.io/) donde tenemos diferentes formas de **explotar capabilities** en un sistema.
 
+## Comandos para ver a usuarios conectados en el sistema
+
+| Comando              | Descripción                                                                                     |
+|----------------------|-------------------------------------------------------------------------------------------------|
+| who                  | Muestra los usuarios actualmente conectados.                                                    |
+| w                    | Muestra usuarios conectados y sus actividades actuales.                                         |
+| last                 | Muestra el historial de inicios de sesión.                                                      |
+| lastlog              | Muestra el último inicio de sesión de cada usuario.                                             |
+| whoami               | Muestra el nombre del usuario actual.                                                           |
+| id                   | Muestra el UID, GID y grupos del usuario actual.                                                |
+| finger               | Muestra información detallada sobre un usuario.                                                 |
+| uptime               | Muestra el tiempo de actividad del sistema y el número de usuarios conectados.                  |
+| ps aux               | Muestra todos los procesos del sistema, incluyendo los de los usuarios.                         |
+| watch                | Ejecuta un comando repetidamente para monitorear en tiempo real.                                |
+| pkill -KILL -u       | Termina todos los procesos de un usuario específico.                                            |
+| loginctl             | Gestiona y monitorea sesiones de usuarios en sistemas con systemd (systemd-logind).             |
+
+## Comando loginctl
+
+El comando **loginctl** es una herramienta para gestionar y monitorizar sesiones de usuario, usuarios y asientos en sistemas Linux que usan systemd (systemd-logind).Sus principales comandos y opciones:
+- **list-sessions**: Lista todas las sesiones de usuario activas en el sistema.
+- **session-status ID**: Muestra información resumida sobre una sesión específica.
+- **show-session ID**: Muestra información detallada y propiedades de una sesión específica.
+- **terminate-session ID**: Finaliza una sesión de usuario específica de forma controlada.
+- **kill-session ID**: Finaliza abruptamente una sesión y todos sus procesos asociados.
+- **list-users**: Muestra los usuarios conectados actualmente al sistema.
+- **user-status usuario**: Muestra todas las sesiones abiertas por un usuario específico.
+- **show-user usuario**: Muestra información detallada sobre un usuario conectado.
+- **terminate-user usuario**: Finaliza todas las sesiones de un usuario específico.
+- **kill-user usuario**: Mata todos los procesos y sesiones de un usuario específico de forma inmediata.
+
+---
+Respuesta de Perplexity: pplx.ai/share
 ---
 
 ### Cuestionarios
