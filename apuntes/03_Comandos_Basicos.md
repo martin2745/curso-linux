@@ -31,23 +31,6 @@ kali adm dialout cdrom floppy sudo audio dip video plugdev users netdev bluetoot
 ```
 **Explicación:** El comando `groups` muestra todos los grupos a los que pertenece el usuario `kali`.
 
-### Comando sudo su
-
-```bash
-┌──(kali㉿kali)-[~]
-└─$ sudo su
-[sudo] password for kali: 
-```
-**Explicación:** El comando `sudo su` permite al usuario cambiar a la cuenta de `root` (superusuario) después de ingresar la contraseña.
-
-### Comando exit
-
-```bash
-┌──(root㉿kali)-[/home/kali]
-└─# exit
-```
-**Explicación:** El comando `exit` termina la sesión de superusuario y vuelve al usuario anterior (`kali`).
-
 ### Comando id
 
 ```bash
@@ -437,3 +420,18 @@ _*Nota*_: Es importante entender que los enlaces duros no pueden hacerse contra 
 | Tienen diferente número de inodo | Comparten número de inodo |
 | Si borramos la información original perdemos el enlace | Si borramos la información original el enlace sigue funcionando |
 | Son punteros o accesos directos a memoria | Son copias exactas del fichero de origen |
+
+### Comando su –
+
+```bash
+vagrant@debian:~$ echo $HOME
+/home/vagrant
+vagrant@debian:~$ su -
+Contraseña: 
+root@debian:~# echo $HOME
+/root
+```
+
+**Explicación**: El comando `su` y `su -` en Linux se utilizan para cambiar de usuario en el sistema, pero tienen comportamientos diferentes en cuanto al entorno del usuario al que se cambia. A continuación, se explica las diferencias clave entre ambos:
+- su (sin guion): Cambia de usuario sin cargar completamente el entorno de inicio de sesión del nuevo usuario. Mantiene el entorno actual del usuario que ejecuta el comando (variables de entorno, directorio actual, etc.). El directorio de trabajo permanece siendo el directorio del usuario desde el que ejecutaste su.
+- su - (con guion): Cambia de usuario y carga completamente el entorno de inicio de sesión del nuevo usuario (como si hubieras iniciado sesión directamente como ese usuario). Carga el entorno completo del nuevo usuario, incluyendo las variables de entorno, el directorio de inicio, y archivos de configuración como .bashrc o .profile. El directorio de trabajo cambia al directorio personal (home) del nuevo usuario.
