@@ -31,23 +31,6 @@ kali adm dialout cdrom floppy sudo audio dip video plugdev users netdev bluetoot
 ```
 **Explicación:** El comando `groups` muestra todos los grupos a los que pertenece el usuario `kali`.
 
-### Comando sudo su
-
-```bash
-┌──(kali㉿kali)-[~]
-└─$ sudo su
-[sudo] password for kali: 
-```
-**Explicación:** El comando `sudo su` permite al usuario cambiar a la cuenta de `root` (superusuario) después de ingresar la contraseña.
-
-### Comando exit
-
-```bash
-┌──(root㉿kali)-[/home/kali]
-└─# exit
-```
-**Explicación:** El comando `exit` termina la sesión de superusuario y vuelve al usuario anterior (`kali`).
-
 ### Comando id
 
 ```bash
@@ -91,8 +74,21 @@ inetsim:x:127:
 ┌──(kali㉿kali)-[~]
 └─$ echo $PATH
 /home/kali/.local/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/home/kali/.dotnet/tools
+
+root@debian:~# echo -e "Hola\n que tal\t estás"
+Hola
+ que tal         estás
 ```
 **Explicación:** El comando `echo $PATH` muestra la variable de entorno `PATH`, que contiene los directorios en los que el sistema busca los ejecutables de los comandos. Aquí, se muestra una lista de directorios como `/home/kali/.local/bin`, `/usr/bin`, etc.
+
+_*Nota*_: Muy importante es el uso de las comillas en el comando *echo*.
+
+```bash
+root@debian:~# echo "$PWD"
+/root
+root@debian:~# echo '$PWD'
+$PWD
+```
 
 ### Comando pwd
 
@@ -162,6 +158,32 @@ root@debian:/tmp# mkdir -p uno/dos/tres/cuatro
 **Explicación:** el comando `more` muestra el archivo por páginas, solo hacia adelante.
 **Explicación:** el comando `less` muestra el archivo por páginas, permite moverse hacia adelante y atrás.
 **Explicación:** el comando `tac` muestra el archivo en orden inverso, desde la última línea hasta la primera.
+
+### Comando head y tail
+
+```bash
+root@debian:~# head -n 3 /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+
+root@debian:~# head -3 /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+
+root@debian:~# tail -n 3 /etc/passwd
+vboxadd:x:999:1::/var/run/vboxadd:/bin/false
+_chrony:x:104:109:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
+usuario:x:1001:1001::/home/usuario:/bin/bash
+
+root@debian:~# tail -3 /etc/passwd
+vboxadd:x:999:1::/var/run/vboxadd:/bin/false
+_chrony:x:104:109:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
+usuario:x:1001:1001::/home/usuario:/bin/bash
+```
+
+**Explicación**: Los comandos `head` y `tail` permiten mostrar por defecto las 10 primeras o últimas lineas de un fichero. Se puede ajustar el número con el parámetro *-n* o indicandolo con el número de lineas a mostrar.
 
 ### Comando man, manpath, --help
 
@@ -325,10 +347,34 @@ root@debian:~# uname -r
 _*Nota*_: En la ruta `/etc/debian_version` o `/etc/redhat-release` puedo ver la versión del sistema operativo.
 _*Nota*_: Con el comando `arch` se puede ver la arquitectura del sistema.
 
+### Comando split
+
+```bash
+root@debian:/tmp/split# ls -lh
+total 4,0K
+-rw-r--r-- 1 root root 1,4K abr 28 12:14 passwd
+
+root@debian:/tmp/split# split -l 10 passwd ./linea/passwd-
+root@debian:/tmp/split# ls -l linea/
+total 12
+-rw-r--r-- 1 root root 424 may  6 10:40 passwd-aa
+-rw-r--r-- 1 root root 564 may  6 10:40 passwd-ab
+-rw-r--r-- 1 root root 412 may  6 10:40 passwd-ac
+
+root@debian:/tmp/split# split -b 512 passwd ./bloque/passwd-
+root@debian:/tmp/split# ls -l bloque/
+total 12
+-rw-r--r-- 1 root root 512 may  6 10:42 passwd-aa
+-rw-r--r-- 1 root root 512 may  6 10:42 passwd-ab
+-rw-r--r-- 1 root root 376 may  6 10:42 passwd-ac
+```
+
+**Explicación**: El comando `split` permite dividir un fichero en un conjunto de ficheros sucesivos donde le indicamos por cuanto dividimos, pudiendo dividir por linea con el parámetro *-l* o por bloque con el parámetro *-b*.
+
 ### Comando ln
 
 ```bash
-
+root@debian:/tmp# ln test/ enlace-duro-test
 ```
 
 **Explicación**: El comando `ln` sirve para crear enlaces en Linux. Aquí tenemos que explicar que existen dos tipos de enlaces.
@@ -374,3 +420,18 @@ _*Nota*_: Es importante entender que los enlaces duros no pueden hacerse contra 
 | Tienen diferente número de inodo | Comparten número de inodo |
 | Si borramos la información original perdemos el enlace | Si borramos la información original el enlace sigue funcionando |
 | Son punteros o accesos directos a memoria | Son copias exactas del fichero de origen |
+
+### Comando su –
+
+```bash
+vagrant@debian:~$ echo $HOME
+/home/vagrant
+vagrant@debian:~$ su -
+Contraseña: 
+root@debian:~# echo $HOME
+/root
+```
+
+**Explicación**: El comando `su` y `su -` en Linux se utilizan para cambiar de usuario en el sistema, pero tienen comportamientos diferentes en cuanto al entorno del usuario al que se cambia. A continuación, se explica las diferencias clave entre ambos:
+- su (sin guion): Cambia de usuario sin cargar completamente el entorno de inicio de sesión del nuevo usuario. Mantiene el entorno actual del usuario que ejecuta el comando (variables de entorno, directorio actual, etc.). El directorio de trabajo permanece siendo el directorio del usuario desde el que ejecutaste su.
+- su - (con guion): Cambia de usuario y carga completamente el entorno de inicio de sesión del nuevo usuario (como si hubieras iniciado sesión directamente como ese usuario). Carga el entorno completo del nuevo usuario, incluyendo las variables de entorno, el directorio de inicio, y archivos de configuración como .bashrc o .profile. El directorio de trabajo cambia al directorio personal (home) del nuevo usuario.

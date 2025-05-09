@@ -33,6 +33,24 @@ si@si-VirtualBox:/tmp/prueba$ find . -name "file*" | xargs -I X ls -l X;
 -rw-rw-r-- 1 si si 112 abr 14 16:02 ./file.tmp
 ```
 
+Por otra parte el uso de `xargs` está enfocado en convertir la entrada estandar en argumentos, lo cual es muy util en Linux ya que si por ejemplo quisieramos eliminar una gran cantidad de archivos como en el siguiente ejemplo:
+
+```bash
+root@debian:/tmp/prueba# ls -l
+total 0
+-rw-r--r-- 1 root root 0 may  6 19:50 prueba1.txt
+-rw-r--r-- 1 root root 0 may  6 19:50 prueba2.txt
+-rw-r--r-- 1 root root 0 may  6 19:50 prueba3.txt
+...
+-rw-r--r-- 1 root root 0 may  6 19:50 prueba987654321.txt
+```
+
+Si nosotros hicieramos uso del comando `rm *` el proceso de conversión de Linux generaría la orden `rm prueba1.txt prueba2.txt prueba3.txt prueba987654321.txt` por lo que se excede el tamaño del buffer reservado para los comandos. La solución para este tipo de operaciones es el uso de `xargs`.
+
+```bash
+root@debian:/tmp/prueba# ls | xargs rm
+```
+
 ## Parametros de find
 
 1. **-name:**

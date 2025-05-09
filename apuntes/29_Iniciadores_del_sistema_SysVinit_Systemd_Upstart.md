@@ -162,39 +162,52 @@ chkconfig --level 3 httpd off
 /etc/rc3/K85httpd --> /etc/init.d/httpd
 ```
 
-## `systemd`
+## `SystemD`
 
-- Se ejecuta un único programa `systemd` que utilizará ficheros de configuración para cada elemento a gestionar llamados `unidades`, que pueden ser de diversos tipos: automount, device, mount, path, **service**, snapshot, socket y target.
-- Las `unidades`, es decir, los ficheros de configuración, se agrupan en diferentes `target`, donde también podemos definir el orden de ejecución y las dependencias con otros target o services. Son los equivalentes a los runlevels en SysVinit (hay target compatibles con estos). A continuación se adjunta una equivalencia aproximada entre los runlevels en SysVinit y los targets en systemd:
+SystemD apareció por primera vez en 2010, cuando fue anunciado por Lennart Poettering y Kay Sievers, ingenieros de Red Hat. Fue diseñado como un reemplazo moderno para el tradicional System V init y Upstart, con el objetivo de mejorar la gestión de servicios en sistemas Linux. SystemD es un sistema de inicialización y gestor de servicios ampliamente utilizado en sistemas operativos basados en Linux. Fue diseñado para reemplazar sistemas de inicialización tradicionales como SysVinit y Upstart, proporcionando una forma más eficiente y flexible de gestionar los servicios del sistema.
 
-- **Runlevel 0**: Apagado del sistema.
-  - **Systemd Target**: `poweroff.target`.
+Puedo saber si tengo un sistema equipado con *SystemD* de la siguiete forma:
+```bash
+vagrant@debian:~$ ps -ef | head -2
+UID          PID    PPID  C STIME TTY          TIME CMD
+root           1       0  0 18:56 ?        00:00:01 /sbin/init
 
-- **Runlevel 1**: Modo de rescate o de un solo usuario.
-  - **Systemd Target**: `rescue.target`.
+vagrant@debian:~$ ls -l /sbin/init
+lrwxrwxrwx 1 root root 20 jun 16  2024 /sbin/init -> /lib/systemd/systemd
+```
 
-- **Runlevel 2**: Multiusuario sin red.
-  - **Systemd Target**: `multi-user.target`.
+- Se ejecuta un único programa `systemd` que utilizará ficheros de configuración para cada elemento a gestionar llamados `unidades`, que pueden ser de diversos tipos: automount, device, mount, path, **service**, snapshot, socket y target. Podemos decir que SystemD permite iniciar, detener y supervisar servicios del sistema mediante unidades (units)
+- Las `unidades`, es decir, los ficheros de configuración, se agrupan en diferentes `target`, donde también podemos definir el orden de ejecución y las dependencias con otros target o services. Son los equivalentes a los runlevels en SysVinit (hay target compatibles con estos). Ofrece compatibilidad con scripts de inicio de SysVinit para facilitar la transición. Tipos comunes de unidades:
+  - *service*: Un servicio (e.g., nginx, sshd).
+  - *target*: Agrupaciones de unidades (equivalente a los runlevels tradicionales).
+  - *timer*: Tareas programadas.
+  - *mount*: Puntos de montaje.
+- `Paralelismo`: Utiliza un enfoque basado en sockets para iniciar servicios de manera paralela, mejorando los tiempos de arranque.
+- `Journaling`: SystemD incluye journald, un sistema de logging centralizado que almacena logs binarios del sistema y servicios.
+- A continuación se adjunta una equivalencia aproximada entre los runlevels en SysVinit y los targets en systemd:
 
-- **Runlevel 3**: Multiusuario con red.
-  - **Systemd Target**: `multi-user.target`.
-
-- **Runlevel 4**: Reservado para un uso personalizado.
-  - **Systemd Target**: No tiene un equivalente directo, se puede personalizar según las necesidades.
-
-- **Runlevel 5**: Multiusuario con interfaz gráfica (GUI).
-  - **Systemd Target**: `graphical.target`.
-
-- **Runlevel 6**: Reinicio del sistema.
-  - **Systemd Target**: `reboot.target`.
+  - **Runlevel 0**: Apagado del sistema.
+    - **Systemd Target**: `poweroff.target` o `runlevel0.target`.
+  - **Runlevel 1**: Modo de rescate o de un solo usuario.
+    - **Systemd Target**: `rescue.target` o `runlevel1.target`.
+  - **Runlevel 2**: Multiusuario sin red.
+    - **Systemd Target**: `multi-user.target` o `runlevel2.target`.
+  - **Runlevel 3**: Multiusuario con red.
+    - **Systemd Target**: `multi-user.target` o `runlevel3.target`.
+  - **Runlevel 4**: Reservado para un uso personalizado.
+    - **Systemd Target**: `multi-user.target` o `runlevel4.target`. No tiene un equivalente directo, se puede personalizar según las necesidades.
+  - **Runlevel 5**: Multiusuario con interfaz gráfica (GUI).
+    - **Systemd Target**: `graphical.target` o `runlevel5.target`.
+  - **Runlevel 6**: Reinicio del sistema.
+    - **Systemd Target**: `reboot.target` o `runlevel6.target`.
 
 ![sysvinit vs systemd](../imagenes/recursos/sysvinit_vs_systemd/sysvinit_vs_systemd.png)
 
 - Es importante tener en cuenta que, aunque hay una cierta correspondencia entre los runlevels de SysVinit y los targets de systemd, systemd es más flexible y puede tener una configuración diferente en diferentes distribuciones y sistemas. Además, systemd introduce conceptos adicionales como "targets especiales" (`default.target`, `emergency.target`, etc.) que no tienen un equivalente directo en SysVinit.
 - Cada unidad se define en un fichero con el nombre de dicha unidad y en la extensión se indica el tipo de unidad, por ejemplo ssh.service que se encuentra en `/etc/systemd/system`. Destacamos `/usr/lib/systemd/system`, `/lib/systemd/system` y `/etc/systemd/system` siendo esta última la de máxima prioridad. Destacamos:
-  - `/etc/systemd/system`: Máxima prioridad.
-  - `/run/systemd/system`: Ampliar o modificar la base de datos.
-  - `/lib/systemd/system`: Base de units.
+  - `/lib/systemd/system`: Directorio donde se encuentran todas las units del sistema instaladas.
+  - `/run/systemd/system`: Unidades creadas en tiempo de ejecución, tienen prioridad sobre las unidades existentes en el directorio anterior.
+  - `/etc/systemd/system`: Espacio donde se encuentran las units creadas por los usuarios y tienen máxima prioridad por lo que la unidad aquí creada tiene más preferencia sobre la indicada en `/lib/systemd/system`, tienen prioridad sobre las unidades existentes en el directorio anterior.
   - `/etc/systemd/system/name.unit.d/*.conf`: Ampliación de configuraciones para una unidad.
   - `/etc/systemd/system/name.unit.wants/*.conf`: Requisitos para arrancar una unidad.
 
@@ -250,7 +263,31 @@ lrwxrwxrwx 1 root root   13 feb  2 17:48 /usr/lib/systemd/system/runlevel6.targe
 
 ## systemctl
 
-**systemctl** es la herramienta principal para gestionar la mayoría de los aspectos de  *systemd*. A continuación se describen algunos de los comandos más utilizados:
+| Comando              | Descripción                |
+|----------------------|----------------------------|
+| systemctl start                              | Iniciar un servicio                                                  |
+| systemctl stop                               | Detener un servicio                                                  |
+| systemctl restart                            | Reiniciar un servicio                                                |
+| systemctl reload                             | Recargar la configuración de un servicio                             |
+| systemctl enable                             | Habilitar un servicio en el arranque                                 |
+| systemctl disable                            | Deshabilitar un servicio en el arranque                              |
+| systemctl status                             | Ver el estado de un servicio                                         |
+| systemctl list-units --type=service           | Ver todos los servicios                                              |
+| systemctl daemon-reload                      | Recargar configuraciones de systemd                                  |
+| journalctl -u                                | Ver logs de un servicio específico                                   |
+| systemctl reboot                             | Reiniciar el sistema                                                 |
+| systemctl poweroff                           | Apagar el sistema                                                    |
+| sudo systemctl enable                        | Habilita un servicio para que se inicie al arrancar                  |
+| sudo systemctl disable                       | Deshabilita un servicio para que no se inicie al arrancar            |
+| systemctl is-enabled                         | Verifica si un servicio está habilitado o deshabilitado              |
+| systemctl list-units --type=target           | Listar todos los targets disponibles                                 |
+| systemctl isolate nombre_del_target          | Cambiar al target especificado                                       |
+| systemctl set-default nombre_del_target      | Establecer el target por defecto al arrancar                         |
+| systemctl get-default                        | Ver el target por defecto                                            |
+| systemctl list-dependencies nombre_del_target| Listar todas las dependencias del target                             |
+| systemctl start nombre_del_target            | Activar un target sin cambiar inmediatamente                         |
+| systemctl disable nombre_del_target          | Deshabilitar un target                                               |
+
 
 - **get-default**: Muestra el *target* (objetivo) por defecto que se utiliza al iniciar el sistema. A continuación podemos ver que el target por defecto es graphical.target que equivale al runlevel 5.
 
@@ -288,6 +325,8 @@ abr 23 23:51:27 usuario sshd[1295]: pam_unix(sshd:session): session opened for u
 ```
 
 _*Nota*_: En las distribuciones donde se hace uso de SysVinit este proceso se realiza mediante el comando **service** o con la ruta del servicio.
+
+_*Nota*_: Al ser la unit por defecto las de tipo service, nosotros podemos hacer: `systemctl status ssh` o `systemctl status ssh.service`, pero el resto es necesario especificar el tipo de unidad en concreto.
 
 ```bash
 service ssh [start|stop|restart...]
@@ -394,63 +433,49 @@ default.target
 
 ## Comando journalctl
 
-El comando **journalctl** consultar los log del sistema.
+La llegada de systemd a la mayoría de distribuciones de GNU/Linux, como sistema de inicio reemplazando a init, ha supuesto una nueva manera de ver de los mensajes del sistema, como pueden ser los del kernel y los diferentes servicios o procesos. 
 
-- **-S -U** : permite especificar desde (since) y/o hasta cuando (until)
-  - Formatos válidos: YYYY-MM-DD [HH:MM:SS], yesterday, today, tomorrow, N day ago, -/+ NhMmin (-1h15min)
-  - Ejemplos:
-    - `journalctl --since "2025-04-23 12:00:00" --until "2025-04-24 00:00:00"`
-    - `journalctl --since yesterday`
-    - `journalctl --since -1h15min`  
+Journalctl es ahora la herramienta utilizada para acceder a los registros del sistema y en este laboratorio vamos a ver cómo trabajar con la utilidad journalctl. Por defecto todos los mensajes generados por systemd se guardan como registros journal en `/run/log/journal/`, este directorio por defecto se vacía en cada reinicio del servidor, es decir no es persistente
+
+### Comandos Básicos
+
+| Comando        | Descripción             |
+|------------|----------------|
+| `journalctl`                                        | Ver todos los logs del sistema                            |
+| `journalctl -f`                                     | Seguir los logs en tiempo real (modo "tail")              |
+| `journalctl -b`                                     | Ver logs desde el último arranque                         |
+| `journalctl -u nombre_servicio`                     | Ver logs de un servicio específico                        |
+| `journalctl -u httpd.service -u sshd.service`        | Ver logs de varios servicios específicos                  |
+| `journalctl -p err`                                 | Ver solo logs de nivel de error                           |
+| `journalctl --since "YYYY-MM-DD HH:MM:SS"`          | Ver logs desde una fecha y hora específica                |
+| `journalctl --vacuum-size=500M`                     | Limpiar logs antiguos que excedan 500 MB                  |
+| `journalctl -r`                                     | Ver logs en orden inverso (más recientes primero)         |
+| `journalctl -xe`                                    | Ver logs extendidos y seguir el final del log             |
+
+### Permisos de Acceso
+
+**¿Quién puede ver los registros de journald?**  
+Solo el usuario **root** por defecto.
+
+**Permitir acceso a otros usuarios:**  
+Agrega el usuario al grupo `systemd-journal`:
 ```bash
-root@usuario:~# journalctl -S "2025-04-24 00:00:00" -U "2025-04-24 00:00:17"
-Journal file /var/log/journal/ccc919360d074cafa07dd54cccbd0c8d/system@000628ff2354e91e-7bd4b14e740efb67.journal~ is truncated, ignoring file.
-abr 24 00:00:16 usuario systemd[1]: Starting Daily dpkg database backup service...
-abr 24 00:00:16 usuario systemd[1]: Starting Rotate log files...
-abr 24 00:00:16 usuario systemd[1]: Stopping Make remote CUPS printers available locally...
-abr 24 00:00:16 usuario systemd[1]: cups-browsed.service: Deactivated successfully.
-abr 24 00:00:16 usuario systemd[1]: Stopped Make remote CUPS printers available locally.
-abr 24 00:00:16 usuario systemd[1]: Stopping CUPS Scheduler...
-abr 24 00:00:16 usuario systemd[1]: cups.service: Deactivated successfully.
-abr 24 00:00:16 usuario systemd[1]: Stopped CUPS Scheduler.
-abr 24 00:00:16 usuario systemd[1]: cups.path: Deactivated successfully.
-abr 24 00:00:16 usuario systemd[1]: Stopped CUPS Scheduler.
-abr 24 00:00:16 usuario systemd[1]: Stopping CUPS Scheduler...
-abr 24 00:00:16 usuario systemd[1]: Started CUPS Scheduler.
-abr 24 00:00:16 usuario systemd[1]: cups.socket: Deactivated successfully.
-abr 24 00:00:16 usuario systemd[1]: Closed CUPS Scheduler.
-abr 24 00:00:16 usuario systemd[1]: Stopping CUPS Scheduler...
-abr 24 00:00:16 usuario systemd[1]: Listening on CUPS Scheduler.
-abr 24 00:00:16 usuario systemd[1]: Starting CUPS Scheduler...
-abr 24 00:00:16 usuario kernel: audit: type=1400 audit(1745445616.781:64): apparmor="DENIED" operation="capable" class="cap" profile="/usr/sbin/cupsd" pid=3097 comm="cupsd" capability=12  capname="net_admin"
-abr 24 00:00:16 usuario audit[3097]: AVC apparmor="DENIED" operation="capable" class="cap" profile="/usr/sbin/cupsd" pid=3097 comm="cupsd" capability=12  capname="net_admin"
-abr 24 00:00:16 usuario systemd[1]: Started CUPS Scheduler.
-abr 24 00:00:16 usuario systemd[1]: Started Make remote CUPS printers available locally.
-abr 24 00:00:16 usuario systemd[1]: logrotate.service: Deactivated successfully.
-abr 24 00:00:16 usuario systemd[1]: Finished Rotate log files.
+adduser operador
+passwd operador
+usermod -G systemd-journal operador
 ```
 
-- **-u unit** : muestra los mensajes de una unidad en concreto  
-  - Ejemplo: `journalctl -u apache2.service`
+### Persistencia del Journal
+
+Por defecto, los logs pueden no persistir tras reiniciar. Para habilitar la persistencia:
+
 ```bash
-root@usuario:~# journalctl -u ssh.service
-Journal file /var/log/journal/ccc919360d074cafa07dd54cccbd0c8d/system@000628ff2354e91e-7bd4b14e740efb67.journal~ is truncated, ignoring file.
-dic 10 22:52:39 usuario systemd[1]: Starting OpenBSD Secure Shell server...
-dic 10 22:52:39 usuario sshd[34262]: Server listening on 0.0.0.0 port 22.
-dic 10 22:52:39 usuario sshd[34262]: Server listening on :: port 22.
-dic 10 22:52:39 usuario systemd[1]: Started OpenBSD Secure Shell server.
--- Boot b8dff8ef5d344b2fa2308933a4b80166 --
-dic 11 15:08:56 usuario systemd[1]: Starting OpenBSD Secure Shell server...
-dic 11 15:08:56 usuario sshd[798]: Server listening on 0.0.0.0 port 22.
-dic 11 15:08:56 usuario sshd[798]: Server listening on :: port 22.
+mkdir -p /var/log/journal/
+systemd-tmpfiles --create --prefix /var/log/journal
+chown root:systemd-journal /var/log/journal
+chmod 2775 /var/log/journal
+systemctl restart systemd-journald
 ```
-- **-k** : muestra solo los mensajes del kernel  
-  - Ejemplo: `journalctl -k`
-- **-p** : filtra por tipo de prioridad (emerg, alert, crit, err, warning, notice, info, debug)
-  - Ejemplo: `journalctl -p err`
-- **PARAM=VALUE** : permite filtrar por parámetros como _PID, _UID, _COMM, etc.
-  - Ejemplo: `journalctl _PID=1234`
-  - Para ver todos los campos disponibles: `man systemd.journal-fields`
 
 ## Comando dmesg
 Al arrancar el sistema se muestran mensajes según se van cargando controladores o funciones del sistema. Para revisarlos se usa dmesg y es equivalente a journalctl -b -k Opciones:

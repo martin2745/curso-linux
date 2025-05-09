@@ -53,7 +53,10 @@ kernel         modules.builtin.alias.bin  modules.dep.bin          modules.symbo
 modules.alias  modules.builtin.bin        modules.devname          modules.symbols.bin
 ```
 
-Por otra parte, existe la posibilidad de tener librerias compartidas a utilizar por diferentes programas o binarios del sistema. Para poder acceder a ellas se tienen que configurar en el fichero de configuración `/etc/ld.so.conf` o preferiblemente en el directorio `/etc/ld.so.conf.d` mediante ficheros con extensión `.conf`. Posteriormente tenemos que hacer uso del comando **ldconfig** para que la cache de librerias se actualice y los programas sepan que hay una nueva ruta con diferentes librerias.
+Por otra parte, existe la posibilidad de tener librerias compartidas a utilizar por diferentes programas o binarios del sistema. Para poder acceder a ellas se tienen que configurar en el fichero de configuración `/etc/ld.so.conf` o preferiblemente en el directorio `/etc/ld.so.conf.d` mediante ficheros con extensión `.conf`. Posteriormente tenemos que hacer uso del comando **ldconfig** para que la cache de librerias se actualice y los programas sepan que hay una nueva ruta con diferentes librerias. El comando **ldconfig**:
+- Actualiza la caché para las rutas definidas en `/etc/ld.so.conf` y asociadas, así como para `/usr/lib` y `/lib`.
+- Actualiza los vínculos simbólicos en las librerías.
+- Permite también listar las librerías conocidas en la caché.
 
 Por otra parte, existe la variable de entorno *$LD_LIBRARY_PATH* donde se pueden asignar la ruta de las librerias compartidas. La información de esta variable tiene preferencia sobre la información del fichero de configuración.
 
@@ -94,7 +97,7 @@ Incluye todos los dispositivos de almacenamiento conectados al sistema y que est
 ## /proc y /sys
 **/sys** se enfoca en la configuración y el hardware del sistema, mientras que **/proc** contiene información de los procesos y aplicaciones que se están ejecutando en un momento dado en el sitema.
 - **/sys**: Contiene información y configuraciones del sistema a nivel de hardware y del núcleo (kernel), expuestas en tiempo real. Permite interactuar con parámetros del hardware y configuraciones del sistema.
-- /proc: Es un sistema de archivos temporal que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos hardware del sistema. El demonio encargado de generar el tiempo de ejecución el contenido de `/proc` es *procfs*.
+- **/proc**: Es un sistema de archivos temporal que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos hardware del sistema. El demonio encargado de generar el tiempo de ejecución el contenido de `/proc` es *procfs*.
   - **/proc/interrupts**: Información que corresponde a los IRQ o interrupciones del sistema, es decir, canales (presentan un identificador numérico) que necesitan los dispositivos hardware para comunicarse con la CPU. En el directorio `/proc/interrupts` podemos ver la relación entre dispositivo hardware e interrupción.
   - **/proc/ioports**: Directorio donde se encuentran las localizaciones en memoria reservadas para la comunicación entre CPU y dispositivos hardware.
   - **/proc/dma**: Canales de acceso directo a memoria.
@@ -126,10 +129,6 @@ usuario@usuario:/proc$ ls
 ```
 
 _*Nota*_: Estos directorios `/proc`, `/sys` y `/dev` son cruciales para la administración de sistemas y proporcionan interfaces muy poderosas para la gestión de procesos, hardware, y recursos del sistema. A modo de resumen podemos decir que los archivos dentro del directorio /sys tienen roles similares a los de /proc. Sin embargo, el directorio /sys tiene el propósito específico de almacenar información del dispositivo y datos del núcleo del sistema operativo relacionados con el dispositivo, mientras que /proc también contiene información sobre varias estructuras de datos  del núcleo del sistema operativo, incluidos los procesos en ejecución y la configuración.
-
-_*Nota*_: Es importante saber que el directorio `/proc` permite enviar parámetros en caliente que permiten personalizar el sistema operativo. Un ejemplo típico es modificar el contenido de `/proc/sys/net/ipv4/icmp_echo_ignore_all`, el cual por defecto es 0, al modificar el parámetro por un 1, se deja de permitir la respuesta de paquetes ICMP por lo que ante un ping mi máquina no responde. Gracias a esto estamos modificando los parámetros del kernel del Linux. Estas modificaciones no son persistentes, si se quiere modificar de forma persistente sería necesario en este caso editar el fichero `/etc/sysctl.conf` con:
-- net.ipv4.ip_forward = 1
-- icmp_echo_ignore_all = 1
 
 ## /srv
 Almacena información propia de servidores en forma de archivo que puedan estar instalados en el sistema.

@@ -9,16 +9,25 @@ Tenemos un conjunto de comandos principales para la gestión de paquetes en linu
 ## .deb
 ### dpkg
 
-Gestiona paquetes .deb sin gestión de dependencias.
+Gestiona paquetes .deb sin gestión de dependencias. La base de datos de *dpkg* donde figura todo lo instalado está en `/var/lib/dpkg`.
 
-- `-i`: Instala un paquete.
-- `-G`: Actualiza el paquete si hay una versión más actual a la instalada.
-- `-r`: Elimina un paquete pero conserva sus archivos de configuración.
-- `-P | --purge`: Elimina un paquete y también sus archivos de configuración.
-- `-l | --list`: Lista todos los paquetes instalados en el sistema.
-- `-L`: Lista todos los ficheros instalados que pertenecen a un paquete específico.
-- `--get-selectios`: En linux, ejecutar `dpkg --get-selections` permite mostrar todos los paquetes .deb instalados en el sistema.
-- `-s`: Muestra información sobre un paquete.
+- `dpkg -i {package.deb}` : usado para instalar el paquete.
+- `dpkg -R {directory}` : este comando instala todos los paquetes de un estructura de directorio.
+- `dpkg -l` : muestra la lista de paquetes instalados.
+- `dpkg -c {package.deb}` : lista los archivos en un paquete.
+- `dpkg -L {package}` : muestra los archivos proporcionados por un paquete instalado.
+- `dpkg -S {pattg/to/file}` : determina los paquetes que pertenecen a un archivo.
+- `dpkg -r {package}` : elimina un paquete instalado, pero deja sus archivos de configuración.
+- `dpkg -P {package}` :elimina un paquete instalado, incluyendo sus archivos de configuración.
+- `dpkg --get-selections` : es utilizado para buscar paquetes instalados, desinstalados y purgados en el sistema operativo.
+- `dpkg --configure --pending` : función para reconfigurar cualquier paquete que no haya pasado por un proceso de configuración.
+- `dpkg --info pp.deb` : se encarga de mostrar información sobre las dependencias y sus extensiones.
+- `dpkg --version`: para consultar la licencia del paquete dpkg.
+- `dpkg --unpack nombre_paquete.deb`: usado para descomprimir un archivo deb.
+- `dpkg -R –install /deb-files-location/`: instala varios archivos deb de forma simultánea, siempre y cuando se encuentren en la misma carpeta.
+- `sudo dpkg --help`: para obtener ayuda sobre cómo usar la herramienta en cuestión.
+- `dpkg --force-all --purge nombre_del_paquete`
+- `dpkg-reconfigure`: reconfigura paquetes después de su instalación. Introduzca los nombres del paquete o paquetes a reconfigurar. Formulará preguntas de configuración de forma similar a cuando el paquete se instaló en primer lugar.
   
 _*Nota*_: Existe una diferencia fundamental entre eliminar y purgar. Cuando instalamos un paquete es normal que existan configuraciones personales que se almacenan en el `/home` de cada usuario, una eliminación del paquete hace que estas configuraciones permanezcan, lo que hace que si posteriormente se instala de nuevo el paquete estas permanecen en el sistema. Por otro lado, purgar el paquete implica eliminar todos esos archivos de creación personal. 
 
@@ -73,8 +82,8 @@ Facilita la instalación de paquetes .deb, descargándolos de los repositorios y
 - `search`: Accede a los repositorios para poder buscar el paquete deseado.
 - `install`: Instala uno o varios paquetes.
 - `remove`: Elimina uno o varios paquetes.
-- `purge`: Elimina uno o varios paquetes y también sus archivos de configuración.
-- `update`: Actualiza la lista de paquetes disponibles en los repositorios.
+- `purge`: Elimina uno o varios paquetes y también sus archivos de configuración. Alternativamente podemos utilizar `sudo apt remove --purge nombre_del_paquete`.
+- `update`: Actualiza la lista de paquetes disponibles en los repositorios. No instala nada en el sistema.
 - `upgrade`: Actualiza todos los paquetes instalados a las versiones más recientes disponibles de los repositorios y si no están actualizados nos dirá que es necesario instalar.
 - `download`: Descarga el paquete .deb sin instalarlo.
 - `dist-upgrade`: Realiza una actualización más completa que `apt upgrade`, incluyendo la resolución de dependencias y la eliminación o instalación de nuevos paquetes si es necesario para completar la actualización de forma coherente de los paquetes ya existentes. 
@@ -101,16 +110,18 @@ deb http://security.ubuntu.com/ubuntu jammy-security multiverse
 
 ### rpm
 
-Gestiona paquetes .rpm sin resolver automáticamente las dependencias.
+Gestiona paquetes .rpm sin resolver automáticamente las dependencias. Todo lo instalado con *rpm* se almacena en la base de datos de `/var/lib/rpm`. Con el comando *rpm --rebuilddb*, regenera los archivos de la base de datos de RPM en `/var/lib/rpm/`. Corrige inconsistencias cuando la base de datos está corrupta. No afecta los paquetes instalados, solo repara la información sobre ellos. Esa información la podemos consultar con:
+- `rpm -qa php`: Consulta información de cuales son los paquetes de un servicio instalado.
+- `rpm -qi paquete`: Informacion sobre el paquete.
+- `rpm -ql php`: Nos dice que ficheros instala el paquete y donde.
+- `rpm -qf /etc/passwd`: Le damos un archivo y nos dice que paquete lo instalo.
+- `rpm -qp paquete`: Nos indica las dependencias de los paquetes.
 
+Parámetros de `rpm`:
 - `-i`: Instala un paquete.
 - `-U`: Actualiza un paquete o lo instala si no está presente.
 - `-F`: Actualiza solo si el paquete ya está instalado.
 - `-e`: Elimina un paquete.
-- `-q`: Consulta información sobre paquetes instalados.
-- `-qa`: Lista todos los paquetes instalados en el sistema.
-- `-ql`: Lista todos los archivos instalados que pertenecen a un paquete específico.
-- `-qf `: Muestra a qué paquete pertenece un archivo.
 - `-V`: Verifica la integridad de los archivos instalados por un paquete.
 - `--rebuilddb`: Reconstruye la base de datos de rpm si hay problemas de corrupción.
 
@@ -142,7 +153,7 @@ _*Nota*_: Para ver a qué paquete pertenece un archivo, puedes usar `rpm -qf /ru
 
 ### yum
 
-Facilita la instalación de paquetes .rpm, resolviendo automáticamente las dependencias y gestionando los repositorios. Es el gestor estándar en distribuciones como CentOS, RHEL y Fedora (en versiones recientes, reemplazado por `dnf`).
+Facilita la instalación de paquetes .rpm, resolviendo automáticamente las dependencias y gestionando los repositorios. Es el gestor estándar en distribuciones como CentOS, RHEL y Fedora (en versiones recientes, `yum` es reemplazado por `dnf` el cual mantiene toda la compatibilidad con los comandos de `yum`).
 
 - `install`: Instala uno o varios paquetes.
 - `check-update`: Comprueba si hay actualizaciones disponibles para los repositorios. Es el equivalente a *apt update*.
