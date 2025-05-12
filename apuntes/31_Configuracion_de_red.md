@@ -261,6 +261,19 @@ Es importante saber que el directorio `/proc` permite enviar parámetros en cali
 
 ### Herramientas de utilidad
 
+#### ping
+
+El comando *ping* verifica la conectividad con un host mediante paquetes ICMP. Se puede usar en la forma *ping google.com* o *ping 192.168.100.100* haciendo uso de la IP del equipo. Tres parámetros deben llamarle la atención: 
+- -c: Permite especificar el número de ecos que se deben emitir.
+- -b: Permite emitir un echo en una dirección de broadcast.
+- -I: Permite especificar la interfaz de red.
+
+```bash
+ping -c 1 10.9.238.170
+ping -b 192.168.1.255
+ping -I eth0 192.168.1.60
+```
+
 #### Netcat
 
 Netcat es una conocida herramienta para el análisis de red, conocida también como la navaja suiza de los hackers concebida y desarrollada por un hacker (Hobbit) en el año 1996 y posteriormente portada a Windows y a MAC. Tiene cuatro funcionalidades básicas que son:
@@ -303,5 +316,86 @@ Hola
 Qué tal?
 ```
 
-La cantidad de múltiples usos de netcat (similares a los que podría tener una navaja suiza), ha
-derivado en calificar este software de esta forma
+La cantidad de múltiples usos de netcat (similares a los que podría tener una navaja suiza), ha derivado en calificar este software de esta forma.
+
+#### Comando ss
+
+El comando *ss* (socket statistics) es una herramienta moderna que proporciona la misma funcionalidad que netstat, pero es más rápida y ligera. Ofrece:
+- Conexiones y sockets de red (más rápido que netstat). 
+- Filtrado detallado en base a estados, puertos, y protocolos.
+- Información similar sobre rutas y estadísticas de red.
+
+Diferencias clave con respecto a netstat:
+- Velocidad: ss es significativamente más rápido.
+- Obsolescencia: netstat está quedando obsoleto en favor de ss en algunas distribuciones modernas.
+- Formato: ss ofrece una sintaxis y salida ligeramente distinta, adaptada a nuevas tecnologías de red.
+
+Ejemplo de comandos:
+```bash
+ss -tuln: Muestra los puertos TCP/UDP en escucha en modo numérico.
+ss -anp: Lista todas las conexiones y sockets con el PID y el nombre del proceso.
+ss -putona
+```
+
+#### nmcli
+*nmcli* es una herramienta de línea de comandos que forma parte de NetworkManager en Linux, utilizada para gestionar conexiones de red. Con nmcli, puedes realizar una amplia variedad de tareas relacionadas con la configuración de interfaces de red, administración de conexiones Wi-Fi, creación de conexiones VPN, y más, sin necesidad de utilizar una interfaz gráfica, normalmete para realizar scripts. Funcionalidades principales de nmcli:
+- Gestionar interfaces de red: Puedes activar, desactivar, y ver el estado de las interfaces de red.
+- Configurar conexiones: Permite crear, editar y eliminar conexiones de red (Ethernet, Wi-Fi, VPN, etc.).
+- Escanear redes Wi-Fi: Puedes listar y conectarte a redes inalámbricas disponibles.
+- Configurar redes con IP estática o dinámica (DHCP).
+- Gestionar DNS, puertas de enlace y rutas.
+
+#### hostnamectl
+
+El comando *hostnamectl* es una herramienta en sistemas Linux que permite gestionar el nombre del host (hostname) y la información relacionada con el sistema. Es parte de systemd y facilita la configuración del hostname, así como la visualización de detalles del sistema, como el sistema operativo, la arquitectura del hardware y más.
+```bash
+cat /etc/hostname
+hostnamectl
+hostnamectl set-hostname service.curso.local
+systemctl restart systemd-hostnamed
+```
+
+#### Configurar el cliente de dns
+Para ello es necesario editar el fichero `/etc/resolv.conf`. Podemos en el añadir:
+- nameserver 8.8.8.8: Servidor DNS primario.
+- nameserver 8.8.4.4: Servidor DNS secundario.
+- domain curso.local: Dominio.
+- search localdomain curso.local barcelona.curso.local langreo.curso.local: Subdominios.
+
+#### Comando dig
+
+El programa *dig* es una herramienta de consulta avanzada de servidor de nombres capaz de restituir todos los datos de las zonas de un servidor de DNS. 
+```bash
+dig tele2.es
+```
+
+#### Comando host
+
+La herramienta *host* devuelve el mismo resultado, pero quizá de manera más sencilla.
+```bash
+host tele2.es
+```
+
+#### Comando getent
+
+El comando *getent* en Linux se utiliza para obtener entradas de las bases de datos del sistema, como usuarios, grupos, hosts, servicios y más. Es una herramienta útil para consultar la información que se gestiona mediante Name Service Switch (NSS), que puede provenir de diferentes fuentes como archivos locales, LDAP, NIS, DNS, etc. 
+
+Consultar usuarios (passwd): Muestra una lista de todos los usuarios en el sistema, similar al contenido de `/etc/passwd`:
+```bash
+getent passwd
+getent passwd operador
+getent group operadoresldap
+getent hosts google.com
+```
+
+Bases de datos más comunes que puedes consultar con getent:
+
+- passwd: Muestra la información de los usuarios, como si leyeras /etc/passwd.
+- group: Muestra información sobre los grupos, equivalente a /etc/group.
+- hosts: Resuelve nombres de host, como si estuvieras consultando /etc/hosts o haciendo una consulta DNS.
+- services: Muestra los servicios de red y sus puertos, como los definidos en /etc/services.
+- protocols: Muestra los protocolos de red, definido en /etc/protocols.
+- networks: Muestra las redes conocidas.
+- shadow: Muestra las contraseñas encriptadas de los usuarios (requiere permisos de superusuario).
+
+En resumen, getent es una herramienta muy versátil para consultar diversas bases de datos del sistema. Permite extraer información sobre usuarios, grupos, hosts, servicios, protocolos y más. Es útil en entornos donde se utiliza LDAP o NIS para la gestión de cuentas de usuario y otros recursos de red, ya que consulta todas las fuentes configuradas en /etc/nsswitch.conf.
