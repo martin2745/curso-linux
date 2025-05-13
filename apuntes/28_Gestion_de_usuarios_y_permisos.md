@@ -186,6 +186,7 @@ _*Nota: Si queremos que un usuario tenga un grupo principal con el mismo nombre,
 _*Nota2: Podemos indicar el algoritmo de cifrado de la contraseña si queremos.*_
 _*Nota3: Con el parametro `-m` estamos indicando que se copie la estructura de `/etc/skel` para el nuevo usuario.*_
 _*Nota4: Con el parametro `-M` estamos indicando que el usuario no ha de tener un `/home` para el. A pesar de ello en el `/etc/passwd` si va a figurar como que existe la ruta.*_ -_Nota5: Con los parametros `-u` podemos dar un uid específico, `-g` un gid específico y con `-l` cambiar el nombre del usuario._\_
+_*Nota5*_: Si quiero crear un usuario cuya cuenta caduque en un día concreto puedo hacerlo de la siguiente forma: *root@debian:~# useradd -m -p $(mkpasswd 'abc123.') -e 2025-05-10 usuario2*. 
 
 ```bash
 si@si-VirtualBox:~/Desktop/scripts/ejercicios/ej2$ sudo useradd -m -d /home/alumno -p $(mkpasswd 'abc123.') -s "/bin/bash" alumno
@@ -250,6 +251,35 @@ groupdel dam
 **chsh**: Permite editar la shell del usuario.
 
 _*Nota*_: Supongamos que creamos un usuario y queremos que en el próximo inicio de sesión, el usuario modifique su password. Para ello podemos usar los comandos `chage -d 0 usuario` o `passwd -e usuario`.
+
+Como aportación, el comando *passwd* permite modificar la contraseña a un usuario y parámetros y usos interesantes son los siguientes:
+- *passwd -l usuario*: Bloquea la cuenta del usuario, impidiendo su acceso al sistema.
+- *passwd -S usuario*: Muestra el estado de la contraseña del usuario, incluyendo si está bloqueada, la fecha del último cambio y detalles de expiración.
+- *passwd -u usuario*: Desbloquea la cuenta del usuario previamente bloqueada, permitiendo nuevamente su acceso.
+- *passwd -e usuario*: Fuerza a que el usuario deba cambiar su contraseña en el próximo inicio de sesión, expirando la contraseña actual de inmediato.
+- *echo 000000 |passwd --stdin user1*: Asigna la contraseña “000000” al usuario user1 de forma automática, sin interacción manual.
+
+#### /etc/nologin
+
+El archivo `/etc/nologin` en sistemas Linux y Unix es utilizado para bloquear el acceso de usuarios regulares al sistema, especialmente durante tareas de mantenimiento o actualización. Cuando este archivo está presente, el sistema impide el inicio de sesión de los usuarios no privilegiados y muestra un mensaje que especifica que el acceso está restringido.
+
+Para bloquear el acceso a usuarios regulares y personalizar el mensaje: 
+*echo "El sistema está en mantenimiento. Inténtelo más tarde." | sudo tee /etc/nologin*.
+
+```bash
+usuario@usuario:~$ ssh alex@192.168.100.3
+alex@192.168.100.3's password:
+Permission denied, please try again.
+usuario@192.168.100.3's password:
+El sistema está en mantenimiento. Inténtelo más tarde.
+
+Connection closed by 192.168.100.3 port 22
+```
+
+Una vez completado el mantenimiento, elimina el archivo para permitir el acceso de nuevo:
+*sudo rm /etc/nologin*.
+
+`/etc/nologin` es una forma sencilla y efectiva de gestionar el acceso al sistema durante tiempos de inactividad.
 
 #### gpasswd
 
