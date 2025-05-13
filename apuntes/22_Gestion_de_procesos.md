@@ -560,4 +560,38 @@ CPU:
 - st: Porcentaje de tiempo robado a una máquina virtual por el hipervisor.
 
 ## Comando lsof
-El término *lsof* es la abreviatura de List Open Files que como lo indica su nombre lista los archivos abiertos. El comando lsof le ayuda a determinar qué proceso está utilizando un archivo del punto de montaje en el momento de iniciar el comando.
+El comando *lsof* es la abreviatura de List Open Files que como lo indica su nombre lista los archivos abiertos. El comando lsof le ayuda a determinar qué proceso está utilizando un archivo del punto de montaje en el momento de iniciar el comando.
+
+```bash
+lsof --help
+lsof /backup/
+lsof /backup/
+COMMAND  PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+bash    8153 root  cwd    DIR   8,17     4096    2 /backup
+```
+
+Ejemplos del uso de *lsof*:
+
+- *lsof -i -P -n*: Ver todos los puertos que estan listando tanto TCP como UDP:
+- *lsof -i*: Visualizar los puertos TCP y UDP así como las conexiones activas en el sistema, usando el parámetro -i
+- *lsof -u usuario*: Ver los archivos que esta utilizando un determinado usuario.
+- *lsof -i TCP:22*: Buscar procesos que usan un determinado puerto ej, el puerto 22
+- *lsof -c httpd*: Ver archivos abiertos por un proceso o programa concreto.
+- *lsof -i 4 / lsof -i 6*: Mostrar procesos que usan IPv4 o IPV6.
+- *lsof -i TCP:1-1024*: Ver archivos abiertos por un rango de puertos.
+- *lsof -u nksistemas -a +D /bin*: Ver archivos en uso por un usuario, en un directorio o path específico.
+
+## Comando fuser
+Como administrador, puede iniciar fuser para forzar la parada de los procesos que estén accediendo al punto de montaje. El comando fuser se utiliza para identificar los procesos que están utilizando un archivo, directorio o socket específico en un sistema Unix o Linux. Es útil para determinar qué procesos están accediendo a un recurso de archivo o red, especialmente cuando quieres desmontar un sistema de archivos o realizar operaciones administrativas.
+
+```bash
+fuser --help
+-a,--all              display unused files too
+  -i,--interactive      ask before killing (ignored without -k)
+  -k,--kill             kill processes accessing the named file
+  -l,--list-signals     list available signal names
+  -m,--mount            show all processes using the named filesystems or block device
+
+fuser -km /backup
+kill -9 8153
+```

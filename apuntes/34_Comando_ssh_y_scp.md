@@ -339,6 +339,70 @@ ssh -p 8733 user1@192.168.100.20 df -h && ls /tmp
 
 Este caso es incorrecto ya que el comando `df -h` se ejecutaría en el servidor pero el `ls /tmp` se lanzaría en el cliente si la conexión es exitosa por lo que tendríamos que poner entre comillas los dos comandos para no tener errores.
 
+## A modo de resumen decimos que OpenSSH incluye servicio y clientes para los protocolos SSH, SFTP y SCP.
+
+### ssh
+
+*ssh* (Secure Shell) es un protocolo y herramienta en Linux y otros sistemas operativos que permite realizar conexiones remotas seguras a otros sistemas. SSH cifra la conexión, protegiendo la transferencia de datos y la comunicación, lo que lo convierte en la opción preferida para administración remota de servidores, ejecución de comandos remotos, transferencia de archivos segura, y más.
+```bash
+ssh usuario@maquina.curso.local
+ssh operador@192.168.1.5
+ssh root@192.168.1.5 
+ssh 192.168.33.150
+ssh -p 52341 juan@192.168.70.99
+```
+
+Opciones comunes de ssh:
+- -i: Especifica un archivo de clave privada para la conexión.
+- -N: No ejecuta ningún comando; solo establece la conexión (útil para túneles).
+- -T: Deshabilita la asignación de pseudo-terminal (para ejecutar comandos simples).
+- -f: Envía la conexión al background después de la autenticación (útil para túneles persistentes).
+- -v: Activa el modo de depuración (verboroso), útil para solucionar problemas de conexión.
+- -p puerto: Indica el número de puerto al que se debe conectar.
+
+### scp
+
+*scp* (Secure Copy Protocol) es una herramienta de línea de comandos en Linux y Unix que permite copiar archivos y directorios entre un sistema local y un servidor remoto, o entre dos servidores remotos, utilizando una conexión segura mediante SSH. scp cifra los datos en tránsito, protegiendo la transferencia de archivos frente a accesos no autorizados.
+- scp /root/algo.txt operador@192.168.70.99:/home/operador
+
+Para que funcione la orden primero tenemos que colocar el puerto antes del fichero a copiar:
+```bash
+scp  -P 52341 algo.txt  operador@192.168.70.99:/home/operador
+scp  -p -P 52341 algo.txt   192.168.70.99:/home/operador
+```
+
+Esto no funcionaria:
+```bash
+scp algo.txt -P 52341   operador@192.168.70.99:/home/operador
+```
+
+Donde Ejemplos-scrpts es un directorio:
+```bash
+scp -r Ejemplos-scrpts vagrant@192.168.33.10:/tmp
+```
+
+Opciones comunes de scp:
+- -r: Copia directorios de manera recursiva.
+- -P: Especifica el puerto SSH a utilizar.
+- -C: Habilita la compresión para acelerar la transferencia (útil para archivos grandes).
+- -i: Especifica un archivo de clave privada diferente para la autenticación.
+- -v: Activa el modo verboroso para obtener información adicional sobre la transferencia (útil para depuración).
+- -p: en scp preserva los permisos, marcas de tiempo y la propiedad del archivo o directorio al copiarlo al destino. Esto es útil cuando deseas mantener la integridad de los atributos del archivo original, como la hora de creación y modificación, permisos y el propietario.
+
+### sftp 
+
+*SFTP* (SSH File Transfer Protocol) es un protocolo de transferencia de archivos que utiliza una conexión segura mediante SSH. A diferencia de FTP, SFTP cifra tanto la autenticación como la transmisión de datos, lo que lo hace adecuado para transferencias de archivos seguras en redes inseguras.
+```bash
+sftp usuario@servidor
+sftp -o Port=52341 juan@192.168.70.99
+```
+
+Opciones comunes de SFTP:
+- -i ruta/a/clave: Usa una clave SSH específica para la autenticación.
+- -b archivo: Ejecuta un conjunto de comandos desde un archivo de texto.
+- -C: Activa la compresión durante la transferencia para archivos grandes
+- -o Port=52341: Especifica el puerto en el que el servidor SSH escucha las conexiones. Esto es útil cuando el servidor SSH no está en el puerto predeterminado (22).
+
 ---
 
 ### Retos de SSH
