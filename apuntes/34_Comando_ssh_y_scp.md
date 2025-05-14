@@ -159,7 +159,7 @@ Para generar el par de claves, se utiliza el comando `ssh-keygen` con las siguie
 - **`-C ""`**: Añade un comentario para identificar la clave (ejemplo: "clave_servidor").  
 - **`-f `**: Especifica la ruta y nombre de los archivos de claves (ejemplo: `~/.ssh/clave_personal`).  
 
-#### Ejemplo de uso:  
+#### Ejemplo de uso sin passphrase
 ```bash
 ssh-keygen -t rsa -b 4096 -C "clave_para_servidor" -f ~/.ssh/clave_servidor
 ```
@@ -173,22 +173,7 @@ Generating public/private rsa key pair.
 Enter file in which to save the key (/home/kali/.ssh/id_rsa):
 Enter passphrase (empty for no passphrase):
 Enter same passphrase again:
-Your identification has been saved in /home/kali/.ssh/id_rsa
-Your public key has been saved in /home/kali/.ssh/id_rsa.pub
-The key fingerprint is:
-SHA256:gckghzEyGS3QmomEnguTbWDkP6p0BH4e8/VMWrzUbb0 kali@kali
-The key's randomart image is:
-+---[RSA 3072]----+
-|O*+oo            |
-|*=++ o o         |
-|=@.   + .        |
-|Xo=     ... . .  |
-|.+.B   .S= . o . |
-| .= = . B . .   .|
-| o o . . +     E |
-|o .              |
-|.                |
-+----[SHA256]-----+
+...
 ```
 
 - Debemos elegir el directorio donde guardar las claves y el nombre de estas. Pulsamos Enter para dejar por defecto el directorio .ssh/ y el nombre id_rsa dentro del HOME del usuario: /home/kali.
@@ -238,27 +223,140 @@ Last login: Sun Jun  9 13:47:01 2024 from 10.0.2.2
 kali
 ```
 
-Si hubieramos introducido un `Passphrase` se nos hubiera pedido a la hora de hacer ssh tal y como se ve en este ejemplo.
+_*Nota*_: En algunas veces podemos hacer el proceso inverso de conectarnos a un servidor haciendo uso de la clave privada para lo que se usa `ssh -i ~/.ssh/id_rsa usuario@servidor_remoto`.
 
+#### Ejemplo de uso con passphrase
+
+Si hubieramos introducido un *passphrase* se nos hubiera pedido a la hora de hacer ssh tal y como se ve en este ejemplo. Como dijimos el *passphrase* en SSH es una contraseña opcional que se utiliza para proteger tu clave privada. Su utilidad principal es añadir una capa extra de seguridad: aunque alguien obtenga acceso a tu ordenador y copie tu clave privada, no podrá usarla para autenticarse en servidores remotos sin conocer la *passphrase*. En este tendremos dos máquinas, una máquina cliente con el usuarioA y otra máquina servidor a la que nos conectamos con el usuarioB.
+
+El usuarioA en la máquina cliente genera el par de claves con el passphrase, comparte la clave y se conecta a máquinaB.
 ```bash
-┌──(kali㉿kaliA)-[~]
-└─$ ssh kali@192.168.120.101
-Enter passphrase for key '/home/kali/.ssh/id_rsa':
-Linux kali 6.5.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.5.6-1kali1 (2023-10-09) x86_64
+usuarioA@usuario:~$ ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/usuarioA/.ssh/id_rsa):
+Created directory '/home/usuarioA/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+...
 
-The programs included with the Kali GNU/Linux system are free software;
-the exact distribution terms for each program are described in the
-individual files in /usr/share/doc/*/copyright.
+usuarioA@usuario:~$ ssh-copy-id -i .ssh/id_rsa.pub usuarioB@192.168.100.3
+...
+Now try logging into the machine, with:   "ssh 'usuarioB@192.168.100.3'"
+and check to make sure that only the key(s) you wanted were added.
 
-Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-permitted by applicable law.
-Last login: Sun Jun  9 13:48:45 2024 from 192.168.120.100
-┌──(kali㉿kaliB)-[~]
-└─$ whoami
-kali
+usuarioA@usuario:~$ ssh usuarioB@192.168.100.3
+Enter passphrase for key '/home/usuarioA/.ssh/id_rsa':
+...
+
+usuarioB@usuario:~$ whoami
+usuarioB
 ```
 
-_*Nota*_: En algunas veces podemos hacer el proceso inverso de conectarnos a un servidor haciendo uso de la clave privada para lo que se usa `ssh -i ~/.ssh/id_rsa usuario@servidor_remoto.
+En el servidor para el usuarioB se crea la ruta `/home/.ssh/authorized_keys` con la información de la clave privada compartida por el usuarioA. 
+```bash
+usuarioB@usuario:~$ cat .ssh/authorized_keys
+ssh-rsa AAAAB...m10= usuarioA@usuario
+```
+
+#### Uso de ssh-agent
+
+**ssh-agent** es un manejador de claves para SSH, es decir, mantiene las passphrases privadas en memoria, descifradas y listas para usarse. Esto nos facilita el hecho de utilizar dichas claves sin necesidad de cargarlas y descifrarlas (en el caso de que hayamos seteado una passphrase) cada vez que vayamos a usarlas. Principalmente aporta:
+- **Seguridad**: utilizar una passphrase para la clave es más seguro que utilizar solamente una password, más si alguien se hace con nuestra computadora. De hecho sería conveniente establecer una passphrase a la hora de generar la clave privada.
+- **Comodidad**: A nivel práctico, *ssh-agent* nos permite no tener que volver a introducir la passphrase cada vez que usamos la clave privada. Puede parecer contradictorio establecer una passphrase para añadir seguridad y luego usar un mecanismo que la almacene en memoria, evitando tener que introducirla repetidamente. Sin embargo, esto tiene sentido en escenarios como Ansible, donde un nodo central realiza tareas en cientos de máquinas dependientes. No usar passphrase es poco seguro, pero tener que introducirla en cada conexión puede ser muy engorroso. Por eso, se utiliza *ssh-agent*, que ofrece un equilibrio entre seguridad y comodidad.
+
+Desde el punto de vista del servidor SSH, el protocolo funciona de la siguiente manera (muy breve y resumido):
+- El cliente le da su clave pública.
+- El servidor genera un mensaje denominado Key Challenge, y lo envía al cliente para realizar la verificación de identidad.
+- El cliente usa la clave privada para realizar la verificación, y responde al servidor.
+- El servidor constata la veracidad del Key Challenge del cliente.
+- El servidor ahora sabe que el cliente es quien dice ser y establece el túnel.
+- Luego de esto se generan claves simétricas efímeras para el intercambio de tráfico cifrado.
+
+Los principales comandos a emplear son los siguientes.
+
+El comando `eval $(ssh-agent)` se usa para iniciar el agente SSH (ssh-agent) y configurar el entorno para que las claves SSH puedan utilizarse sin necesidad de ingresar la contraseña en cada conexión. Para detener su funcionamiento se hace uso del comando `eval $(ssh-agent -k)`.
+```bash
+eval $(ssh-agent)
+eval $(ssh-agent -k)
+```
+
+Ahora cuando se ejecuta `eval $(ssh-agent)` se pedira el password del certificado que se guradara en la variable ssh-agent. Podemos establecer el tiempo que queremos que se guarde o que sea de forma continua hasta detener el uso con `eval $(ssh-agent -k)`.
+```bash
+ssh-add -t 1800 # 1800 seconds
+ssh-add -t 45m # 45 minutes
+ssh-add -t 3h42 # 3 hours 42 minutes
+
+##Nuestro laboratorio este comando me pide el pass de la llave privada y la guarda en el ssh-agent:
+ssh-add /root/.ssh/id_rsa
+ssh-add -t 45m /root/.ssh/id_rsa # 45 minutes
+ssh-add -t 2m /root/.ssh/id_rsa # 2 minutes
+```
+
+A continuación recogemos el procedimiento de *ssh-agent* en el excenario de usuarioA y usuarioB.
+En usuarioA generamos el par de claves y compartimos la clave pública con el servidor.
+```bash
+usuarioA@usuario:~$ ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/usuarioA/.ssh/id_rsa):
+Created directory '/home/usuarioA/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+...
+
+usuarioA@usuario:~$ ssh-copy-id -i .ssh/id_rsa.pub usuarioB@192.168.100.3
+Number of key(s) added: 1
+...
+```
+
+Ejecutamos el comando *eval $(ssh-agent)* para realizar el procedimiento, decimos que queremos que se almacene el passphrase por tiempo indefinido y realizamos la conexión. A continuación detenemos el procedimiento con *eval $(ssh-agent -k)*. Tambien podríamos realizar este procedimiento por un tiempo determinado.
+```bash
+usuarioA@usuario:~$ eval $(ssh-agent)
+Agent pid 5934
+
+usuarioA@usuario:~$ ssh-add .ssh/id_rsa
+Enter passphrase for .ssh/id_rsa:
+Identity added: .ssh/id_rsa (usuarioA@usuario)
+
+usuarioA@usuario:~$ ssh usuarioB@192.168.100.3
+...
+
+usuarioB@usuario:~$ whoami
+usuarioB
+```
+
+```bash
+usuarioA@usuario:~$ eval $(ssh-agent -k)
+Agent pid 5934 killed
+
+usuarioA@usuario:~$ ssh usuarioB@192.168.100.3
+Enter passphrase for key '/home/usuarioA/.ssh/id_rsa':
+
+usuarioB@usuario:~$ whoami
+usuarioB
+```
+
+Como punto final supongamos que tenemos un conjunto de máquinas que dependen de nuestro par de claves y necesitamos cambiar el passphrase y no queremos volver a generar un nuevo par de claves, podemos solucionar esto de la siguiente forma. En resumen:
+- Si tu clave privada actual no tiene contraseña, puedes añadirle una.
+- Si ya tiene una contraseña, puedes cambiarla o eliminarla.
+
+Permite poner clave o cambiar una clave al certificado privado.
+```bash
+ssh-keygen -p -f <ruta al fichero de la clave privada id_rsa>
+```
+
+Estas opciones permiten lo siguiente:
+- -p: Indica que quieres cambiar el passphrase.
+- -f: Especifica el archivo de clave privada que quieres modificar (por ejemplo ~/.ssh/id_rsa).
+
+```bash
+usuarioA@usuario:~$ ssh-keygen -p -f .ssh/id_rsa
+Enter old passphrase:
+Key has comment 'usuarioA@usuario'
+Enter new passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved with the new passphrase.
+```
+
 
 ## scp
 
