@@ -1,4 +1,196 @@
-# Diferencia entre [ y [[
+# Scripts en linux
+
+Un script en Linux es un archivo de texto plano que contiene una secuencia de comandos o instrucciones escritas para ser ejecutadas por un intérprete de comandos, como Bash, en sistemas Unix o Linux. Estos archivos permiten automatizar tareas, gestionar procesos complejos y ejecutar múltiples comandos de manera secuencial sin intervención manual.
+
+## Ejecución de un script
+
+Los scripts tienen una primera linea, el *shebang*, también conocido como hashbang o sha-bang, es una convención en sistemas operativos tipo Unix que se utiliza en scripts para indicar qué intérprete de comandos debe ser utilizado para ejecutar el script. El shebang consiste en los caracteres "#!" seguidos de la ruta al intérprete. Por ejemplo:
+
+- En scripts bash:
+
+```bash
+#!/bin/bash
+```
+
+- En scripts python:
+
+```bash
+#!/usr/bin/env python3
+#!/usr/bin/env python
+```
+
+- `chmod -x env.sh && bash env.sh`: Si ejecutamos bash env.sh, no es necesario tener permisos de ejecución en el script y estamos `ejecutando el script en una subshell`, por lo que al finalizar el script se elimina la subshell.
+
+- `chmod +x env.sh && ./env.sh`: Si el shebang es #!/bin/bash y lo ejecutamos mediante ./env.sh, siempre y cuando el script tenga permisos de ejecución, estamos `ejecutando el script en una subshell`, por lo que al finalizar el script se elimina la subshell. Es análogo a la ejecución mediante el comando bash.
+
+- `chmod -x env.sh && . ./env.sh`: Si ejecutamos mediante . ./env.sh o source ./env.sh, no es necesario tener permisos de ejecución y estamos `ejecutando el script en la shell actual`.
+
+Es fundamental comprender de que forma se ejecutan nuestros scripts para poder comprender si van a modificar aspectos de nuestro entorno o no. En el siguiente ejemplo podemos apreciar como el nivel de shell que es diferente en función de como lanzamos nuestro script.
+
+Script `env-ejemplo1.sh`
+
+```bash
+#!/bin/bash
+env | sort | grep -v '^_' | tee env1.txt
+```
+
+Si ejecutamos con las opciones 1 o 2, es decir, con `bash` o con `./` se ejecutará el script en una subshell por lo que no afectará a mi entorno.
+
+Podemos ver que al lanzarlo con `bash` (o con `./`) estamos en el nivel de shell 1.
+
+```bash
+si@si-VirtualBox:~$ bash env-ejemplo1.sh
+COLORTERM=truecolor
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+DESKTOP_SESSION=ubuntu
+DISPLAY=:0
+GDMSESSION=ubuntu
+...
+
+si@si-VirtualBox:~$ cat env1.txt | grep SHLVL
+SHLVL=1
+```
+
+En este caso, ejecutamos directamente el comando y podemos ver que estamos en el nivel de shell 0, es decir, el mismo nivel de shell donde lanzamos comandos. Esto quiere decir que las modificaciones de este comando si podrían afectar a mi entorno a diferencia del caso anterior.
+
+```bash
+si@si-VirtualBox:~$ env | sort | grep -v '^_' | tee env2.txt
+COLORTERM=truecolor
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+DESKTOP_SESSION=ubuntu
+DISPLAY=:0
+GDMSESSION=ubuntu
+...
+
+si@si-VirtualBox:~$ cat env2.txt | grep SHLVL
+SHLVL=0
+```
+
+```bash
+si@si-VirtualBox:~$ source env-ejemplo1.sh
+COLORTERM=truecolor
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+DESKTOP_SESSION=ubuntu
+DISPLAY=:0
+GDMSESSION=ubuntu
+...
+
+si@si-VirtualBox:~$ cat env1.txt | grep SHLVL
+SHLVL=0
+```
+
+Este es el motivo por el cual cuando queremos modificar nuestro entorno se hace uso de ficheros como `.bashrc` y este se lanza con `source`. El objetivo es hacer una modificación de nuestro entorno.
+
+Cargamos .bashrc con `.` por lo tanto al ser lo mismo que `source` se convierten en variables de entorno las variables definidas dentro a las que se le aplica un `export`.
+
+```bash
+si@si-VirtualBox:~$ cat .profile | grep ".bashrc"
+    # include .bashrc if it exists
+    if [ -f "$HOME/.bashrc" ]; then
+	. "$HOME/.bashrc"
+```
+
+## Variables locales y globales en un script
+
+`global, local`
+
+Todas las variables en los scripts bash, a menos que se definan de otra manera, son globales, es decir, una vez definidas pueden ser utilizadas en cualquier parte del script. Para que una variable sea local, es decir, tenga sentido solamente dentro de una sección del script, como en una función, y no en todo el script, debe ser precedida por la sentencia: local.
+
+1. `caso A`: Sin sentencia local para la variable `NOMBRE`.
+
+```bash
+si@si-VirtualBox:~$ cat script.sh
+    #!/bin/bash
+
+    function dentro_variable_local() {
+            NOMBRE="DENTRO"
+            echo ${NOMBRE}
+    }
+
+    NOMBRE="FUERA"
+    echo ${NOMBRE}
+
+    dentro_variable_local
+    echo ${NOMBRE}
+
+si@si-VirtualBox:~$ ./script.sh
+FUERA
+DENTRO
+DENTRO
+```
+
+2. `caso B`: Con sentencia local para la variable `NOMBRE`.
+
+```bash
+si@si-VirtualBox:~$ cat script.sh
+    #!/bin/bash
+
+    function dentro_variable_local() {
+            local NOMBRE="DENTRO"
+            echo ${NOMBRE}
+    }
+
+    NOMBRE="FUERA"
+    echo ${NOMBRE}
+
+    dentro_variable_local
+    echo ${NOMBRE}
+
+si@si-VirtualBox:~$ ./script.sh
+FUERA
+DENTRO
+FUERA
+```
+
+En un script de shell en Linux, puedes definir variables locales y globales dentro de una función de la siguiente manera:
+
+### Sin especificar nada (implícitamente global):
+
+```bash
+mi_funcion() {
+    variable_global="Hola"
+}
+```
+
+- **Descripción:** La variable `variable_global` será global y accesible desde cualquier parte del script después de llamar a `mi_funcion()`.
+
+### Con `local`:
+
+```bash
+mi_funcion() {
+    local variable_local="Mundo"
+}
+```
+
+- **Descripción:** `variable_local` será local a la función `mi_funcion()` y no estará disponible fuera de ella.
+
+### Con `declare`:
+
+```bash
+mi_funcion() {
+    declare variable_local="Linux"
+}
+```
+
+- **Descripción:** Similar a `local`, `variable_local` será local a la función `mi_funcion()` y no estará disponible fuera de ella. `declare` es una forma más explícita de declarar variables en Bash.
+
+### Con `declare -g`:
+
+```bash
+mi_funcion() {
+    declare -g variable_global="Adiós"
+}
+```
+
+- **Descripción:** `variable_global` será global, incluso si se define dentro de una función, y será accesible desde cualquier parte del script después de llamar a `mi_funcion()`.
+
+#### Resumen:
+
+- **Global (implícito):** Sin ninguna palabra clave, la variable es global.
+- **Local:** Se define usando `local` o `declare` dentro de la función.
+- **Global explícito:** Se usa `declare -g` para declarar una variable global dentro de una función.
+
+## Diferencia entre el uso del operador [ y [[
 
 Preferiblemente hacer uso de `[[]]` en lugar de `[] o test` ya que a diferencia de los `[]` los `[[]]`:
 1. No tienen en cuenta el separador de campos IFS.
@@ -13,7 +205,7 @@ IFS=$' \t\n\C-@'
 
 En conclusión, usa `[[` siempre que sea posible, ya que es más seguro y potente. Sin embargo, si escribes scripts que deben ejecutarse en shells POSIX antiguos, entonces usa `[` para compatibilidad.
 
-## Comando test o []
+### Comando test o []
 
 El comando `test` en Unix/Linux se utiliza para evaluar expresiones condicionales, normalmente dentro de scripts de shell. Permite verificar condiciones como la existencia de archivos, comparaciones de cadenas y valores numéricos, entre otras.
 
