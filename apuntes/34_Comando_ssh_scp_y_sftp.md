@@ -357,7 +357,6 @@ Enter same passphrase again:
 Your identification has been saved with the new passphrase.
 ```
 
-
 ## scp
 
 ### scp de máquina A -> B indicado desde máquina C
@@ -500,6 +499,27 @@ Opciones comunes de SFTP:
 - -b archivo: Ejecuta un conjunto de comandos desde un archivo de texto.
 - -C: Activa la compresión durante la transferencia para archivos grandes
 - -o Port=52341: Especifica el puerto en el que el servidor SSH escucha las conexiones. Esto es útil cuando el servidor SSH no está en el puerto predeterminado (22).
+
+```bash
+usuarioA@usuario:~$ sftp usuarioB@192.168.100.3
+...
+sftp> ls
+carpeta      fichero.txt  snap
+sftp> get -r carpeta/
+Fetching /home/usuarioB/carpeta/ to carpeta
+Retrieving /home/usuarioB/carpeta
+ficheroCarpeta.txt                                                                                                                                                             100%   60     5.0KB/s   00:00
+sftp> get fichero.txt
+Fetching /home/usuarioB/fichero.txt to fichero.txt
+fichero.txt                                                                                                                                                                    100%   60    10.3KB/s   00:00
+sftp> exit
+
+usuarioA@usuario:~$ ls -l
+total 12
+drwxrwxr-x 2 usuarioA usuarioA 4096 may 15 10:45 carpeta
+-rw-rw-r-- 1 usuarioA usuarioA   60 may 15 10:45 fichero.txt
+drwx------ 3 usuarioA usuarioA 4096 may 15 10:38 snap
+```
 
 ---
 
