@@ -1,4 +1,4 @@
-# Comando ssh y scp
+# Comando ssh, scp y sftp
 
 ## Comandos para instalar el servidor SSH en Debian
 
