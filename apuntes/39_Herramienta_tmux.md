@@ -88,4 +88,4 @@ Ctrl+b, x
 
 ---
 
-![tmux](../imagenes/cuestionarios/tmux/0.png)
+![tmux](../imagenes/recursos/tmux/0.png)

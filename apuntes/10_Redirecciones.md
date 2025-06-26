@@ -295,13 +295,3 @@ root@debian:/tmp# idhj || pwd
 -bash: idhj: orden no encontrada
 /tmp
 ```
-
----
-
-### Cuestionarios
-
-![1](../imagenes/cuestionarios/redirecciones/1.png)
-![2](../imagenes/cuestionarios/redirecciones/2.png)
-![3](../imagenes/cuestionarios/redirecciones/3.png)
-![4](../imagenes/cuestionarios/redirecciones/4.png)
-![5](../imagenes/cuestionarios/redirecciones/5.png)

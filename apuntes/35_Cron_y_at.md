@@ -158,19 +158,3 @@ vagrant@debian:~$ at 08:25 today -f    /usr/bin/systemctl status httpd.service >
 Se colocan los jobs (tareas) en el directorio `/var/spool/atjobs`, a razón de un ejecutable por tarea `/var/spool/at`.
 Es posible controlar el acceso al comando at por usuario con los archivos `/etc/at.allow` y `/etc/at.deny`.	
 Todo el mundo puede utiliza *at* porque solo existe el archivo `/etc/at.deny`. Si creamos el archivo `/etc/at.allow` solomente los que estan en este archivo pueden utizar *at*.
-
-
----
-
-### Cuestionarios
-
-![1](../imagenes/cuestionarios/cron/1.png)
-![2](../imagenes/cuestionarios/cron/2.png)
-![3](../imagenes/cuestionarios/cron/3.png)
-![4](../imagenes/cuestionarios/cron/4.png)
-![5](../imagenes/cuestionarios/cron/5.png)
-![6](../imagenes/cuestionarios/cron/6.png)
-![7](../imagenes/cuestionarios/cron/7.png)
-![8](../imagenes/cuestionarios/cron/8.png)
-![9](../imagenes/cuestionarios/cron/9.png)
-![10](../imagenes/cuestionarios/cron/10.png)
