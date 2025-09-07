@@ -59,14 +59,14 @@ dam:RsdRTGHtdrs:moncho:lipido,rivelora
 ## su y sudo
 
 ```bash
-martin@debian12:/etc/sudoers.d$ sudo su -
-martin@debian12:/etc/sudoers.d$ sudo su
-martin@debian12:/etc/sudoers.d$ sudo -i
-martin@debian12:/etc/sudoers.d$ su juan
-martin@debian12:/etc/sudoers.d$ su - juan
-martin@debian12:/etc/sudoers.d$ su - juan -c "pwd"
-martin@debian12:/etc/sudoers.d$ su -l juan
-martin@debian12:/etc/sudoers.d$ su --c "pwd"
+martin@debian:/etc/sudoers.d$ sudo su -
+martin@debian:/etc/sudoers.d$ sudo su
+martin@debian:/etc/sudoers.d$ sudo -i
+martin@debian:/etc/sudoers.d$ su juan
+martin@debian:/etc/sudoers.d$ su - juan
+martin@debian:/etc/sudoers.d$ su - juan -c "pwd"
+martin@debian:/etc/sudoers.d$ su -l juan
+martin@debian:/etc/sudoers.d$ su --c "pwd"
 ```
 
 1. `sudo su -`: Inicia un shell interactivo como el usuario root, cargando el entorno de inicio de sesión del usuario root.
@@ -112,7 +112,7 @@ Al final estas entradas especifican para el usuario martin (analogo para el grup
 
 En el archivo sudoers, cuando especificas una entrada como esta:
 
-```
+```bash
 martin 192.168.1.14,192.168.1.15=(juan:dam) /bin/pwd
 ```
 
@@ -125,15 +125,15 @@ Significa que el usuario "martin" puede ejecutar el comando `/bin/pwd` **en el h
 **groups**: Permite ver unicamente los grupos secundarios del usuario.
 
 ```bash
-martin@debian12:~$ id
+martin@debian:~$ id
 uid=1000(martin) gid=1000(martin) grupos=1000(martin),24(cdrom),25(floppy),27(sudo),29(audio),30(dip),44(video),46(plugdev),100(users),106(netdev),113(bluetooth),116(lpadmin),119(scanner)
-martin@debian12:~$ groups
+martin@debian:~$ groups
 martin cdrom floppy sudo audio dip video plugdev users netdev bluetooth lpadmin scanner
 
-martin@debian12:~$ sudo su -
-root@debian12:~# id
+martin@debian:~$ sudo su -
+root@debian:~# id
 uid=0(root) gid=0(root) grupos=0(root)
-root@debian12:~# groups
+root@debian:~# groups
 root
 ```
 
@@ -145,10 +145,10 @@ _*Nota*_: Nótese que el grupo root tiene el id 0.
 - u: Desbloquea el acceso al sistema del usuario (usermod -U).
 
 ```bash
-martin@debian12:~$ sudo passwd -l martin && sudo tail /etc/shadow | grep martin
+martin@debian:~$ sudo passwd -l martin && sudo tail /etc/shadow | grep martin
 passwd: contraseña cambiada.
 martin:!$y$j9T$D1YstIGhwPXktsEmolZg./$I7fKcY0m9yE2LYgGBEn8yolExy5PLvBTIlZf5keudM3:19770:0:99999:7:::
-martin@debian12:~$ sudo passwd -u martin && sudo tail /etc/shadow | grep martin
+martin@debian:~$ sudo passwd -u martin && sudo tail /etc/shadow | grep martin
 passwd: contraseña cambiada.
 martin:$y$j9T$D1YstIGhwPXktsEmolZg./$I7fKcY0m9yE2LYgGBEn8yolExy5PLvBTIlZf5keudM3:19770:0:99999:7:::
 ```
@@ -162,23 +162,23 @@ useradd -m -d /home/juan -p "$(mkpasswd 'abc123..')" -g sistemas -G dam -s /bin/
 ```
 
 ```bash
-si@si-VirtualBox:~$ sudo useradd -m -d /home/user1 -s /bin/bash -p $(mkpasswd -m sha-512 'abc123.') -G sudo user1
-si@si-VirtualBox:~$ tail -1 /etc/passwd && sudo tail -1 /etc/shadow
+usuario@debian:~$ sudo useradd -m -d /home/user1 -s /bin/bash -p $(mkpasswd -m sha-512 'abc123.') -G sudo user1
+usuario@debian:~$ tail -1 /etc/passwd && sudo tail -1 /etc/shadow
 user1:x:1011:1011::/home/user1:/bin/bash
 user1:$6$j0kV4V7Uc2t9RDrY$XHh4NJsZA73bCXMDPkNtU.6D1TC2snGxByWwlwyyaedOd8GMPwG.6jiBxe2ecIIDbOCdBKj04oWUA.77Vrbjo/:19890:0:99999:7:::
-si@si-VirtualBox:~$ ls /etc/skel/
+usuario@debian:~$ ls /etc/skel/
 scripts_bash
-si@si-VirtualBox:~$ sudo ls /home/user1/
+usuario@debian:~$ sudo ls /home/user1/
 scripts_bash
 ```
 
 ```bash
-si@si-VirtualBox:~$ sudo useradd -M -d /home/user2 -s /bin/bash -p $(mkpasswd -m sha-512 'abc123.') -G sudo user2
-si@si-VirtualBox:~$ sudo ls /home/user2
+usuario@debian:~$ sudo useradd -M -d /home/user2 -s /bin/bash -p $(mkpasswd -m sha-512 'abc123.') -G sudo user2
+usuario@debian:~$ sudo ls /home/user2
 ls: cannot access '/home/user2': No such file or directory
-si@si-VirtualBox:~$ ls /home
-nuevo  si  user1
-si@si-VirtualBox:~$ tail -1 /etc/passwd
+usuario@debian:~$ ls /home
+nuevo  usuario  user1
+usuario@debian:~$ tail -1 /etc/passwd
 user2:x:1012:1012::/home/user2:/bin/bash
 ```
 
@@ -186,30 +186,30 @@ _*Nota: Si queremos que un usuario tenga un grupo principal con el mismo nombre,
 _*Nota2: Podemos indicar el algoritmo de cifrado de la contraseña si queremos.*_
 _*Nota3: Con el parametro `-m` estamos indicando que se copie la estructura de `/etc/skel` para el nuevo usuario.*_
 _*Nota4: Con el parametro `-M` estamos indicando que el usuario no ha de tener un `/home` para el. A pesar de ello en el `/etc/passwd` si va a figurar como que existe la ruta.*_ -_Nota5: Con los parametros `-u` podemos dar un uid específico, `-g` un gid específico y con `-l` cambiar el nombre del usuario._\_
-_*Nota5*_: Si quiero crear un usuario cuya cuenta caduque en un día concreto puedo hacerlo de la siguiente forma: *root@debian:~# useradd -m -p $(mkpasswd 'abc123.') -e 2025-05-10 usuario2*. 
+_*Nota5*_: Si quiero crear un usuario cuya cuenta caduque en un día concreto puedo hacerlo de la siguiente forma: _root@debian:~# useradd -m -p $(mkpasswd 'abc123.') -e 2025-05-10 usuario2_.
 
 ```bash
-si@si-VirtualBox:~/Desktop/scripts/ejercicios/ej2$ sudo useradd -m -d /home/alumno -p $(mkpasswd 'abc123.') -s "/bin/bash" alumno
+usuario@debian:~/Desktop/scripts/ejercicios/ej2$ sudo useradd -m -d /home/alumno -p $(mkpasswd 'abc123.') -s "/bin/bash" alumno
 
-si@si-VirtualBox:~/Desktop/scripts/ejercicios/ej2$ tail -1 /etc/passwd
+usuario@debian:~/Desktop/scripts/ejercicios/ej2$ tail -1 /etc/passwd
 geoclue:x:124:131::/var/lib/geoclue:/usr/sbin/nologin
 pulse:x:125:132:PulseAudio daemon,,,:/run/pulse:/usr/sbin/nologin
 gnome-initial-setup:x:126:65534::/run/gnome-initial-setup/:/bin/false
 hplip:x:127:7:HPLIP system user,,,:/run/hplip:/bin/false
 gdm:x:128:134:Gnome Display Manager:/var/lib/gdm3:/bin/false
-si:x:1000:1000:si,,,:/home/si:/bin/bash
+usuario:x:1000:1000:usuario,,,:/home/usuario:/bin/bash
 vboxadd:x:999:1::/var/run/vboxadd:/bin/false
 sshd:x:129:65534::/run/sshd:/usr/sbin/nologin
 mysql:x:130:137:MySQL Server,,,:/nonexistent:/bin/false
 alumno:x:1001:1001::/home/alumno:/bin/bash
 
-si@si-VirtualBox:~/Desktop/scripts/ejercicios/ej2$ tail -1 /etc/group
+usuario@debian:~/Desktop/scripts/ejercicios/ej2$ tail -1 /etc/group
 pulse:x:132:
 pulse-access:x:133:
 gdm:x:134:
-lxd:x:135:si
-si:x:1000:
-sambashare:x:136:si
+lxd:x:135:usuario
+usuario:x:1000:
+sambashare:x:136:usuario
 vboxsf:x:999:
 vboxdrmipc:x:998:
 mysql:x:137:
@@ -252,19 +252,20 @@ groupdel dam
 
 _*Nota*_: Supongamos que creamos un usuario y queremos que en el próximo inicio de sesión, el usuario modifique su password. Para ello podemos usar los comandos `chage -d 0 usuario` o `passwd -e usuario`.
 
-Como aportación, el comando *passwd* permite modificar la contraseña a un usuario y parámetros y usos interesantes son los siguientes:
-- *passwd -l usuario*: Bloquea la cuenta del usuario, impidiendo su acceso al sistema.
-- *passwd -S usuario*: Muestra el estado de la contraseña del usuario, incluyendo si está bloqueada, la fecha del último cambio y detalles de expiración.
-- *passwd -u usuario*: Desbloquea la cuenta del usuario previamente bloqueada, permitiendo nuevamente su acceso.
-- *passwd -e usuario*: Fuerza a que el usuario deba cambiar su contraseña en el próximo inicio de sesión, expirando la contraseña actual de inmediato.
-- *echo 000000 |passwd --stdin user1*: Asigna la contraseña “000000” al usuario user1 de forma automática, sin interacción manual.
+Como aportación, el comando _passwd_ permite modificar la contraseña a un usuario y parámetros y usos interesantes son los siguientes:
+
+- _passwd -l usuario_: Bloquea la cuenta del usuario, impidiendo su acceso al sistema.
+- _passwd -S usuario_: Muestra el estado de la contraseña del usuario, incluyendo si está bloqueada, la fecha del último cambio y detalles de expiración.
+- _passwd -u usuario_: Desbloquea la cuenta del usuario previamente bloqueada, permitiendo nuevamente su acceso.
+- _passwd -e usuario_: Fuerza a que el usuario deba cambiar su contraseña en el próximo inicio de sesión, expirando la contraseña actual de inmediato.
+- _echo 000000 |passwd --stdin user1_: Asigna la contraseña “000000” al usuario user1 de forma automática, sin interacción manual.
 
 #### /etc/nologin
 
 El archivo `/etc/nologin` en sistemas Linux y Unix es utilizado para bloquear el acceso de usuarios regulares al sistema, especialmente durante tareas de mantenimiento o actualización. Cuando este archivo está presente, el sistema impide el inicio de sesión de los usuarios no privilegiados y muestra un mensaje que especifica que el acceso está restringido.
 
-Para bloquear el acceso a usuarios regulares y personalizar el mensaje: 
-*echo "El sistema está en mantenimiento. Inténtelo más tarde." | sudo tee /etc/nologin*.
+Para bloquear el acceso a usuarios regulares y personalizar el mensaje:
+_echo "El sistema está en mantenimiento. Inténtelo más tarde." | sudo tee /etc/nologin_.
 
 ```bash
 usuario@usuario:~$ ssh alex@192.168.100.3
@@ -277,34 +278,36 @@ Connection closed by 192.168.100.3 port 22
 ```
 
 Una vez completado el mantenimiento, elimina el archivo para permitir el acceso de nuevo:
-*sudo rm /etc/nologin*.
+_sudo rm /etc/nologin_.
 
 `/etc/nologin` es una forma sencilla y efectiva de gestionar el acceso al sistema durante tiempos de inactividad.
 
 #### gpasswd
 
 Este comando establece la contraseña del grupo y lo administra pudiendo agregar o eliminar un usuario de un grupo. Los usuarios y grupos deben existir.
-- *-r*: Elimina la contraseña.
-- *-a*: Añade usuario al grupo.
-- *-d*: Elimina usuario del grupo.
-- *-A*: Añade un administrador o varios al grupo, el cual va a poder agregar o eliminar usuarios del grupo, modificar la contraseña del grupo
 
-La contraseña de grupo le permite a los usuarios añadirse al mismo y poder usar los permisos de este, para ello pueden hacer uso del comando *newgrp*.
+- _-r_: Elimina la contraseña.
+- _-a_: Añade usuario al grupo.
+- _-d_: Elimina usuario del grupo.
+- _-A_: Añade un administrador o varios al grupo, el cual va a poder agregar o eliminar usuarios del grupo, modificar la contraseña del grupo
+
+La contraseña de grupo le permite a los usuarios añadirse al mismo y poder usar los permisos de este, para ello pueden hacer uso del comando _newgrp_.
 
 #### ulimit
 
 Este comando da control sobre los recursos que dispone el shell y los procesos lanzando por ella. Se puede inicializar en `/etc/profile` o en `~/.bashrc` de cada usuario.
 
-- *-a*: Despliega todas las limitaciones.
-- *-f*: Cantidad máxima de archivos creados por la shell.
-- *-n*: Cantidad máxima de archivos abiertos.
-- *-u*: Cantidad máxima de procesos por usuario.
+- _-a_: Despliega todas las limitaciones.
+- _-f_: Cantidad máxima de archivos creados por la shell.
+- _-n_: Cantidad máxima de archivos abiertos.
+- _-u_: Cantidad máxima de procesos por usuario.
 
 _*Nota*_: Se pueden establecer límites blandos y duros, en el caso de los blandos nos saldrá una alerta de advertencia diciendo que excedemos dicho límite.
 
 ## Campo tipo
 
 Antes de la terna de permisos tendremos un caracter que indica el tipo de archivo en cuestión. Como resumen del campo tipo tenemos:
+
 - -: Archivo regular.
 - d: Directorio.
 - l: Enlace simbólico.
@@ -477,14 +480,14 @@ Es un mecanismo en sistemas Unix y Unix-like que permite que un programa sea eje
 Este permiso es fundamental para que un usuario pueda hacer cosas tan simples como cambiar su contraseña de acceso. Básicamente cambiar la contraseña de un usuario distinto de root implica modificar el fichero /etc/shadow el cual tiene permisos rw-r----- y pertenece al usuario root grupo shadow. Con esta configuración de permisos sólo el usuario root puede realizar modificaciones sobre este fichero. Para realizar este cambio de contraseña se usa la herramienta passwd la cual tiene unos permisos especiales (rwsr-xr-x):
 
 ```bash
-si@si-VirtualBox:~$ which passwd
+usuario@debian:~$ which passwd
 /usr/bin/passwd
-si@si-VirtualBox:~$ ls -la $(which passwd)
+usuario@debian:~$ ls -la $(which passwd)
 -rwsr-xr-x 1 root root 59976 feb  6 13:54 /usr/bin/passwd
-si@si-VirtualBox:~$ ls -l /etc/shadow
+usuario@debian:~$ ls -l /etc/shadow
 -rw-r----- 1 root shadow 1536 abr  9 13:07 /etc/shadow
-si@si-VirtualBox:~$ sudo cat /etc/shadow | grep -n si:
-48:si:$y$j9T$xzdCWBCAVajtbrVsu/dPu0$7bIViJJgWzNPhkT5yk1YLQkZNhhDfdN/vlXO5LB.B49:19725:0:99999:7:::
+usuario@debian:~$ sudo cat /etc/shadow | grep -n usuario:
+48:usuario:$y$j9T$xzdCWBCAVajtbrVsu/dPu0$7bIViJJgWzNPhkT5yk1YLQkZNhhDfdN/vlXO5LB.B49:19725:0:99999:7:::
 ```
 
 El cambio está en que en los permisos del usuario propietario se ha sustituido una x por una s. Y así es como se representa el permiso Set UID en los ficheros ejecutables el cual es un acrónimo de “set user ID upon execution”. **Un ejecutable con este permiso activado se ejecuta como el usuario propietario (el usuario root en este caso) y no con los privilegios del usuario actual.**
@@ -492,17 +495,17 @@ El cambio está en que en los permisos del usuario propietario se ha sustituido 
 Por último, en Linux cuando un fichero tiene permiso Set UID pero no tiene permiso de ejecución, Linux marca esta circunstancia con una “S” (mayúscula).
 
 ```bash
-si@si-VirtualBox:~$ echo "Permisos" > fichero.txt
-si@si-VirtualBox:~$ ls -l fichero.txt
--rw-rw-r-- 1 si si 9 jun 12 09:23 fichero.txt
+usuario@debian:~$ echo "Permisos" > fichero.txt
+usuario@debian:~$ ls -l fichero.txt
+-rw-rw-r-- 1 usuario usuario 9 jun 12 09:23 fichero.txt
 
-si@si-VirtualBox:~$ chmod 4700 fichero.txt
-si@si-VirtualBox:~$ ls -l fichero.txt
--rws------ 1 si si 9 jun 12 09:23 fichero.txt
+usuario@debian:~$ chmod 4700 fichero.txt
+usuario@debian:~$ ls -l fichero.txt
+-rws------ 1 usuario usuario 9 jun 12 09:23 fichero.txt
 
-si@si-VirtualBox:~$ chmod u-x fichero.txt
-si@si-VirtualBox:~$ ls -l fichero.txt
--rwS------ 1 si si 9 jun 12 09:23 fichero.txt
+usuario@debian:~$ chmod u-x fichero.txt
+usuario@debian:~$ ls -l fichero.txt
+-rwS------ 1 usuario usuario 9 jun 12 09:23 fichero.txt
 ```
 
 ### Setgid (Set Group ID - SGID)
@@ -516,17 +519,17 @@ Como se puede ver en el ejemplo, el fichero /etc/shadow tiene permiso de lectura
 Para asignar permisos de Set GID habrá que anteponer un 2 al permiso en formato numérico (2755) ó usar g+s. Por otra banda, es posible activar Set UID y Set GID a la vez empleando chmod con las especificaciones de permisos 6755 ó u+s g+s.
 
 ```bash
-si@si-VirtualBox:~$ echo "Permisos" > fichero.txt
-si@si-VirtualBox:~$ ls -l fichero.txt
--rw-rw-r-- 1 si si 9 jun 12 10:50 fichero.txt
+usuario@debian:~$ echo "Permisos" > fichero.txt
+usuario@debian:~$ ls -l fichero.txt
+-rw-rw-r-- 1 usuario usuario 9 jun 12 10:50 fichero.txt
 
-si@si-VirtualBox:~$ chmod 2070 fichero.txt
-si@si-VirtualBox:~$ ls -l fichero.txt
-----rws--- 1 si si 9 jun 12 10:50 fichero.txt
+usuario@debian:~$ chmod 2070 fichero.txt
+usuario@debian:~$ ls -l fichero.txt
+----rws--- 1 usuario usuario 9 jun 12 10:50 fichero.txt
 
-si@si-VirtualBox:~$ chmod g-x fichero.txt
-si@si-VirtualBox:~$ ls -l fichero.txt
-----rwS--- 1 si si 9 jun 12 10:50 fichero.txt
+usuario@debian:~$ chmod g-x fichero.txt
+usuario@debian:~$ ls -l fichero.txt
+----rwS--- 1 usuario usuario 9 jun 12 10:50 fichero.txt
 ```
 
 ### Sticky bit
@@ -538,46 +541,46 @@ Este permiso permite proteger ficheros dentro de un directorio. Concretamente ev
 Por otro lado, indicar que con la T (mayúscula) indica que no existe el permiso de ejecución para el colectivo otros usuarios que en carpetas significa poder acceder a la carpeta.
 
 ```bash
-si@si-VirtualBox:~$ sudo groupadd secundaria
-si@si-VirtualBox:~$ sudo useradd -m -d /home/juan -p $(mkpasswd 'abc123.') -s /bin/bash -g secundaria -G sudo juan
-si@si-VirtualBox:~$ sudo useradd -m -d /home/mateo -p $(mkpasswd 'abc123.') -s /bin/bash -g secundaria -G sudo mateo
+usuario@debian:~$ sudo groupadd secundaria
+usuario@debian:~$ sudo useradd -m -d /home/juan -p $(mkpasswd 'abc123.') -s /bin/bash -g secundaria -G sudo juan
+usuario@debian:~$ sudo useradd -m -d /home/mateo -p $(mkpasswd 'abc123.') -s /bin/bash -g secundaria -G sudo mateo
 
-si@si-VirtualBox:~$ id juan
+usuario@debian:~$ id juan
 uid=1001(juan) gid=1001(secundaria) groups=1001(secundaria),27(sudo)
-si@si-VirtualBox:~$ id mateo
+usuario@debian:~$ id mateo
 uid=1002(mateo) gid=1001(secundaria) groups=1001(secundaria),27(sudo)
 
-si@si-VirtualBox:~$ mkdir /tmp/sticky
-si@si-VirtualBox:~$ ls -ld /tmp/sticky/
-drwxrwxr-x 2 si si 4096 jun 12 10:58 /tmp/sticky/
+usuario@debian:~$ mkdir /tmp/sticky
+usuario@debian:~$ ls -ld /tmp/sticky/
+drwxrwxr-x 2 usuario usuario 4096 jun 12 10:58 /tmp/sticky/
 
-si@si-VirtualBox:~$ chmod 1777 /tmp/sticky/
-si@si-VirtualBox:~$ ls -ld /tmp/sticky/
-drwxrwxrwt 2 si si 4096 jun 12 10:58 /tmp/sticky/
+usuario@debian:~$ chmod 1777 /tmp/sticky/
+usuario@debian:~$ ls -ld /tmp/sticky/
+drwxrwxrwt 2 usuario usuario 4096 jun 12 10:58 /tmp/sticky/
 
-si@si-VirtualBox:~$ su - juan -c "touch /tmp/sticky/fi1.txt"
+usuario@debian:~$ su - juan -c "touch /tmp/sticky/fi1.txt"
 Password:
-si@si-VirtualBox:~$ su - mateo -c "rm /tmp/sticky/fi1.txt"
+usuario@debian:~$ su - mateo -c "rm /tmp/sticky/fi1.txt"
 Password:
 rm: remove write-protected regular empty file '/tmp/sticky/fi1.txt'? yes
 rm: cannot remove '/tmp/sticky/fi1.txt': Operation not permitted
-si@si-VirtualBox:~$ tree /tmp/sticky/
+usuario@debian:~$ tree /tmp/sticky/
 /tmp/sticky/
 └── fi1.txt
 
 0 directories, 1 file
 
-si@si-VirtualBox:~$ chmod o-t /tmp/sticky/
-si@si-VirtualBox:~$ ls -ld /tmp/sticky/
-drwxrwxrwx 2 si si 4096 jun 12 11:04 /tmp/sticky/
+usuario@debian:~$ chmod o-t /tmp/sticky/
+usuario@debian:~$ ls -ld /tmp/sticky/
+drwxrwxrwx 2 usuario usuario 4096 jun 12 11:04 /tmp/sticky/
 
-si@si-VirtualBox:~$ su - mateo -c "rm /tmp/sticky/fi1.txt"
+usuario@debian:~$ su - mateo -c "rm /tmp/sticky/fi1.txt"
 Password:
 rm: remove write-protected regular empty file '/tmp/sticky/fi1.txt'? yes
 
-si@si-VirtualBox:~$ ls -ld /tmp/sticky/
-drwxrwxrwx 2 si si 4096 jun 12 11:08 /tmp/sticky/
-si@si-VirtualBox:~$ tree /tmp/sticky/
+usuario@debian:~$ ls -ld /tmp/sticky/
+drwxrwxrwx 2 usuario usuario 4096 jun 12 11:08 /tmp/sticky/
+usuario@debian:~$ tree /tmp/sticky/
 /tmp/sticky/
 
 0 directories, 0 files
@@ -587,20 +590,20 @@ _*Nota*_: Tambien podríamos hacerlo con `chmod +t`.
 
 ### Comando install
 
-
 El comando `install` en Linux se utiliza para **copiar archivos y establecer permisos** en el sistema de archivos. Aunque su nombre puede ser confuso, no se utiliza para instalar paquetes, sino para mover o copiar archivos de manera controlada.
 
 install [opciones] origen destino
 
-- -d	Crea directorios, similar a mkdir -p.
-- -m	Establece los permisos de archivo (por ejemplo, 755).
-- -o	Especifica el propietario del archivo.
-- -g	Especifica el grupo del archivo.
-- -t	Especifica el directorio de destino.
-- -v	Muestra información detallada del proceso.
-- -p	Preserva los tiempos de acceso y modificación.
+- -d Crea directorios, similar a mkdir -p.
+- -m Establece los permisos de archivo (por ejemplo, 755).
+- -o Especifica el propietario del archivo.
+- -g Especifica el grupo del archivo.
+- -t Especifica el directorio de destino.
+- -v Muestra información detallada del proceso.
+- -p Preserva los tiempos de acceso y modificación.
 
 1. Copiar un Archivo con Permisos Específicos:
+
 ```bash
 sudo install -m 755 script.sh /usr/local/bin
 ```
@@ -609,6 +612,7 @@ Copia el archivo script.sh al directorio /usr/local/bin.
 Establece permisos 755 (ejecutable para todos, escritura solo para el propietario).
 
 2. Crear un Directorio con Permisos:
+
 ```bash
 sudo install -d -m 755 /opt/mi_directorio
 ```
@@ -616,6 +620,7 @@ sudo install -d -m 755 /opt/mi_directorio
 Crea el directorio /opt/mi_directorio con permisos 755.
 
 3. Copiar un Archivo con Propietario y Grupo Específicos:
+
 ```bash
 sudo install -o root -g root -m 644 archivo.txt /etc/mi_archivo.txt
 ```
@@ -624,6 +629,7 @@ Copia el archivo archivo.txt a /etc/mi_archivo.txt.
 El propietario y grupo serán root, y los permisos serán 644.
 
 4. Copiar Múltiples Archivos a un Directorio:
+
 ```bash
 sudo install -v archivo1 archivo2 archivo3 -t /usr/local/bin
 ```
@@ -632,12 +638,15 @@ Copia varios archivos al directorio /usr/local/bin.
 La opción -v muestra detalles de la copia.
 
 #### Usos Comunes:
+
 Instalación Manual de Scripts: Colocar scripts en directorios como /usr/local/bin.
 Despliegue de Archivos de Configuración: Copiar archivos de configuración con permisos específicos.
 Creación de Estructura de Directorios: Crear rutas completas para aplicaciones.
 
 #### Ejemplo Completo: Despliegue de un Script
+
 Imagina que tienes un script llamado mi_script.sh que deseas copiar a /usr/local/bin con permisos ejecutables para todos:
+
 ```bash
 sudo install -m 755 mi_script.sh /usr/local/bin
 ```
@@ -652,52 +661,52 @@ A mayores existen en Linux a editar con los comandos `chattr` y listar con `lsat
 Como ejemplos tenemos:
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ ls -l fichero1.txt
--rw-rw-r-- 1 si si 9 abr 13 22:42 fichero1.txt
+usuario@debian:/tmp/prueba$ ls -l fichero1.txt
+-rw-rw-r-- 1 usuario usuario 9 abr 13 22:42 fichero1.txt
 
-si@si-VirtualBox:/tmp/prueba$ lsattr fichero1.txt
+usuario@debian:/tmp/prueba$ lsattr fichero1.txt
 --------------e------- fichero1.txt
 
-si@si-VirtualBox:/tmp/prueba$ sudo chattr +a fichero1.txt
+usuario@debian:/tmp/prueba$ sudo chattr +a fichero1.txt
 [sudo] password for si:
 
-si@si-VirtualBox:/tmp/prueba$ lsattr fichero1.txt
+usuario@debian:/tmp/prueba$ lsattr fichero1.txt
 -----a--------e------- fichero1.txt
 
-si@si-VirtualBox:/tmp/prueba$ echo "Otra linea" > fichero1.txt
+usuario@debian:/tmp/prueba$ echo "Otra linea" > fichero1.txt
 -bash: fichero1.txt: Operation not permitted
 
-si@si-VirtualBox:/tmp/prueba$ echo "Otra linea" >> fichero1.txt
+usuario@debian:/tmp/prueba$ echo "Otra linea" >> fichero1.txt
 
-si@si-VirtualBox:/tmp/prueba$ cat fichero1.txt
+usuario@debian:/tmp/prueba$ cat fichero1.txt
 Fichero1
 Otra linea
 
-si@si-VirtualBox:/tmp/prueba$ sudo chattr +i fichero1.txt
+usuario@debian:/tmp/prueba$ sudo chattr +i fichero1.txt
 
-si@si-VirtualBox:/tmp/prueba$ echo "Otra nueva linea" >> fichero1.txt
+usuario@debian:/tmp/prueba$ echo "Otra nueva linea" >> fichero1.txt
 -bash: fichero1.txt: Operation not permitted
 
-si@si-VirtualBox:/tmp/prueba$ sudo echo "Otra nueva linea" >> fichero1.txt
+usuario@debian:/tmp/prueba$ sudo echo "Otra nueva linea" >> fichero1.txt
 -bash: fichero1.txt: Operation not permitted
 
-si@si-VirtualBox:/tmp/prueba$ lsattr fichero1.txt
+usuario@debian:/tmp/prueba$ lsattr fichero1.txt
 ----ia--------e------- fichero1.txt
 
-si@si-VirtualBox:/tmp/prueba$ sudo chattr -ai fichero1.txt
+usuario@debian:/tmp/prueba$ sudo chattr -ai fichero1.txt
 
-si@si-VirtualBox:/tmp/prueba$ lsattr fichero1.txt
+usuario@debian:/tmp/prueba$ lsattr fichero1.txt
 --------------e------- fichero1.txt
 ```
 
 Del mismo modo, ambos comandos son aplicables tambien a directorios, no unicamente a ficheros.
 
 ```bash
-si@si-VirtualBox:/tmp$ lsattr -d COMUN/
+usuario@debian:/tmp$ lsattr -d COMUN/
 --------------e------- COMUN/
 
-si@si-VirtualBox:/tmp$ sudo chattr +i COMUN/
-si@si-VirtualBox:/tmp$ lsattr -d COMUN/
+usuario@debian:/tmp$ sudo chattr +i COMUN/
+usuario@debian:/tmp$ lsattr -d COMUN/
 ----i---------e------- COMUN/
 ```
 
@@ -718,9 +727,9 @@ setfacl -R -m u:mateo:rwx prueba/
 ```
 
 ```bash
-root@si-VirtualBox:/mnt# setfacl -R -m u:mateo:rwx prueba/
+root@debian:/mnt# setfacl -R -m u:mateo:rwx prueba/
 
-root@si-VirtualBox:/mnt# getfacl -R prueba/
+root@debian:/mnt# getfacl -R prueba/
 # file: prueba/
 # owner: root
 # group: root
@@ -747,9 +756,9 @@ setfacl -R -m g:dam:r-x prueba/
 ```
 
 ```bash
-root@si-VirtualBox:/mnt# setfacl -R -m g:dam:r-x prueba/
+root@debian:/mnt# setfacl -R -m g:dam:r-x prueba/
 
-root@si-VirtualBox:/mnt# getfacl -R prueba/
+root@debian:/mnt# getfacl -R prueba/
 # file: prueba/
 # owner: root
 # group: root
@@ -776,9 +785,9 @@ setfacl -R -d -m g:dam:w prueba/
 ```
 
 ```bash
-root@si-VirtualBox:/mnt# setfacl -R -d -m g:dam:w prueba/
+root@debian:/mnt# setfacl -R -d -m g:dam:w prueba/
 
-root@si-VirtualBox:/mnt# getfacl -R prueba/
+root@debian:/mnt# getfacl -R prueba/
 # file: prueba/
 # owner: root
 # group: root
@@ -806,9 +815,9 @@ setfacl -m m::rwx prueba/
 ```
 
 ```bash
-root@si-VirtualBox:/mnt# setfacl -m m::rwx prueba/
+root@debian:/mnt# setfacl -m m::rwx prueba/
 
-root@si-VirtualBox:/mnt# getfacl -R prueba/
+root@debian:/mnt# getfacl -R prueba/
 # file: prueba/
 # owner: root
 # group: root
@@ -834,10 +843,10 @@ setfacl -R -m o::w prueba/
 ```
 
 ```bash
-root@si-VirtualBox:/mnt# setfacl -R -m u::x prueba/
-root@si-VirtualBox:/mnt# setfacl -R -m g::r prueba/
-root@si-VirtualBox:/mnt# setfacl -R -m o::w prueba/
-root@si-VirtualBox:/mnt# getfacl -R prueba/
+root@debian:/mnt# setfacl -R -m u::x prueba/
+root@debian:/mnt# setfacl -R -m g::r prueba/
+root@debian:/mnt# setfacl -R -m o::w prueba/
+root@debian:/mnt# getfacl -R prueba/
 # file: prueba/
 # owner: root
 # group: root
@@ -865,9 +874,9 @@ setfacl -R -b -k datosEmpresa/
 - -k: Elimina las ACL por defecto.
 
 ```bash
-root@si-VirtualBox:/mnt# setfacl -R -b -k prueba/
+root@debian:/mnt# setfacl -R -b -k prueba/
 
-root@si-VirtualBox:/mnt# getfacl -R prueba/
+root@debian:/mnt# getfacl -R prueba/
 # file: prueba/
 # owner: root
 # group: root
@@ -886,21 +895,21 @@ other::r--
 ### `Eliminar ACLs de un usuario/grupo`
 
 ```bash
-si@si-VirtualBox:/tmp$ getfacl prueba/
+usuario@debian:/tmp$ getfacl prueba/
 # file: prueba/
-# owner: si
-# group: si
+# owner: usuario
+# group: usuario
 user::rwx
 user:carmencita:r-x
 group::rwx
 mask::rwx
 other::r-x
 
-si@si-VirtualBox:/tmp$ setfacl -x u:carmencita prueba/
-si@si-VirtualBox:/tmp$ getfacl prueba/
+usuario@debian:/tmp$ setfacl -x u:carmencita prueba/
+usuario@debian:/tmp$ getfacl prueba/
 # file: prueba/
-# owner: si
-# group: si
+# owner: usuario
+# group: usuario
 user::rwx
 group::rwx
 mask::rwx
@@ -908,21 +917,21 @@ other::r-x
 ```
 
 ```bash
-si@si-VirtualBox:/tmp$ getfacl prueba/
+usuario@debian:/tmp$ getfacl prueba/
 # file: prueba/
-# owner: si
-# group: si
+# owner: usuario
+# group: usuario
 user::rwx
 group::rwx
 group:primaria:r-x
 mask::rwx
 other::r-x
 
-si@si-VirtualBox:/tmp$ setfacl -x g:primaria prueba/
-si@si-VirtualBox:/tmp$ getfacl prueba/
+usuario@debian:/tmp$ setfacl -x g:primaria prueba/
+usuario@debian:/tmp$ getfacl prueba/
 # file: prueba/
-# owner: si
-# group: si
+# owner: usuario
+# group: usuario
 user::rwx
 group::rwx
 mask::rwx
@@ -944,34 +953,34 @@ _*Nota 4: Se pueden juntar los parametros de una ACL para realzar algo como lo s
 _*Nota 5: Los permisos de otros son acumulativos, como podemos ver en el siguiente ejemplo, si no eliminamos los permisos de otros se van a añadir a los del usuario. Este es el motivo por el cual lucia que pertenece a dam puede en el primer caso listar el contenido de `/tmp/prueba` y una vez eliminamos los permisos de otros ya no puede.*_
 
 ```bash
-si@si-VirtualBox:/tmp$ id lucia
+usuario@debian:/tmp$ id lucia
 uid=1001(lucia) gid=1001(lucia) groups=1001(lucia),27(sudo),1003(dam)
-si@si-VirtualBox:/tmp$ getfacl prueba/ -e
+usuario@debian:/tmp$ getfacl prueba/ -e
 # file: prueba/
-# owner: si
-# group: si
+# owner: usuario
+# group: usuario
 user::rwx
 group::rwx                      #effective:---
 group:dam:r-x                   #effective:---
 mask::---
 other::r-x
 
-si@si-VirtualBox:/tmp$ sudo -u lucia ls -l /tmp/prueba
+usuario@debian:/tmp$ sudo -u lucia ls -l /tmp/prueba
 total 0
--rw-rw-r-- 1 si si 0 jun 11 11:29 fichero.txt
-si@si-VirtualBox:/tmp$ sudo setfacl -R -m o::- prueba/
-si@si-VirtualBox:/tmp$ sudo setfacl -R -m m::- prueba/
-si@si-VirtualBox:/tmp$ getfacl prueba/ -e
+-rw-rw-r-- 1 usuario usuario 0 jun 11 11:29 fichero.txt
+usuario@debian:/tmp$ sudo setfacl -R -m o::- prueba/
+usuario@debian:/tmp$ sudo setfacl -R -m m::- prueba/
+usuario@debian:/tmp$ getfacl prueba/ -e
 # file: prueba/
-# owner: si
-# group: si
+# owner: usuario
+# group: usuario
 user::rwx
 group::rwx                      #effective:---
 group:dam:r-x                   #effective:---
 mask::---
 other::---
 
-si@si-VirtualBox:/tmp$ sudo -u lucia ls -l /tmp/prueba
+usuario@debian:/tmp$ sudo -u lucia ls -l /tmp/prueba
 ls: cannot open directory '/tmp/prueba': Permission denied
 ```
 
@@ -983,6 +992,7 @@ ls: cannot open directory '/tmp/prueba': Permission denied
 - **setcap**: Modifica las capabilities de archivos.
 
 ### **Capabilities**
+
 Las capabilities en GNU/Linux son un sistema más granular de control de acceso que se utiliza principalmente para elevar los privilegios de ejecución de un programa o binario específico sin otorgarle privilegios totales.
 
 Permiten a los programas realizar operaciones específicas que normalmente requerirían privilegios elevados, pero solo durante la ejecución de ese programa en particular. En las capabilities, la cadena `=eip` se utiliza para asignar capacidades específicas a un archivo binario. Cada letra en la cadena tiene un significado particular:
@@ -1000,31 +1010,32 @@ Cuando se asigna `=eip` a un archivo binario, se otorgan las capabilities especi
 En resumen, `=eip` establece las capabilities de manera efectiva, heredable y permitida para el programa binario al que se le asigna. Este tipo de configuración puede utilizarse para permitir que un programa ejecute operaciones específicas con privilegios elevados sin otorgarle todos los privilegios de root.
 
 Para más información, se puede consultar la página de manual referente a capabilities:
+
 ```bash
 $ man capabilities
 ```
 
 ### **Tipos de capabilities**
+
 Existen diferentes tipos de capabilities que se pueden asignar a un binario. Algunas de ellas son:
 
-| **Capability**           | **Explicación** |
-|--------------------------|-------------------------------------------|
-| **CAP_CHOWN**            | Permite cambiar el propietario de archivos. |
-| **CAP_DAC_OVERRIDE**     | Permite anular permisos de acceso a archivos. |
-| **CAP_DAC_READ_SEARCH**  | Permite leer archivos y directorios. |
+| **Capability**           | **Explicación**                                               |
+| ------------------------ | ------------------------------------------------------------- |
+| **CAP_CHOWN**            | Permite cambiar el propietario de archivos.                   |
+| **CAP_DAC_OVERRIDE**     | Permite anular permisos de acceso a archivos.                 |
+| **CAP_DAC_READ_SEARCH**  | Permite leer archivos y directorios.                          |
 | **CAP_FOWNER**           | Permite eludir restricciones de control de acceso a archivos. |
-| **CAP_FSETID**           | Permite establecer bits setuid y setgid en archivos. |
-| **CAP_KILL**             | Permite enviar señales a otros procesos. |
-| **CAP_SETGID**           | Permite cambiar el grupo efectivo del proceso. |
-| **CAP_SETUID**           | Permite cambiar el usuario efectivo del proceso. |
-| **CAP_NET_BIND_SERVICE** | Permite enlazar sockets a puertos privilegiados (<1024). |
-| **CAP_NET_RAW**          | Permite usar sockets de red RAW. |
+| **CAP_FSETID**           | Permite establecer bits setuid y setgid en archivos.          |
+| **CAP_KILL**             | Permite enviar señales a otros procesos.                      |
+| **CAP_SETGID**           | Permite cambiar el grupo efectivo del proceso.                |
+| **CAP_SETUID**           | Permite cambiar el usuario efectivo del proceso.              |
+| **CAP_NET_BIND_SERVICE** | Permite enlazar sockets a puertos privilegiados (<1024).      |
+| **CAP_NET_RAW**          | Permite usar sockets de red RAW.                              |
 
 Este sistema proporciona un mayor control y seguridad en la ejecución de programas sin necesidad de conceder permisos root completos.
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ getcap -r / 2>/dev/null
+usuario@debian:~$ getcap -r / 2>/dev/null
 /usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-ptp-helper cap_net_bind_service,cap_net_admin,cap_sys_nice=ep
 /usr/lib/nmap/nmap cap_net_bind_service,cap_net_admin,cap_net_raw=eip
 /usr/bin/ping cap_net_raw=ep
@@ -1034,132 +1045,114 @@ Este sistema proporciona un mayor control y seguridad en la ejecución de progra
 
 Como prueba vamos a otorgar capabilities a vim para que cualquier usuario modifique el /etc/passwd.
 
-En el siguiente conjunto de comandos se inspecciona la ubicación y permisos del editor **Vim** y revisa si tiene **capabilities** asignadas:  
+En el siguiente conjunto de comandos se inspecciona la ubicación y permisos del editor **Vim** y revisa si tiene **capabilities** asignadas:
 
-1. `ls -l /etc/passwd` → Muestra los permisos y detalles del archivo `/etc/passwd`, donde se almacenan los usuarios del sistema.  
-2. `whereis vim` → Localiza los archivos relacionados con Vim.  
-3. `ls -l $(which vim)` → Verifica qué binario se ejecuta al usar `vim`, revelando que es un enlace simbólico.  
-4. `ls -l /etc/alternatives/vim` → Confirma que Vim apunta a `/usr/bin/vim.basic` mediante el sistema de alternativas.  
-5. `ls -l /usr/bin/vim.basic` → Muestra permisos y detalles del binario real de Vim.  
+1. `ls -l /etc/passwd` → Muestra los permisos y detalles del archivo `/etc/passwd`, donde se almacenan los usuarios del sistema.
+2. `whereis vim` → Localiza los archivos relacionados con Vim.
+3. `ls -l $(which vim)` → Verifica qué binario se ejecuta al usar `vim`, revelando que es un enlace simbólico.
+4. `ls -l /etc/alternatives/vim` → Confirma que Vim apunta a `/usr/bin/vim.basic` mediante el sistema de alternativas.
+5. `ls -l /usr/bin/vim.basic` → Muestra permisos y detalles del binario real de Vim.
 6. `getcap /usr/bin/vim.basic` → Comprueba si el binario tiene **capabilities** especiales asignadas.
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ ls -l /etc/passwd
+usuario@debian:~$ ls -l /etc/passwd
 -rw-r--r-- 1 root root 3364 Feb 11 09:30 /etc/passwd
 
-┌──(kali㉿kali)-[~]
-└─$ whereis vim
+usuario@debian:~$ whereis vim
 vim: /usr/bin/vim /etc/vim /usr/share/vim /usr/share/man/man1/vim.1.gz
 
-┌──(kali㉿kali)-[~]
-└─$ ls -l $(which vim)
+usuario@debian:~$ ls -l $(which vim)
 lrwxrwxrwx 1 root root 21 Feb 10 11:47 /usr/bin/vim -> /etc/alternatives/vim
 
-┌──(kali㉿kali)-[~]
-└─$ ls -l /etc/alternatives/vim
+usuario@debian:~$ ls -l /etc/alternatives/vim
 lrwxrwxrwx 1 root root 18 Feb 10 11:47 /etc/alternatives/vim -> /usr/bin/vim.basic
 
-┌──(kali㉿kali)-[~]
-└─$ ls -l /usr/bin/vim.basic
+usuario@debian:~$ ls -l /usr/bin/vim.basic
 -rwxr-xr-x 1 root root 3883352 Nov 13 12:33 /usr/bin/vim.basic
 
-┌──(kali㉿kali)-[~]
-└─$ getcap /usr/bin/vim.basic
+usuario@debian:~$ getcap /usr/bin/vim.basic
 ```
 
-En el siguiente conjunto de comandos se otorga y verifica una **capability** especial al binario de Vim:  
+En el siguiente conjunto de comandos se otorga y verifica una **capability** especial al binario de Vim:
 
-1. `sudo setcap cap_dac_override=ep /usr/bin/vim.basic` → Asigna la capability **CAP_DAC_OVERRIDE** a Vim, permitiéndole ignorar permisos de acceso a archivos.  
+1. `sudo setcap cap_dac_override=ep /usr/bin/vim.basic` → Asigna la capability **CAP_DAC_OVERRIDE** a Vim, permitiéndole ignorar permisos de acceso a archivos.
 2. `getcap /usr/bin/vim.basic` → Verifica que la capability fue aplicada correctamente, mostrando que Vim ahora tiene **CAP_DAC_OVERRIDE** activado. 🚀
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ sudo setcap cap_dac_override=ep /usr/bin/vim.basic
-[sudo] password for kali:
+usuario@debian:~$ sudo setcap cap_dac_override=ep /usr/bin/vim.basic
+[sudo] password for usuario:
 
-┌──(kali㉿kali)-[~]
-└─$ getcap /usr/bin/vim.basic
+usuario@debian:~$ getcap /usr/bin/vim.basic
 /usr/bin/vim.basic cap_dac_override=ep
 ```
 
-En el siguiente conjunto de comandos se crea un usuario, inicia sesión con él y verifica su información:  
+En el siguiente conjunto de comandos se crea un usuario, inicia sesión con él y verifica su información:
 
-1. `sudo useradd -s /bin/bash -p $(mkpasswd 'abc123.') -m -d /home/pepe pepe` → Crea el usuario **pepe** con el shell Bash, establece su contraseña y genera su directorio home.  
-2. `su - pepe` → Inicia sesión como el usuario **pepe**.  
-3. `pwd` → Confirma que la sesión está en el directorio home del usuario (**/home/pepe**).  
-4. `id` → Muestra el UID, GID y grupos a los que pertenece **pepe**.  
+1. `sudo useradd -s /bin/bash -p $(mkpasswd 'abc123.') -m -d /home/pepe pepe` → Crea el usuario **pepe** con el shell Bash, establece su contraseña y genera su directorio home.
+2. `su - pepe` → Inicia sesión como el usuario **pepe**.
+3. `pwd` → Confirma que la sesión está en el directorio home del usuario (**/home/pepe**).
+4. `id` → Muestra el UID, GID y grupos a los que pertenece **pepe**.
 5. `exit` → Cierra la sesión del usuario **pepe** y vuelve al usuario anterior. 🚀
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ sudo useradd -s /bin/bash -p $(mkpasswd 'abc123.' ) -m -d /home/pepe pepe
+usuario@debian:~$ sudo useradd -s /bin/bash -p $(mkpasswd 'abc123.' ) -m -d /home/pepe pepe
 
-┌──(kali㉿kali)-[~]
-└─$ su - pepe
+usuario@debian:~$ su - pepe
 Password:
-┌──(pepe㉿kali)-[~]
-└─$ pwd
+
+pepe@debian:~$ pwd
 /home/pepe
 
-┌──(pepe㉿kali)-[~]
-└─$ id
+pepe@debian:~$ id
 uid=1001(pepe) gid=1001(pepe) groups=1001(pepe)
 
-┌──(pepe㉿kali)-[~]
-└─$ exit
+pepe@debian:~$ exit
 logout
 ```
 
-En el siguiente conjunto de comandos se **otorga privilegios de root** al usuario **pepe** editando el archivo `/etc/passwd`:  
+En el siguiente conjunto de comandos se **otorga privilegios de root** al usuario **pepe** editando el archivo `/etc/passwd`:
 
-1. `vim /etc/passwd` → Abre el archivo de usuarios del sistema para edición.  
-2. `cat /etc/passwd | grep ':0:'` → Busca usuarios con **UID 0**, que tienen privilegios de **root**.  
-   - Se observa que **pepe** tiene `0:1001`, lo que significa que ahora tiene UID 0 (equivalente a root).  
-3. `su - pepe` → Inicia sesión como **pepe**, pero debido a su UID 0, se convierte en **root**.  
-4. `whoami` → Confirma que ahora el usuario **pepe** es en realidad **root**.  
+1. `vim /etc/passwd` → Abre el archivo de usuarios del sistema para edición.
+2. `cat /etc/passwd | grep ':0:'` → Busca usuarios con **UID 0**, que tienen privilegios de **root**.
+   - Se observa que **pepe** tiene `0:1001`, lo que significa que ahora tiene UID 0 (equivalente a root).
+3. `su - pepe` → Inicia sesión como **pepe**, pero debido a su UID 0, se convierte en **root**.
+4. `whoami` → Confirma que ahora el usuario **pepe** es en realidad **root**.
 
 Modificar `/etc/passwd` para asignar UID 0 a un usuario es un **gran riesgo de seguridad**, ya que cualquier usuario con UID 0 tiene **control total** del sistema.
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ vim /etc/passwd
+usuario@debian:~$ vim /etc/passwd
 
-┌──(kali㉿kali)-[~]
-└─$ cat /etc/passwd | grep ':0:'
+usuario@debian:~$ cat /etc/passwd | grep ':0:'
 root:x:0:0:root:/root:/usr/bin/zsh
 pepe:x:0:1001::/home/pepe:/bin/bash
 
-┌──(kali㉿kali)-[~]
-└─$ su - pepe
+usuario@debian:~$ su - pepe
 
 Password:
-┌──(root㉿kali)-[~]
-└─# whoami
+
+root@debian:~# whoami
 root
 ```
 
-En el siguiente conjunto de comandos se **elimina las capabilities de Vim**, pero el usuario **pepe** sigue teniendo privilegios de root:  
+En el siguiente conjunto de comandos se **elimina las capabilities de Vim**, pero el usuario **pepe** sigue teniendo privilegios de root:
 
-1. `sudo setcap -r /usr/bin/vim.basic` → **Elimina todas las capabilities** de Vim, incluyendo `CAP_DAC_OVERRIDE`, que permitía ignorar permisos de archivos.  
-2. `getcap /usr/bin/vim.basic` → Verifica que Vim ya **no tiene capabilities asignadas**.  
-3. `su - pepe` → Inicia sesión como **pepe**, pero sigue teniendo UID `0`, es decir, aún es **root**.  
-4. `vim /etc/passwd` → Abre `/etc/passwd` con Vim, lo que sigue siendo posible porque **pepe sigue siendo root**, aunque ya no tenga capabilities en Vim.  
+1. `sudo setcap -r /usr/bin/vim.basic` → **Elimina todas las capabilities** de Vim, incluyendo `CAP_DAC_OVERRIDE`, que permitía ignorar permisos de archivos.
+2. `getcap /usr/bin/vim.basic` → Verifica que Vim ya **no tiene capabilities asignadas**.
+3. `su - pepe` → Inicia sesión como **pepe**, pero sigue teniendo UID `0`, es decir, aún es **root**.
+4. `vim /etc/passwd` → Abre `/etc/passwd` con Vim, lo que sigue siendo posible porque **pepe sigue siendo root**, aunque ya no tenga capabilities en Vim.
 
-__*Nota*_: Aunque se eliminaron las capabilities de Vim, el usuario **pepe** aún es root debido a su UID 0.
+\__*Nota*_: Aunque se eliminaron las capabilities de Vim, el usuario **pepe** aún es root debido a su UID 0.
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ sudo setcap -r /usr/bin/vim.basic
+usuario@debian:~$ sudo setcap -r /usr/bin/vim.basic
 
-┌──(kali㉿kali)-[~]
-└─$ getcap /usr/bin/vim.basic
+usuario@debian:~$ getcap /usr/bin/vim.basic
 
-┌──(kali㉿kali)-[~]
-└─$ su - pepe
+usuario@debian:~$ su - pepe
 Password:
-┌──(root㉿kali)-[~]
-└─# vim /etc/passwd
+
+root@debian:~# vim /etc/passwd
 ERROR, ya no se puede modificar de esta forma el /etc/passwd
 ```
 
@@ -1167,24 +1160,25 @@ Especialmente interesante es el recurso [gtfobins](https://gtfobins.github.io/) 
 
 ## Comandos para ver a usuarios conectados en el sistema
 
-| Comando              | Descripción                                                                                     |
-|----------------------|-------------------------------------------------------------------------------------------------|
-| who                  | Muestra los usuarios actualmente conectados.                                                    |
-| w                    | Muestra usuarios conectados y sus actividades actuales.                                         |
-| last                 | Muestra el historial de inicios de sesión.                                                      |
-| lastlog              | Muestra el último inicio de sesión de cada usuario.                                             |
-| whoami               | Muestra el nombre del usuario actual.                                                           |
-| id                   | Muestra el UID, GID y grupos del usuario actual.                                                |
-| finger               | Muestra información detallada sobre un usuario.                                                 |
-| uptime               | Muestra el tiempo de actividad del sistema y el número de usuarios conectados.                  |
-| ps aux               | Muestra todos los procesos del sistema, incluyendo los de los usuarios.                         |
-| watch                | Ejecuta un comando repetidamente para monitorear en tiempo real.                                |
-| pkill -KILL -u       | Termina todos los procesos de un usuario específico.                                            |
-| loginctl             | Gestiona y monitorea sesiones de usuarios en sistemas con systemd (systemd-logind).             |
+| Comando        | Descripción                                                                         |
+| -------------- | ----------------------------------------------------------------------------------- |
+| who            | Muestra los usuarios actualmente conectados.                                        |
+| w              | Muestra usuarios conectados y sus actividades actuales.                             |
+| last           | Muestra el historial de inicios de sesión.                                          |
+| lastlog        | Muestra el último inicio de sesión de cada usuario.                                 |
+| whoami         | Muestra el nombre del usuario actual.                                               |
+| id             | Muestra el UID, GID y grupos del usuario actual.                                    |
+| finger         | Muestra información detallada sobre un usuario.                                     |
+| uptime         | Muestra el tiempo de actividad del sistema y el número de usuarios conectados.      |
+| ps aux         | Muestra todos los procesos del sistema, incluyendo los de los usuarios.             |
+| watch          | Ejecuta un comando repetidamente para monitorear en tiempo real.                    |
+| pkill -KILL -u | Termina todos los procesos de un usuario específico.                                |
+| loginctl       | Gestiona y monitorea sesiones de usuarios en sistemas con systemd (systemd-logind). |
 
 ## Comando loginctl
 
 El comando **loginctl** es una herramienta para gestionar y monitorizar sesiones de usuario, usuarios y asientos en sistemas Linux que usan systemd (systemd-logind).Sus principales comandos y opciones:
+
 - **list-sessions**: Lista todas las sesiones de usuario activas en el sistema.
 - **session-status ID**: Muestra información resumida sobre una sesión específica.
 - **show-session ID**: Muestra información detallada y propiedades de una sesión específica.

@@ -25,21 +25,21 @@ El orden de ejecución en Linux es:
 - Descripción: Busca comandos internos (builtin) para su ejecución.
 
 ```bash
-martin@debian12:~$ type -a ls
+usuario@debian:~$ type -a ls
 ls es un alias de `ls --color=auto'
 ls is /usr/bin/ls
 ls is /bin/ls
 ```
 
 ```bash
-martin@debian12:~$ command ls
+usuario@debian:~$ command ls
 d1	   Documentos  fichero.txt  Música	Público
 Descargas  Escritorio  Imágenes     Plantillas	Vídeos
 ```
 
 ```bash
-martin@debian12:~$ type -a cd
+usuario@debian:~$ type -a cd
 cd es una orden interna del shell
-martin@debian12:~$ command cd
-martin@debian12:~$ builtin cd
+usuario@debian:~$ command cd
+usuario@debian:~$ builtin cd
 ```

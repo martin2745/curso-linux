@@ -3,18 +3,18 @@
 El comando ls lista archivos y directorios en un directorio especificado.
 
 ```bash
-martin@debian12:~$ ls -l
+usuario@debian:~$ ls -l
 total 36
-drwxr-xr-x 2 martin martin 4096 mar  4 09:58 d1
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Descargas
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Documentos
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Escritorio
--rw-r--r-- 1 martin martin    0 abr 12 16:29 fichero.txt
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Imágenes
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Música
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Plantillas
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Público
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Vídeos
+drwxr-xr-x 2 usuario usuario 4096 mar  4 09:58 d1
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Descargas
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Documentos
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Escritorio
+-rw-r--r-- 1 usuario usuario    0 abr 12 16:29 fichero.txt
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Imágenes
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Música
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Plantillas
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Público
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Vídeos
 ```
 
 _*Nota: Se refiere el campo de fecha a la hora en la que se hizo la última modificación de contenido del fichero o directorio (creacción o eliminación de contenido en su interior).*_
@@ -37,56 +37,56 @@ Parámetros bien conocidos:
 1. -t: Lista los ficheros o directorios más nuevos al principio.
 
 ```bash
-martin@debian12:~$ ls -l -t
-martin@debian12:~$ ls -l --sort=time
+usuario@debian:~$ ls -l -t
+usuario@debian:~$ ls -l --sort=time
 ```
 
 ```bash
-martin@debian12:~$ ls -l -t
+usuario@debian:~$ ls -l -t
 total 36
--rw-r--r-- 1 martin martin    0 abr 12 16:29 fichero.txt
-drwxr-xr-x 2 martin martin 4096 mar  4 09:58 d1
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Descargas
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Documentos
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Escritorio
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Imágenes
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Música
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Plantillas
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Público
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Vídeos
+-rw-r--r-- 1 usuario usuario    0 abr 12 16:29 fichero.txt
+drwxr-xr-x 2 usuario usuario 4096 mar  4 09:58 d1
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Descargas
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Documentos
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Escritorio
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Imágenes
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Música
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Plantillas
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Público
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Vídeos
 ```
 
 2. -S: Lista por tamaño de mayor a menor.
 
 ```bash
-martin@debian12:~$ ls -l -S
-martin@debian12:~$ ls -l --sort=size
+usuario@debian:~$ ls -l -S
+usuario@debian:~$ ls -l --sort=size
 ```
 
 ```bash
-martin@debian12:~$ ls -l -S
+usuario@debian:~$ ls -l -S
 total 36
-drwxr-xr-x 2 martin martin 4096 mar  4 09:58 d1
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Descargas
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Documentos
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Escritorio
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Imágenes
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Música
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Plantillas
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Público
-drwxr-xr-x 2 martin martin 4096 feb  2 18:10 Vídeos
--rw-r--r-- 1 martin martin    0 abr 12 16:29 fichero.txt
+drwxr-xr-x 2 usuario usuario 4096 mar  4 09:58 d1
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Descargas
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Documentos
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Escritorio
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Imágenes
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Música
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Plantillas
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Público
+drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Vídeos
+-rw-r--r-- 1 usuario usuario    0 abr 12 16:29 fichero.txt
 ```
 
 3. -m: Listado de elementos separados por comas.
 
 ```bash
-martin@debian12:~$ ls -m
-martin@debian12:~$ ls -l --format=commas
+usuario@debian:~$ ls -m
+usuario@debian:~$ ls -l --format=commas
 ```
 
 ```bash
-martin@debian12:~$ ls -m
+usuario@debian:~$ ls -m
 d1, Descargas, Documentos, Escritorio, fichero.txt, Imágenes, Música, Plantillas,
 Público, Vídeos
 ```
@@ -94,28 +94,28 @@ Público, Vídeos
 4. Vertical, Horizontal y una columna: El listado se realiza por linea y no por columa.
 
 ```bash
-martin@debian12:~$ ls -x
-martin@debian12:~$ ls -l --format=horizontal
+usuario@debian:~$ ls -x
+usuario@debian:~$ ls -l --format=horizontal
 ```
 
 ```bash
-martin@debian12:~$ ls
+usuario@debian:~$ ls
 d1         Documentos  fichero.txt  Música      Público
 Descargas  Escritorio  Imágenes     Plantillas  Vídeos
 
-martin@debian12:~$ ls --format=vertical
+usuario@debian:~$ ls --format=vertical
 d1         Documentos  fichero.txt  Música      Público
 Descargas  Escritorio  Imágenes     Plantillas  Vídeos
 
-martin@debian12:~$ ls -x
+usuario@debian:~$ ls -x
 d1       Descargas  Documentos  Escritorio  fichero.txt  Imágenes  Música  Plantillas
 Público  Vídeos
 
-martin@debian12:~$ ls --format=horizontal
+usuario@debian:~$ ls --format=horizontal
 d1       Descargas  Documentos  Escritorio  fichero.txt  Imágenes  Música  Plantillas
 Público  Vídeos
 
-martin@debian12:~$ ls --format=single-column
+usuario@debian:~$ ls --format=single-column
 d1
 Descargas
 Documentos
@@ -166,7 +166,7 @@ Los comandos lspci, lsusb y lsmod actúan como interfaz para leer la informació
 El comando **lspci** muestra información sobre los dispositivos PCI conectados al sistema (tarjetas de red, gráficas, etc.).
 
 ```bash
-usuario@usuario:~$ lspci
+usuario@debian:~$ lspci
 00:00.0 Host bridge: Intel Corporation 440FX - 82441FX PMC [Natoma] (rev 02)
 00:01.0 ISA bridge: Intel Corporation 82371SB PIIX3 ISA [Natoma/Triton II]
 00:01.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)
@@ -186,7 +186,7 @@ usuario@usuario:~$ lspci
   Muestra información más detallada sobre cada dispositivo PCI, como recursos asignados y capacidades adicionales.
 
 ```bash
-usuario@usuario:~$ lspci -v
+usuario@debian:~$ lspci -v
 00:00.0 Host bridge: Intel Corporation 440FX - 82441FX PMC [Natoma] (rev 02)
         Flags: fast devsel
 
@@ -219,10 +219,10 @@ usuario@usuario:~$ lspci -v
   Filtra la salida para mostrar solo el dispositivo PCI que coincide con la dirección especificada (formato: `[[[[dominio]:]bus]:][dispositivo][.función]`, en hexadecimal).
 
 ```bash
-usuario@usuario:~$ lspci -s 00:03.0
+usuario@debian:~$ lspci -s 00:03.0
 00:03.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet Controller (rev 02)
 
-usuario@usuario:~$ lspci -s 00:03.0 -v
+usuario@debian:~$ lspci -s 00:03.0 -v
 00:03.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet Controller (rev 02)
         Subsystem: Intel Corporation PRO/1000 MT Desktop Adapter
         Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 19
@@ -235,9 +235,9 @@ usuario@usuario:~$ lspci -s 00:03.0 -v
 
 - **`-k` (kernel drivers):**  
   Muestra, además, información sobre los controladores (drivers) del kernel que están en uso y los disponibles para cada dispositivo PCI.
-  
+
 ```bash
-usuario@usuario:~$ lspci -s 00:03.0 -k
+usuario@debian:~$ lspci -s 00:03.0 -k
 00:03.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet Controller (rev 02)
         Subsystem: Intel Corporation PRO/1000 MT Desktop Adapter
         Kernel driver in use: e1000
@@ -245,6 +245,7 @@ usuario@usuario:~$ lspci -s 00:03.0 -k
 ```
 
 _*Nota*_: Diferencia entre **kernel driver** y **kernel module**.
+
 - Kernel driver: Código encargado de controlar hardware específico.
 - Kernel module: Fragmento de código que puede añadirse o quitarse del kernel en caliente y tiene como objetivo en este contexto, implementar un driver.
 
@@ -253,7 +254,7 @@ _*Nota*_: Diferencia entre **kernel driver** y **kernel module**.
 El comando `lsusb` muestra información sobre los buses USB y los dispositivos conectados a ellos, como memorias USB, impresoras, cámaras, etc.
 
 ```bash
-usuario@usuario:~$ lsusb
+usuario@debian:~$ lsusb
 Bus 002 Device 003: ID 090c:1000 Silicon Motion, Inc. - Taiwan (formerly Feiya Technology Corp.) Flash Drive
 Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 Bus 001 Device 002: ID 80ee:0021 VirtualBox USB Tablet
@@ -266,7 +267,7 @@ Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
   Muestra información detallada sobre cada dispositivo USB, incluyendo descripciones de las interfaces, endpoints, capacidades y más detalles técnicos. Es útil para diagnósticos avanzados o para conocer características específicas de cada dispositivo.
 
 ```bash
-usuario@usuario:~$ lsusb -v
+usuario@debian:~$ lsusb -v
 
 Bus 002 Device 003: ID 090c:1000 Silicon Motion, Inc. - Taiwan (formerly Feiya Technology Corp.) Flash Drive
 Couldn't open device, some information will be missing
@@ -297,7 +298,7 @@ Device Descriptor:
   Permite filtrar la salida para mostrar solo el dispositivo USB que coincide con el número de bus y dispositivo especificado. El formato es `-s :`, por ejemplo, `lsusb -s 001:002` mostrará solo el dispositivo con bus 001 y dispositivo 002.
 
 ```bash
-usuario@usuario:~$ lsusb -v -s 002:003
+usuario@debian:~$ lsusb -v -s 002:003
 
 Bus 002 Device 003: ID 090c:1000 Silicon Motion, Inc. - Taiwan (formerly Feiya Technology Corp.) Flash Drive
 Couldn't open device, some information will be missing
@@ -315,7 +316,7 @@ Device Descriptor:
   Muestra la topología de los dispositivos USB conectados en forma de árbol, permitiendo visualizar cómo están conectados los dispositivos y hubs entre sí. Esto ayuda a entender la jerarquía y la relación física entre los dispositivos USB del sistema.
 
 ```bash
-usuario@usuario:~$ lsusb -t
+usuario@debian:~$ lsusb -t
 /:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/12p, 480M
     |__ Port 1: Dev 3, If 0, Class=Mass Storage, Driver=usb-storage, 480M
 /:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=ohci-pci/12p, 12M
@@ -331,59 +332,61 @@ Los módulos son archivos con extensión .ko que se cargan en memoria en funció
 Son archivos terminados con la extensión .ko que se almacenan en la ubicación `/lib/modules/<versión_del_kernel>/`. Existen módulos monolíticos que siempre permanecen cargados y otros que se cargan en función de si son dependencias de estos módulos.
 
 ```bash
-root@usuario:~# lsmod | grep floppy
-root@usuario:~# find / -name floppy.ko 2> /dev/null
+root@debian:~# lsmod | grep floppy
+root@debian:~# find / -name floppy.ko 2> /dev/null
 /usr/lib/modules/6.8.0-49-generic/kernel/drivers/block/floppy.ko
 /usr/lib/modules/6.8.0-40-generic/kernel/drivers/block/floppy.ko
-root@usuario:~# uname -r
+root@debian:~# uname -r
 6.8.0-49-generic
 ```
 
 - **lsmod**: Muestra módulos cargados en el sistema.
-- **modinfo**: Amplia información de un módulo.  
-- **insmod**: Carga un fichero .ko en el sistema.  
+- **modinfo**: Amplia información de un módulo.
+- **insmod**: Carga un fichero .ko en el sistema.
 - **rmmod**: Quita un módulo del sistema.
   -w : Espera a que deje de utilizarse.  
-  -f : Fuerza el borrado.  
+  -f : Fuerza el borrado.
 
-Vamos a eliminar el módulo *psmouse* ya que no es necesario para nuestra máquina. 
+Vamos a eliminar el módulo _psmouse_ ya que no es necesario para nuestra máquina.
 
 ```bash
-root@usuario:~# lsmod | grep psmouse
+root@debian:~# lsmod | grep psmouse
 psmouse               217088  0
-root@usuario:~# rmmod psmouse
-root@usuario:~# lsmod | grep psmouse
+root@debian:~# rmmod psmouse
+root@debian:~# lsmod | grep psmouse
 ```
 
-Instalamos el módulo *psmouse* de nuevo. En caso de que existan dependencias tendremos un error y tendremos que gestionar las dependencias una por una.
+Instalamos el módulo _psmouse_ de nuevo. En caso de que existan dependencias tendremos un error y tendremos que gestionar las dependencias una por una.
 
 ```bash
-root@usuario:~# uname -r
+root@debian:~# uname -r
 6.8.0-49-generic
-root@usuario:~# cd /lib/modules/6.8.0-49-generic/
-root@usuario:/lib/modules/6.8.0-49-generic# find -name psmouse.ko
+root@debian:~# cd /lib/modules/6.8.0-49-generic/
+root@debian:/lib/modules/6.8.0-49-generic# find -name psmouse.ko
 ./kernel/drivers/input/mouse/psmouse.ko
-root@usuario:/lib/modules/6.8.0-49-generic# insmod $(find -name psmouse.ko) && lsmod | grep psmouse
+root@debian:/lib/modules/6.8.0-49-generic# insmod $(find -name psmouse.ko) && lsmod | grep psmouse
 psmouse               217088  0
 ```
 
 Por otro lado tenemos el comando **modprobe**, el cual carga o borra módulos y resuelve las dependencias entre éstos. Como parámetros a destacar.
-- f : Fuerza la carga del módulo aunque la versión del kernel no coincida con la que espera encontrar.  
-- r : Elimina el módulo.  
-- v : Muestra información adicional de lo que realiza.  
+
+- f : Fuerza la carga del módulo aunque la versión del kernel no coincida con la que espera encontrar.
+- r : Elimina el módulo.
+- v : Muestra información adicional de lo que realiza.
 - n : Hace una simulación pero no inserta el módulo.
 
-Elimino el módulo *psmouse* y lo instalo de nuevo. En este caso *psmouse* no requiere dependencias de otros módulos pero si fuera el caso las instalaría.
+Elimino el módulo _psmouse_ y lo instalo de nuevo. En este caso _psmouse_ no requiere dependencias de otros módulos pero si fuera el caso las instalaría.
 
 ```bash
-root@usuario:~# modprobe -r psmouse
-root@usuario:~# lsmod | grep psmouse
-root@usuario:~# modprobe psmouse
-root@usuario:~# lsmod | grep psmouse
+root@debian:~# modprobe -r psmouse
+root@debian:~# lsmod | grep psmouse
+root@debian:~# modprobe psmouse
+root@debian:~# lsmod | grep psmouse
 psmouse               217088  0
 ```
 
 A mayores, existe el comando **dmesg** en Linux que muestra los mensajes del buffer del kernel, incluyendo información sobre hardware, dispositivos, errores y eventos del sistema. Para ejecutarlo en una terminal podemos realizar:
+
 - dmesg: Muestra todos los mensajes del buffer del kernel.
 - dmesg --level=err: Muestra errores del kernel.
 - dmesg -T: Nos muestra los mensajes del kernel en una fecha legible para humanos.

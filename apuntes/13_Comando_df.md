@@ -5,55 +5,53 @@ El comando `df` en sistemas Unix/Linux se utiliza para mostrar el espacio dispon
 **Opciones comunes**:
 
 - `-h` (human-readable): Esta opción muestra los tamaños en un formato legible para humanos (por ejemplo, KB, MB, GB).
-
 - `-T` (print-type): Muestra el tipo de sistema de archivos.
-
 - `-i` (inodes): Muestra información sobre el número de inodos utilizados y disponibles en lugar de la información sobre el espacio de disco.
 
 ```bash
-si@si-VirtualBox:/tmp$ df
-Filesystem     1K-blocks     Used Available Use% Mounted on
-tmpfs             400104     1468    398636   1% /run
-/dev/sda3       50770432 16547340  31611688  35% /
-tmpfs            2000504        0   2000504   0% /dev/shm
-tmpfs               5120        4      5116   1% /run/lock
-/dev/sda2         524252     6220    518032   2% /boot/efi
-tmpfs             400100       80    400020   1% /run/user/128
-tmpfs             400100       68    400032   1% /run/user/1000
+usuario@debian:~$ df
+S.ficheros     bloques de 1K  Usados Disponibles Uso% Montado en
+udev                 1971332       0     1971332   0% /dev
+tmpfs                 400876    1184      399692   1% /run
+/dev/sda1           50303512 5476028    42239736  12% /
+tmpfs                2004368       0     2004368   0% /dev/shm
+tmpfs                   5120       8        5112   1% /run/lock
+tmpfs                 400872      64      400808   1% /run/user/112
+tmpfs                 400872      56      400816   1% /run/user/1000
 ```
 
 ```bash
-si@si-VirtualBox:/tmp$ df -h
-Filesystem      Size  Used Avail Use% Mounted on
-tmpfs           391M  1,5M  390M   1% /run
-/dev/sda3        49G   16G   31G  35% /
-tmpfs           2,0G     0  2,0G   0% /dev/shm
-tmpfs           5,0M  4,0K  5,0M   1% /run/lock
-/dev/sda2       512M  6,1M  506M   2% /boot/efi
-tmpfs           391M   80K  391M   1% /run/user/128
-tmpfs           391M   68K  391M   1% /run/user/1000
+usuario@debian:~$ df -h
+S.ficheros     Tamaño Usados  Disp Uso% Montado en
+udev             1,9G      0  1,9G   0% /dev
+tmpfs            392M   1,2M  391M   1% /run
+/dev/sda1         48G   5,3G   41G  12% /
+tmpfs            2,0G      0  2,0G   0% /dev/shm
+tmpfs            5,0M   8,0K  5,0M   1% /run/lock
+tmpfs            392M    64K  392M   1% /run/user/112
+tmpfs            392M    56K  392M   1% /run/user/1000
 ```
 
 ```bash
-si@si-VirtualBox:/tmp$ df -Th
-Filesystem     Type   Size  Used Avail Use% Mounted on
-tmpfs          tmpfs  391M  1,5M  390M   1% /run
-/dev/sda3      ext4    49G   16G   31G  35% /
-tmpfs          tmpfs  2,0G     0  2,0G   0% /dev/shm
-tmpfs          tmpfs  5,0M  4,0K  5,0M   1% /run/lock
-/dev/sda2      vfat   512M  6,1M  506M   2% /boot/efi
-tmpfs          tmpfs  391M   80K  391M   1% /run/user/128
-tmpfs          tmpfs  391M   68K  391M   1% /run/user/1000
+usuario@debian:~$ df -Th
+S.ficheros     Tipo     Tamaño Usados  Disp Uso% Montado en
+udev           devtmpfs   1,9G      0  1,9G   0% /dev
+tmpfs          tmpfs      392M   1,2M  391M   1% /run
+/dev/sda1      ext4        48G   5,3G   41G  12% /
+tmpfs          tmpfs      2,0G      0  2,0G   0% /dev/shm
+tmpfs          tmpfs      5,0M   8,0K  5,0M   1% /run/lock
+tmpfs          tmpfs      392M    64K  392M   1% /run/user/112
+tmpfs          tmpfs      392M    56K  392M   1% /run/user/1000
 ```
 
 ```bash
-si@si-VirtualBox:/tmp$ df -Tih
-Filesystem     Type  Inodes IUsed IFree IUse% Mounted on
-tmpfs          tmpfs   489K   999  488K    1% /run
-/dev/sda3      ext4    3,1M  244K  2,9M    8% /
-tmpfs          tmpfs   489K     1  489K    1% /dev/shm
-tmpfs          tmpfs   489K     5  489K    1% /run/lock
-/dev/sda2      vfat       0     0     0     - /boot/efi
-tmpfs          tmpfs    98K    82   98K    1% /run/user/128
-tmpfs          tmpfs    98K    74   98K    1% /run/user/1000
+usuario@debian:~$ df -Thi
+S.ficheros     Tipo     Nodos-i NUsados NLibres NUso% Montado en
+udev           devtmpfs    482K     422    481K    1% /dev
+tmpfs          tmpfs       490K     708    489K    1% /run
+/dev/sda1      ext4        3,1M    167K    3,0M    6% /
+tmpfs          tmpfs       490K       1    490K    1% /dev/shm
+tmpfs          tmpfs       490K       4    490K    1% /run/lock
+tmpfs          tmpfs        98K      80     98K    1% /run/user/112
+tmpfs          tmpfs        98K      72     98K    1% /run/user/1000
 ```

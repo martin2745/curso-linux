@@ -5,32 +5,35 @@
 ### Tipos de particionado: MBR y GPT
 
 #### MBR (Master Boot Record)
-El esquema **MBR** es el más antiguo y se introdujo en 1983 con IBM PC DOS 2.0. Sus características principales son:  
 
-- **Límite de almacenamiento**: Soporta discos de hasta **2 TB**.  
-- **Número de particiones**: Solo permite **cuatro particiones primarias**, aunque una de ellas puede ser una **partición extendida** que permite múltiples particiones lógicas.  
-- **Ubicación del registro de arranque**: Se encuentra en el primer sector del disco (sector 0) y contiene la tabla de particiones junto con el **código de arranque**. 
-- **Compatibilidad**: Es compatible con sistemas operativos más antiguos y con el modo BIOS.  
+El esquema **MBR** es el más antiguo y se introdujo en 1983 con IBM PC DOS 2.0. Sus características principales son:
 
-#### GPT (GUID Partition Table) 
-El esquema **GPT** es más moderno y forma parte del estándar UEFI. Sus características principales son:  
+- **Límite de almacenamiento**: Soporta discos de hasta **2 TB**.
+- **Número de particiones**: Solo permite **cuatro particiones primarias**, aunque una de ellas puede ser una **partición extendida** que permite múltiples particiones lógicas.
+- **Ubicación del registro de arranque**: Se encuentra en el primer sector del disco (sector 0) y contiene la tabla de particiones junto con el **código de arranque**.
+- **Compatibilidad**: Es compatible con sistemas operativos más antiguos y con el modo BIOS.
 
-- **Límite de almacenamiento**: Puede gestionar discos de **hasta 9.4 ZB** (zettabytes).  
-- **Número de particiones**: Permite hasta **128 particiones** sin necesidad de una partición extendida.  
-- **Ubicación del registro de arranque**: No depende de un solo sector, ya que almacena copias redundantes de la tabla de particiones en distintas partes del disco, lo que lo hace más seguro ante fallos.  
-- **Compatibilidad**: Es necesario para discos de más de 2 TB y funciona con el modo **UEFI**. Algunos sistemas antiguos no pueden arrancar desde discos GPT.  
+#### GPT (GUID Partition Table)
+
+El esquema **GPT** es más moderno y forma parte del estándar UEFI. Sus características principales son:
+
+- **Límite de almacenamiento**: Puede gestionar discos de **hasta 9.4 ZB** (zettabytes).
+- **Número de particiones**: Permite hasta **128 particiones** sin necesidad de una partición extendida.
+- **Ubicación del registro de arranque**: No depende de un solo sector, ya que almacena copias redundantes de la tabla de particiones en distintas partes del disco, lo que lo hace más seguro ante fallos.
+- **Compatibilidad**: Es necesario para discos de más de 2 TB y funciona con el modo **UEFI**. Algunos sistemas antiguos no pueden arrancar desde discos GPT.
 
 En resumen:
 
-| Característica | BIOS/MBR | UEFI/GPT |
-|--------------|---------|----------|
-| Tipo de firmware | BIOS | UEFI |
-| Ubicación del cargador | MBR (sector 0) | Partición EFI |
-| Seguridad | Sin protección avanzada | Soporta Secure Boot |
-| Límite de particiones | 4 primarias (o extendida) | Hasta 128 |
-| Tamaño máximo del disco | 2 TB | 9.4 ZB |
+| Característica          | BIOS/MBR                  | UEFI/GPT            |
+| ----------------------- | ------------------------- | ------------------- |
+| Tipo de firmware        | BIOS                      | UEFI                |
+| Ubicación del cargador  | MBR (sector 0)            | Partición EFI       |
+| Seguridad               | Sin protección avanzada   | Soporta Secure Boot |
+| Límite de particiones   | 4 primarias (o extendida) | Hasta 128           |
+| Tamaño máximo del disco | 2 TB                      | 9.4 ZB              |
 
 En pocas palabras:
+
 - **MBR**: Usa el **BIOS** y una **partición activa** para arrancar, donde se carga el cargador de arranque desde el primer sector del disco.
 - **GPT**: Usa **UEFI** y una **partición EFI** para arrancar, donde se almacenan los archivos necesarios para iniciar el sistema desde una partición separada.
 
@@ -41,7 +44,7 @@ En pocas palabras:
 A continuación, vamos a realizar el particionado de un disco y vamos a proceder a su montado. Inicialmente partimos de la siguiente situación.
 
 ```bash
-root@si-VirtualBox:~# df -Th
+root@debian:~# df -Th
 S.ficheros     Tipo  Tamaño Usados  Disp Uso% Montado en
 tmpfs          tmpfs   795M   1,4M  793M   1% /run
 /dev/sda3      ext4     49G    12G   35G  26% /
@@ -55,21 +58,23 @@ tmpfs          tmpfs   795M    84K  795M   1% /run/user/128
 Es conveniente indicar que en un sistema Linux podemos tener los siguientes indicadores de particiones.
 
 Tipo de particiones para GPT ---> UEFI --> con gdisk.
-- *8300* : partición de tipo Linux (datos).
-- *8200* : partición de tipo swap.
-- *fd00* : partición de tipo RAID. 
-- *8e00* : partición de tipo LVM.
- 
+
+- _8300_ : partición de tipo Linux (datos).
+- _8200_ : partición de tipo swap.
+- _fd00_ : partición de tipo RAID.
+- _8e00_ : partición de tipo LVM.
+
 Tipo de particiones MBR --> BIOS-->fdisk.
-- *83* : partición de tipo Linux (datos).
-- *82* : partición de tipo swap. 
-- *fd* : partición de tipo RAID.
-- *8e* : partición de tipo LVM.
+
+- _83_ : partición de tipo Linux (datos).
+- _82_ : partición de tipo swap.
+- _fd_ : partición de tipo RAID.
+- _8e_ : partición de tipo LVM.
 
 ```bash
 root@debian:/tmp# fdisk -l /dev/sda
 Disco /dev/sda: 64 GiB, 68719476736 bytes, 134217728 sectores
-Modelo de disco: VBOX HARDDISK   
+Modelo de disco: VBOX HARDDISK
 Unidades: sectores de 1 * 512 = 512 bytes
 Tamaño de sector (lógico/físico): 512 bytes / 512 bytes
 Tamaño de E/S (mínimo/óptimo): 512 bytes / 512 bytes
@@ -85,8 +90,9 @@ Disposit.  Inicio Comienzo     Final  Sectores Tamaño Id Tipo
 ## lsblk
 
 Nos muestra información relevante de los dispositivos de almacenamiento.
-- *-f*: Muestra información del sistema de archivos, como el tipo (xfs, ext4), el UUID, y la etiqueta (LABEL).
-- *-p*: Muestra la ruta completa del dispositivo, como `/dev/sda1` en lugar de *sda1*.
+
+- _-f_: Muestra información del sistema de archivos, como el tipo (xfs, ext4), el UUID, y la etiqueta (LABEL).
+- _-p_: Muestra la ruta completa del dispositivo, como `/dev/sda1` en lugar de _sda1_.
 
 ```bash
 root@debian:/tmp/prueba# lsblk
@@ -99,22 +105,23 @@ sda                         8:0    0   64G  0 disk
   └─debian--12--vg-swap_1 254:1    0  980M  0 lvm  [SWAP]
 ```
 
-- *NAME*: Nombre del dispositivo.
-- *MAJ:MIN*: Número mayor y menor del dispositivo.
-- *RM*: 1 si es extraíble, 0 si no lo es.
-- *SIZE*: Tamaño del dispositivo.
-- *RO*: 1 si es de solo lectura.
-- *TYPE*: Tipo de dispositivo (disk, part, rom, lvm, etc.).
-- *MOUNTPOINT*: Punto de montaje del dispositivo.
+- _NAME_: Nombre del dispositivo.
+- _MAJ:MIN_: Número mayor y menor del dispositivo.
+- _RM_: 1 si es extraíble, 0 si no lo es.
+- _SIZE_: Tamaño del dispositivo.
+- _RO_: 1 si es de solo lectura.
+- _TYPE_: Tipo de dispositivo (disk, part, rom, lvm, etc.).
+- _MOUNTPOINT_: Punto de montaje del dispositivo.
 
-### Dispositivos `loop`  
-Un dispositivo `loop` es un disco virtual que permite montar un archivo como si fuera un dispositivo de almacenamiento real. Se usa para acceder a archivos de imagen (ISO, IMG) o paquetes Snap sin necesidad de grabarlos en un disco físico. 
+### Dispositivos `loop`
+
+Un dispositivo `loop` es un disco virtual que permite montar un archivo como si fuera un dispositivo de almacenamiento real. Se usa para acceder a archivos de imagen (ISO, IMG) o paquetes Snap sin necesidad de grabarlos en un disco físico.
 
 ```bash
 loop2    7:2    0 271,2M  1 loop /snap/firefox/4848
-``` 
-  
-### Disco principal `sda`  
+```
+
+### Disco principal `sda`
 
 ```bash
 sda      8:0    0    50G  0 disk
@@ -123,10 +130,11 @@ sda      8:0    0    50G  0 disk
 └─sda3   8:3    0  49,5G  0 part /
 ```
 
-`sda` es un disco de 50 GB con **tres particiones**:  
-- `sda1` (1 MB) → Pequeña partición reservada (uso de GRUB). Si usas BIOS antiguo, el código de GRUB suele guardarse en el MBR (Master Boot Record), que es el primer sector del disco. En modo GPT, una pequeña partición (como sda1) puede ser usada para el **gestor de arranque**. 
-- `sda2` (513 MB) → Montada en `/boot/efi` (para arranque UEFI). Esta partición contiene el **cargador de arranque** y los archivos necesarios para que UEFI inicie Linux. 
-- `sda3` (49.5 GB) → Montada en `/` (almacena el sistema operativo).  
+`sda` es un disco de 50 GB con **tres particiones**:
+
+- `sda1` (1 MB) → Pequeña partición reservada (uso de GRUB). Si usas BIOS antiguo, el código de GRUB suele guardarse en el MBR (Master Boot Record), que es el primer sector del disco. En modo GPT, una pequeña partición (como sda1) puede ser usada para el **gestor de arranque**.
+- `sda2` (513 MB) → Montada en `/boot/efi` (para arranque UEFI). Esta partición contiene el **cargador de arranque** y los archivos necesarios para que UEFI inicie Linux.
+- `sda3` (49.5 GB) → Montada en `/` (almacena el sistema operativo).
 
 _*Nota*_: Diferencia entre **gestor de arranque** y **cargador de arranque**
 
@@ -140,10 +148,11 @@ Si tienes Windows y Linux en el mismo PC, el **gestor de arranque (GRUB)** te pe
 ```bash
 sdb      8:16   0    25G  0 disk
 ```
-- `sdb` es un disco de **25 GB sin particiones ni sistema de archivos**. Para usarlo, se debe **particionar y formatear** antes de montarlo.  
+
+- `sdb` es un disco de **25 GB sin particiones ni sistema de archivos**. Para usarlo, se debe **particionar y formatear** antes de montarlo.
 
 ```bash
-root@si-VirtualBox:~# lsblk
+root@debian:~# lsblk
 NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
 loop0    7:0    0     4K  1 loop /snap/bare/5
 loop1    7:1    0  74,3M  1 loop /snap/core22/1612
@@ -184,7 +193,7 @@ Opciones de `fdisk`
 A continuación creamos una partición primaria en el disco `/dev/sdb` de 10GiB sobre un disco de 25GiB de partida.
 
 ```bash
-root@si-VirtualBox:~# fdisk /dev/sdb
+root@debian:~# fdisk /dev/sdb
 
 Welcome to fdisk (util-linux 2.37.2).
 Changes will remain in memory only, until you decide to write them.
@@ -273,13 +282,13 @@ The partition table has been altered.
 Calling ioctl() to re-read partition table.
 Syncing disks.
 
-root@si-VirtualBox:~#
+root@debian:~#
 ```
 
 Veamos ahora el resultado final.
 
 ```bash
-root@si-VirtualBox:~# fdisk -l /dev/sdb
+root@debian:~# fdisk -l /dev/sdb
 Disk /dev/sdb: 25 GiB, 26843545600 bytes, 52428800 sectors
 Disk model: VBOX HARDDISK
 Units: sectors of 1 * 512 = 512 bytes
@@ -297,7 +306,7 @@ Device     Boot    Start      End  Sectors Size Id Type
 Si quisiéramos borrar una tabla de particiones en fdisk nos bastaría con cambiar la etiqueta, por ejemplo de DOS (MBR) a GPT con la opción `g`, o a la inversa con la opción `o`. Si nos fijamos, la etiqueta de la tabla de particiones se va a modificar.
 
 ```bash
-root@si-VirtualBox:~# fdisk -l /dev/sdb
+root@debian:~# fdisk -l /dev/sdb
 Disk /dev/sdb: 25 GiB, 26843545600 bytes, 52428800 sectors
 Disk model: VBOX HARDDISK
 Units: sectors of 1 * 512 = 512 bytes
@@ -310,7 +319,7 @@ Device     Boot    Start      End  Sectors Size Id Type
 /dev/sdb1           2048 20973567 20971520  10G 83 Linux
 /dev/sdb2       20973568 52428799 31455232  15G  5 Extended
 /dev/sdb5       20975616 31461375 10485760   5G 83 Linux
-root@si-VirtualBox:~# fdisk /dev/sdb
+root@debian:~# fdisk /dev/sdb
 
 Welcome to fdisk (util-linux 2.37.2).
 Changes will remain in memory only, until you decide to write them.
@@ -337,7 +346,7 @@ Disk identifier: 9D46AE3B-2D99-F94C-8C2F-3A58DB60DC6F
 `blkid`: Permite consultar el identificador único de cada disco. Como no tienen un sistema de ficheros asignado el identificador va a tener el tamaño que se muestra a continuación.
 
 ```bash
-root@si-VirtualBox:~# blkid | grep sdb
+root@debian:~# blkid | grep sdb
 /dev/sdb5: PARTUUID="20eab2f1-05"
 /dev/sdb1: PARTUUID="20eab2f1-01"
 ```
@@ -350,7 +359,7 @@ root@si-VirtualBox:~# blkid | grep sdb
 `mkfs -t ext4 /dev/sdb5` Igual al anterior.
 
 ```bash
-root@si-VirtualBox:~# mkfs.ext4 /dev/sdb1
+root@debian:~# mkfs.ext4 /dev/sdb1
 mke2fs 1.46.5 (30-Dec-2021)
 Creating filesystem with 2621440 4k blocks and 655360 inodes
 Filesystem UUID: c5e35664-cef9-4345-afbb-82a6723b2659
@@ -362,7 +371,7 @@ Writing inode tables: done
 Creating journal (16384 blocks): done
 Writing superblocks and filesystem accounting information: done
 
-root@si-VirtualBox:~# mkfs -t ext4 /dev/sdb5
+root@debian:~# mkfs -t ext4 /dev/sdb5
 mke2fs 1.46.5 (30-Dec-2021)
 Creating filesystem with 1310720 4k blocks and 327680 inodes
 Filesystem UUID: 054a4742-ad44-4132-bfb9-ce927f9bfdc3
@@ -378,7 +387,7 @@ Writing superblocks and filesystem accounting information: done
 A continuación vamos a ver el identificador que se ha asociado a las particiones con un sistema de ficheros asignado.
 
 ```bash
-root@si-VirtualBox:~# blkid | grep sdb
+root@debian:~# blkid | grep sdb
 /dev/sdb1: UUID="c5e35664-cef9-4345-afbb-82a6723b2659" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="20eab2f1-01"
 /dev/sdb5: UUID="054a4742-ad44-4132-bfb9-ce927f9bfdc3" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="20eab2f1-05"
 ```
@@ -386,16 +395,17 @@ root@si-VirtualBox:~# blkid | grep sdb
 ## mount y umount
 
 El paso final para poder leer y escribir de particiones es montarlas en una ruta del sistema de archivos para lo cual utilizaremos el comando mount:
+
 - `mount /dev/sdb1 /media/datos1` Monta la partición 1 del disco /dev/sdb en la ruta /media/datos1.
 - `umount /media/datos1` Desmonta la partición 1 del disco /dev/sdb de donde esté montada.
 
 Vamos a montar la partición en la ruta `/media/datos1`. Una vez montada podremos crear contenido en su interior que se guardará en el dispositivo `/dev/sdb1`.
 
 ```bash
-root@si-VirtualBox:~# mkdir /media/datos1 && mount /dev/sdb1 /media/datos1
-root@si-VirtualBox:~# mount | grep /dev/sdb1
+root@debian:~# mkdir /media/datos1 && mount /dev/sdb1 /media/datos1
+root@debian:~# mount | grep /dev/sdb1
 /dev/sdb1 on /media/datos1 type ext4 (rw,relatime)
-root@si-VirtualBox:~# df -Th
+root@debian:~# df -Th
 Filesystem     Type   Size  Used Avail Use% Mounted on
 tmpfs          tmpfs  391M  1,5M  390M   1% /run
 /dev/sda3      ext4    49G   16G   30G  35% /
@@ -406,8 +416,8 @@ tmpfs          tmpfs  391M   80K  391M   1% /run/user/128
 tmpfs          tmpfs  391M   68K  391M   1% /run/user/1000
 /dev/sdb1      ext4   9,8G  8,0K  9,3G   1% /media/datos1
 
-root@si-VirtualBox:~# for i in $(seq 1 10); do echo "Fichero ${i}" > /media/datos1/fichero${i}.txt; done
-root@si-VirtualBox:~# ls /media/datos1/
+root@debian:~# for i in $(seq 1 10); do echo "Fichero ${i}" > /media/datos1/fichero${i}.txt; done
+root@debian:~# ls /media/datos1/
 fichero10.txt  fichero2.txt  fichero4.txt  fichero6.txt  fichero8.txt  fichero.txt
 fichero1.txt   fichero3.txt  fichero5.txt  fichero7.txt  fichero9.txt
 ```
@@ -417,7 +427,7 @@ fichero1.txt   fichero3.txt  fichero5.txt  fichero7.txt  fichero9.txt
 Para que el montaje de la partición `/dev/sdb1` sea persistente y no tener que volver a realizar este proceso cuando encendamos de nuevo el ordenador tenemos que añadir la configuración correspondiente en el fichero `/etc/fstab`. Tenemos que tener cuidado con las modificaciones realizadas en este fichero ya que si los datos introducidos son incorrectos podría no iniciarse el ordenador. Para ello vamos a hacer un `cp -pv /etc/fstab /etc/fstab_VIEJO` y ejecutar el comando `mount -a` para ver si tenemos algún error antes de reiniciar la máquina.
 
 ```bash
-root@si-VirtualBox:~# cp -pv /etc/fstab /etc/fstab_VIEJO
+root@debian:~# cp -pv /etc/fstab /etc/fstab_VIEJO
 '/etc/fstab' -> '/etc/fstab_VIEJO'
 ```
 
@@ -435,7 +445,7 @@ UUID=42ec4832-6a90-465b-943b-d523c45b8137
 ```
 
 ```bash
-root@si-VirtualBox:~# nano /etc/fstab
+root@debian:~# nano /etc/fstab
 ```
 
 ```bash
@@ -461,6 +471,7 @@ UUID=42ec4832-6a90-465b-943b-d523c45b8137       /media/sdb5     ext4    defaults
 El archivo **`/etc/fstab`** en Linux contiene información sobre los sistemas de archivos que deben montarse al iniciar el sistema. Cada línea en **`fstab`** describe un sistema de archivos y cómo debe ser montado. Aquí te explico los valores que puede tener:
 
 1. **file system**
+
 - Especifica el dispositivo o sistema de archivos a montar.
 - Puede ser:
 - **UUID**: Identificador único del dispositivo (por ejemplo, `UUID=887fddd5-c130-4d0e-a814-03c02bdd0050`).
@@ -468,10 +479,12 @@ El archivo **`/etc/fstab`** en Linux contiene información sobre los sistemas de
 - **Dispositivo**: Nombre del dispositivo de bloque, como `/dev/sda1` o `/dev/sdb2`.
 
 2. **mount point**
+
 - Especifica el punto de montaje, que es el directorio donde se montará el sistema de archivos.
 - Ejemplo: `/`, `/boot/efi`, `/media/datos1`.
 
 3. **type**
+
 - Especifica el tipo de sistema de archivos.
 - Algunos ejemplos:
 - **ext4**: Sistema de archivos de Linux moderno.
@@ -480,6 +493,7 @@ El archivo **`/etc/fstab`** en Linux contiene información sobre los sistemas de
 - **ntfs**: Sistema de archivos de Windows (si se monta con `ntfs-3g`).
 
 4. **options**
+
 - Especifica las opciones de montaje del sistema de archivos.
 - Algunos ejemplos:
 - **defaults**: Opciones predeterminadas para el montaje.
@@ -488,17 +502,20 @@ El archivo **`/etc/fstab`** en Linux contiene información sobre los sistemas de
 - **sw**: Indica que es una partición de intercambio (swap).
 
 5. **dump**
+
 - Especifica si el sistema de archivos debe ser respaldado por **dump** (una herramienta de respaldo para copias de seguridad).
 - **0**: No se hace respaldo.
 - **1**: Se hace respaldo.
 
 6. **pass**
+
 - Especifica el orden en que los sistemas de archivos deben ser revisados durante el arranque por **fsck** (herramienta de chequeo de sistemas de archivos).
 - **0**: No se realiza chequeo en el arranque.
 - **1**: Se realiza chequeo en la raíz (`/`).
 - **2**: Se realiza chequeo en otros sistemas de archivos después de la raíz.
 
 Resumen de lo que pueden contener los campos:
+
 1. **file system**: UUID, LABEL, /dev/sdX
 2. **mount point**: Directorios donde se monta.
 3. **type**: Tipo de sistema de archivos (ext4, vfat, swap, etc.).
@@ -511,7 +528,7 @@ _*Nota*_: Este funcionamiento era el empleado en SystemV, actualmente con System
 Si tuvieramos algún error en la configuración del `/etc/fstab` debería notificarmelo por pantalla. Como no exite ningún error reiniciamos la máquina.
 
 ```bash
-root@si-VirtualBox:~# mount -a
+root@debian:~# mount -a
 ```
 
 Despues de volver a iniciar el sistema tenemos montados las particiones `sdb1` y `sdb5`.
@@ -539,6 +556,7 @@ mount: /media/sdb5: no se puede encontrar UUID=2ec4832-6a90-465b-943b-d523c45b81
 ```
 
 Si no arranca el sistema ya que el archivo `/etc/fstab` está incorrectamente formado podemos hacer lo siguiente:
+
 1. Editamos los parametros de arranque.
 2. Modificamos `/etc/fstab` para que se produzca el arranque del sistema. Si hemos realizado el proceso como se ha indicado, tendremos el archivo inicial `/etc/fstab_VIEJO` con los datos correctos de arranque.
 
@@ -551,23 +569,23 @@ Si no arranca el sistema ya que el archivo `/etc/fstab` está incorrectamente fo
 **MBR**
 
 ```bash
-root@si-VirtualBox:~# parted -s /dev/sdb mklabel msdos
+root@debian:~# parted -s /dev/sdb mklabel msdos
 ```
 
 **GPT**
 
 ```bash
-root@si-VirtualBox:~# parted -s /dev/sdb mklabel gpt
+root@debian:~# parted -s /dev/sdb mklabel gpt
 ```
 
 2. Creamos particiones primarias, extendidas y lógicas.
 
 ```bash
-root@si-VirtualBox:~# parted -s /dev/sdb mkpart primary 0% 5G
-root@si-VirtualBox:~# parted -s /dev/sdb mkpart primary 5G 5G
-root@si-VirtualBox:~# parted -s /dev/sdb mkpart extended 10G 100%
-root@si-VirtualBox:~# parted -s /dev/sdb mkpart logical 10G 13G
-root@si-VirtualBox:~# parted -s /dev/sdb print
+root@debian:~# parted -s /dev/sdb mkpart primary 0% 5G
+root@debian:~# parted -s /dev/sdb mkpart primary 5G 5G
+root@debian:~# parted -s /dev/sdb mkpart extended 10G 100%
+root@debian:~# parted -s /dev/sdb mkpart logical 10G 13G
+root@debian:~# parted -s /dev/sdb print
 Model: ATA VBOX HARDDISK (scsi)
 Disk /dev/sdb: 26,8GB
 Sector size (logical/physical): 512B/512B
@@ -586,7 +604,7 @@ _*Nota*_: A diferencia de MBR, en GPT no hay distinción entre particiones prima
 3. Tambien puedo eliminar particiones de la siguiente forma.
 
 ```bash
-root@si-VirtualBox:~# parted -s /dev/sdb rm 1
+root@debian:~# parted -s /dev/sdb rm 1
 ```
 
 4. Proceso de montado.
@@ -632,13 +650,13 @@ La partición o espacio swap en Linux es un área del disco duro que el sistema 
 
 En sistemas con gran cantidad de memoria RAM, el uso de swap puede ser innecesario y, en algunos casos perjudicial para el rendimiento. No hay una regla estricta, pero generalmente se recomienda desactivar swap a partir de los 32/64 GB de RAM en adelante, dependiendo del caso de uso.
 
-| Cantidad de RAM     | Swap Recomendada           | Notas                                                      |
-|---------------------|---------------------------|------------------------------------------------------------|
-| 0 - 2 GB            | 2 veces la RAM            | Sistemas con poca memoria requieren swap.                  |
-| 2 - 8 GB            | Igual o 1.5 veces la RAM  | Uso moderado de swap en cargas ligeras.                    |
-| 8 - 16 GB           | Igual a la RAM            | Solo para hibernación o picos de carga.                    |
-| 16 - 32 GB          | 4 - 8 GB de swap          | Útil en servidores de aplicaciones.                        |
-| 64 GB o más         | Desactivada o 4 GB        | Swap puede ser innecesaria salvo cargas pesadas.           |
+| Cantidad de RAM | Swap Recomendada         | Notas                                            |
+| --------------- | ------------------------ | ------------------------------------------------ |
+| 0 - 2 GB        | 2 veces la RAM           | Sistemas con poca memoria requieren swap.        |
+| 2 - 8 GB        | Igual o 1.5 veces la RAM | Uso moderado de swap en cargas ligeras.          |
+| 8 - 16 GB       | Igual a la RAM           | Solo para hibernación o picos de carga.          |
+| 16 - 32 GB      | 4 - 8 GB de swap         | Útil en servidores de aplicaciones.              |
+| 64 GB o más     | Desactivada o 4 GB       | Swap puede ser innecesaria salvo cargas pesadas. |
 
 En el sistema, según la salida de los comandos:
 
@@ -649,7 +667,7 @@ En el sistema, según la salida de los comandos:
 root@usuario:/# swapon
 NAME      TYPE SIZE USED PRIO
 /swapfile file   2G   0B   -2
-root@usuario:/# ls -l swapfile 
+root@usuario:/# ls -l swapfile
 -rw------- 1 root root 2147483648 dic 10 22:25 swapfile
 ```
 
@@ -661,18 +679,25 @@ Este archivo swap (`/swapfile`) se encuentra en la raíz del sistema de archivos
 ```
 
 Si quisieramos configurar una partición como swap tendriamos que hacer lo siguiente:
+
 - Desactiva el swap actual (opcional, recomendado si hay swap activa).
+
 ```bash
 swapoff -a | swapoff /swapfile
 ```
+
 - Prepara la partición /dev/sdb1 como swap.
+
 ```bash
 mkswap /dev/sdb1
 ```
+
 - Activa la partición swap.
+
 ```bash
 swapon /dev/sdb1
 ```
+
 - A mayores tendríamos que editar el `/etc/fstab` para poder añadir la partición de swap en el arranque.
 
 Por otra parte, para ampliar una partición de swap a través de una partición de nuestro disco `/dev/sdb` con 2GB:

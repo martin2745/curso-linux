@@ -21,7 +21,7 @@
 
 ### Ficheros con aplicación a un usuario específico
 
-- **~/.profile**: Permite definir variables de entorno y scripts. Se ejecutan al iniciar la sesión de Escritorio o en una shell con login. Las variables afectan a todos los programas ejecutados desde el escritorio gráfico o desde la shell.
+- **~/.profile**: Permite definir variables de entorno y scripts. Se ejecutan al iniciar la sesión de escritorio o en una shell con login. Las variables afectan a todos los programas ejecutados desde el escritorio gráfico o desde la shell.
 - **~/.bash_profile**, **~/.bash_login**: Permiten definir variables de entorno y scripts. Se ejecutan cuando se utiliza una shell con login. Las variables definidas solo afectarán a los programas ejecutados desde bash.
 - **~/.bashrc**: Permite definir variables de entorno y scripts. Se ejecuta cuando se abre la shell sin necesidad de hacer login. Las variables definidas solo afectarán a los programas ejecutados desde bash.
 - **~/.bash_logout**: Se ejecuta al finalizar un shell de sesión.
@@ -36,10 +36,12 @@ _*Nota*_: En función de nuestra shell podemos trabajar con [.bashrc](https://ww
 Bash dispone de una serie de archivos de configuración que se ejecutan antes y después de que lo haga el intérprete de comandos. Estos archivos son scripts de bash normales, pero el sistema de ejecución es un tanto complejo, ya que algunos se ejecutan solo si estamos en una shell de sesión, mientras que otros se ejecutan en shells que no son de sesión, y algunos únicamente para ciertos usuarios.
 
 1. **Ficheros que se ejecutan en una shell sin sesión**:
+
    - **/etc/bashrc**: Archivo común a todos los usuarios, administrado por el usuario root.
    - **~/.bashrc**: Archivo específico de cada usuario, gestionado por él mismo.
 
 2. **Ficheros que se ejecutan en una shell de sesión**:
+
    - **/etc/profile**: Archivo común a todos los usuarios, solo modificable por root.
    - **~/.bash_profile**, **~/.bash_login**, **~/.profile**: Archivos específicos de cada usuario. Se ejecutan en un orden particular:
      - Primero se busca **~/.bash_profile**.
@@ -53,4 +55,3 @@ Bash dispone de una serie de archivos de configuración que se ejecutan antes y 
 ### ¿Por qué tantos archivos?
 
 La razón de esta estructura es que los archivos que contienen "bash" en su nombre son específicos de este intérprete de comandos, por lo que solo serán ejecutados por bash. En cambio, **/etc/profile** y **~/.profile** son comunes a todos los intérpretes de comandos basados en **sh**, como **ksh**, por lo que podrían ser ejecutados por otros intérpretes disponibles en el sistema. Por esta razón, no deberíamos introducir configuraciones específicas de bash en estos archivos comunes.
-

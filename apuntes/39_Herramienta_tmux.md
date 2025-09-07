@@ -1,6 +1,6 @@
 # Herramienta tmux
 
-`tmux` (Terminal Multiplexer) es una herramienta que permite administrar múltiples sesiones de terminal en una sola ventana. Es especialmente útil para sesiones remotas, ya que permite desconectar y reconectar sin perder procesos en ejecución.
+`tmux` (Terminal Multiplexer) es una herramienta que permite administrar múltiples sesiones de terminal en una sola ventana. Es útil para sesiones remotas, ya que permite desconectar y reconectar sin perder procesos en ejecución.
 
 ## Instalación de tmux
 

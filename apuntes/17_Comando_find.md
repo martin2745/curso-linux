@@ -19,21 +19,21 @@ find . -name "*.txt" | xargs -I PATTERN  cp -t PATTERN  /ruta/de/destino
 Si se necesita ejecutar un comando simple en cada archivo encontrado por `find`, `-exec` es la opción más directa. Sin embargo, si se quiere realizar manipulaciones adicionales en la lista de archivos o si la lista de archivos es muy larga, `xargs` puede ser más apropiado.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ ls
+usuario@debian:~$ ls
 fileModificado.tmp  file.tmp  file.tmp2  prueba.txt
 
-si@si-VirtualBox:/tmp/prueba$ find . -name "file*" -exec ls -l {} \;
--rw-rw-r-- 1 si si 127 abr 14 16:12 ./fileModificado.tmp
--rw-rw-r-- 1 si si 114 abr 14 15:51 ./file.tmp2
--rw-rw-r-- 1 si si 112 abr 14 16:02 ./file.tmp
+usuario@debian:~$ find . -name "file*" -exec ls -l {} \;
+-rw-rw-r-- 1 usuario usuario 127 abr 14 16:12 ./fileModificado.tmp
+-rw-rw-r-- 1 usuario usuario 114 abr 14 15:51 ./file.tmp2
+-rw-rw-r-- 1 usuario usuario 112 abr 14 16:02 ./file.tmp
 
-si@si-VirtualBox:/tmp/prueba$ find . -name "file*" | xargs -I X ls -l X;
--rw-rw-r-- 1 si si 127 abr 14 16:12 ./fileModificado.tmp
--rw-rw-r-- 1 si si 114 abr 14 15:51 ./file.tmp2
--rw-rw-r-- 1 si si 112 abr 14 16:02 ./file.tmp
+usuario@debian:~$ find . -name "file*" | xargs -I X ls -l X;
+-rw-rw-r-- 1 usuario usuario 127 abr 14 16:12 ./fileModificado.tmp
+-rw-rw-r-- 1 usuario usuario 114 abr 14 15:51 ./file.tmp2
+-rw-rw-r-- 1 usuario usuario 112 abr 14 16:02 ./file.tmp
 ```
 
-Por otra parte el uso de `xargs` está enfocado en convertir la entrada estandar en argumentos, lo cual es muy util en Linux ya que si por ejemplo quisieramos eliminar una gran cantidad de archivos como en el siguiente ejemplo:
+Por otra parte, el uso de `xargs` está enfocado en convertir la entrada estandar en argumentos, lo cual es muy util en Linux ya que si por ejemplo quisieramos eliminar una gran cantidad de archivos como en el siguiente ejemplo:
 
 ```bash
 root@debian:/tmp/prueba# ls -l
@@ -57,6 +57,7 @@ root@debian:/tmp/prueba# ls | xargs rm
 
 - Utilizado para buscar archivos por su nombre exacto (distingue entre mayúsculas y minúsculas).
 - Ejemplo: Buscar todos los archivos con extensión ".txt".
+
 ```bash
 find /ruta -name "*.txt"
 ```
@@ -65,6 +66,7 @@ find /ruta -name "*.txt"
 
 - Similar a `-name`, pero no distingue entre mayúsculas y minúsculas.
 - Ejemplo: Buscar archivos con cualquier extensión de texto, ignorando mayúsculas y minúsculas.
+
 ```bash
 find /ruta -iname "*.txt"
 ```
@@ -90,7 +92,6 @@ find . -perm -644
 ```bash
 find . -perm /644
 ```
-
 
 ```bash
 $ touch file1 file2 file3
@@ -120,6 +121,7 @@ $ find . -perm /222 #Buscar archivos donde CUALQUIERA en ugo posean permisos de 
 
 - Especifica la profundidad máxima de búsqueda en el árbol de directorios.
 - Ejemplo: Buscar archivos en el directorio actual y un nivel hacia abajo.
+
 ```bash
 find . -maxdepth 1 -type f
 ```
@@ -128,6 +130,7 @@ find . -maxdepth 1 -type f
 
 - Filtra archivos por tipo (fichero regular, directorio, enlace simbólico, etc.).
 - Ejemplo: Buscar todos los directorios en el sistema.
+
 ```bash
 find / -type d
 ```
@@ -136,6 +139,7 @@ find / -type d
 
 - Utilizado para buscar archivos pertenecientes a un usuario específico.
 - Ejemplo: Buscar todos los archivos pertenecientes al usuario "usuario1".
+
 ```bash
 find /ruta -user usuario1
 ```
@@ -149,6 +153,7 @@ find / -name "*.txt" -o -name "*.jpg"
 ```
 
 - **-a (AND):** Encuentra archivos que cumplan todas las condiciones especificadas.
+
 ```bash
 find /ruta -name "*.txt" -a -user usuario1
 ```
@@ -163,14 +168,14 @@ data -a ! -group root -exec ls -lah {} \; 2>/dev/null
 7. **atime, mtime, ctime**
 
 - -atime: busca en la fecha del último acceso (access time). Un acceso puede ser la lectura del archivo, pero también el simple hecho de listarlo de manera específica.
-- -mtime: busca en la fecha de la última modificación (modification time). Se trata de la modificación del contenido. 
+- -mtime: busca en la fecha de la última modificación (modification time). Se trata de la modificación del contenido.
 - -ctime: busca en la fecha de modificación (change time, en realidad la fecha de última modificación del número de inodo).
 
-Estos tres criterios sólo trabajan con días (periodos de 24 horas). 0 es el mismo día; 1, ayer; 2, antes de ayer, etc. El valor n colocado después del criterio corresponde, por lo tanto, a n*24 horas. Este rango no es fijo, ya que "ayer" significa entre 24 y 48 horas... 
+Estos tres criterios sólo trabajan con días (periodos de 24 horas). 0 es el mismo día; 1, ayer; 2, antes de ayer, etc. El valor n colocado después del criterio corresponde, por lo tanto, a n\*24 horas. Este rango no es fijo, ya que "ayer" significa entre 24 y 48 horas...
 
 Los signos + o - permiten precisar los términos "de más" y "de menos":
-find / -type f -mtime 1: archivos modificados ayer  (entre 24 y 48 horas). 
- 
+find / -type f -mtime 1: archivos modificados ayer (entre 24 y 48 horas).
+
 -mtime -3: archivos modificados hace menos de tres días (72 horas).
 -atime +4: archivos accedios hace más de cuatro días (más de 96 horas).
 
@@ -181,20 +186,17 @@ _*Nota*_: Para trabajar con minutos tenemos los parámetros `amin`, `-mmin` y `-
 Para el siguiente caso:
 
 ```bash
-┌──(kali㉿kali)-[/tmp]
-└─$ find /tmp -name "hola*" 2>/dev/null | xargs -I a ls -l a
--rw-rw-r-- 1 root root 25 Feb 11 11:03 /tmp/hola.txt
--rw-rw-r-- 1 root root 0 Feb 11 11:17 /tmp/hola2.txt
-
-┌──(kali㉿kali)-[/tmp]
-└─$ find /tmp -name "hola*" 2>/dev/null | xargs ls -l
+root@debian:/tmp# find /tmp -name "hola*" 2>/dev/null | xargs -I a ls -l a
 -rw-rw-r-- 1 root root 25 Feb 11 11:03 /tmp/hola.txt
 -rw-rw-r-- 1 root root  0 Feb 11 11:17 /tmp/hola2.txt
 
-┌──(kali㉿kali)-[/tmp]
-└─$ find /tmp -name "hola*" -exec ls -l {} \; 2>/dev/null
+root@debian:/tmp# find /tmp -name "hola*" 2>/dev/null | xargs ls -l
 -rw-rw-r-- 1 root root 25 Feb 11 11:03 /tmp/hola.txt
--rw-rw-r-- 1 root root 0 Feb 11 11:17 /tmp/hola2.txt
+-rw-rw-r-- 1 root root  0 Feb 11 11:17 /tmp/hola2.txt
+
+root@debian:/tmp# find /tmp -name "hola*" -exec ls -l {} \; 2>/dev/null
+-rw-rw-r-- 1 root root 25 Feb 11 11:03 /tmp/hola.txt
+-rw-rw-r-- 1 root root  0 Feb 11 11:17 /tmp/hola2.txt
 ```
 
 La diferencia entre los tres comandos radica en cómo pasan los resultados del comando `find` al comando `ls -l`:
@@ -208,7 +210,8 @@ La diferencia entre los tres comandos radica en cómo pasan los resultados del c
 3. **`find /tmp -name "hola*" -exec ls -l {} \; 2>/dev/null`**  
    Usa `-exec` de `find` para ejecutar `ls -l` sobre cada archivo que encuentra. Esto ejecuta `ls -l` de forma individual para cada archivo encontrado, similar a la opción `-I` de `xargs`, pero dentro del propio comando `find`. La diferencia principal es que se ejecuta un nuevo comando `ls -l` para cada archivo encontrado, lo cual puede ser más lento que usar `xargs` con múltiples archivos a la vez.
 
-En resumen:
+En resumen podemos decir que:
+
 - El primer y segundo comando usan `xargs` para pasar múltiples archivos a `ls -l` a la vez, pero el primero tiene un control más detallado sobre cada archivo (`-I a`).
 - El tercero usa `-exec` para ejecutar `ls -l` sobre cada archivo individualmente.
 
@@ -217,8 +220,8 @@ _*Nota*_: Es muy común el uso de `xargs` en casos como el siguiente donde no po
 ```bash
 ls *.logs | xargs rm -rf
 ```
-  
-_*Nota*_: A mayores de `-exec` existe el parámetro `-ok`, su diferencia es que este último es es idéntico a la opción -exec, pero, para cada coincidencia, se le requiere una confirmación al usuario.
+
+_*Nota 2*_: A mayores de `-exec` existe el parámetro `-ok`, su diferencia es que este último es es idéntico a la opción -exec, pero, para cada coincidencia, se le requiere una confirmación al usuario.
 
 ```bash
 find / -type f -name "*.mp3" -ok rm -rf {} \;

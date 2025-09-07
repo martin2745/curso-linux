@@ -19,7 +19,7 @@ sed 's/hola/adiós/g' archivo.txt
 Cambia los parametros `"` y `,` por ` ` y edita el fichero file.tmp.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -i -e 's#"# #g' -e 's#,# #g' file.tmp
+usuario@debian:~$ sed -i -e 's#"# #g' -e 's#,# #g' file.tmp
  user11   p11   /bin/bash   /tmp
  user2   p2   /bin/false   /home/user2
  user2   p2   /bin/false   /home/user2
@@ -28,19 +28,19 @@ si@si-VirtualBox:/tmp/prueba$ sed -i -e 's#"# #g' -e 's#,# #g' file.tmp
 - No muestra cambios por pantalla por `-n`.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -n -e 's#"# #g' -e 's#,# #g' file.tmp
-si@si-VirtualBox:/tmp/prueba$
+usuario@debian:~$ sed -n -e 's#"# #g' -e 's#,# #g' file.tmp
+usuario@debian:~$
 ```
 
 - Si no se usa `g` solo se elimina la primera ocurrencia por linea.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -e 's#user2#usuario#g' file.tmp
+usuario@debian:~$ sed -e 's#user2#usuario#g' file.tmp
 "user11","p11","/bin/bash","/tmp"
 "usuario","p2","/bin/false","/home/usuario"
 "usuario","p2","/bin/false","/home/usuario"
 
-si@si-VirtualBox:/tmp/prueba$ sed -e 's#user2#usuario#' file.tmp
+usuario@debian:~$ sed -e 's#user2#usuario#' file.tmp
 "user11","p11","/bin/bash","/tmp"
 "usuario","p2","/bin/false","/home/user2"
 "usuario","p2","/bin/false","/home/user2"
@@ -49,14 +49,14 @@ si@si-VirtualBox:/tmp/prueba$ sed -e 's#user2#usuario#' file.tmp
 - La opción `p` hace que se muestren las lineas donde se han realizado sustituciones.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -e 's/user2/usuario/gp' file.tmp
+usuario@debian:~$ sed -e 's/user2/usuario/gp' file.tmp
 "user11","p11","/bin/bash","/tmp"
 "usuario","p2","/bin/false","/home/usuario"
 "usuario","p2","/bin/false","/home/usuario"
 "usuario","p2","/bin/false","/home/usuario"
 "usuario","p2","/bin/false","/home/usuario"
 
-si@si-VirtualBox:/tmp/prueba$ sed -n -e 's/user2/usuario/gp' file.tmp
+usuario@debian:~$ sed -n -e 's/user2/usuario/gp' file.tmp
 "usuario","p2","/bin/false","/home/usuario"
 "usuario","p2","/bin/false","/home/usuario"
 ```
@@ -64,8 +64,8 @@ si@si-VirtualBox:/tmp/prueba$ sed -n -e 's/user2/usuario/gp' file.tmp
 - Elimina las lineas con sed y `d`.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ for i in $(seq 1 80); do $(touch prueba.txt && echo "${i}" >> prueba.txt); done;
-si@si-VirtualBox:/tmp/prueba$ head prueba.txt
+usuario@debian:~$ for i in $(seq 1 80); do $(touch prueba.txt && echo "${i}" >> prueba.txt); done;
+usuario@debian:~$ head prueba.txt
 1
 2
 3
@@ -79,8 +79,8 @@ si@si-VirtualBox:/tmp/prueba$ head prueba.txt
 ```
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -i '2,7d' prueba.txt
-si@si-VirtualBox:/tmp/prueba$ head prueba.txt
+usuario@debian:~$ sed -i '2,7d' prueba.txt
+usuario@debian:~$ head prueba.txt
 1
 8
 9
@@ -94,8 +94,8 @@ si@si-VirtualBox:/tmp/prueba$ head prueba.txt
 ```
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -i '1d' prueba.txt
-si@si-VirtualBox:/tmp/prueba$ head prueba.txt
+usuario@debian:~$ sed -i '1d' prueba.txt
+usuario@debian:~$ head prueba.txt
 8
 9
 10
@@ -109,8 +109,8 @@ si@si-VirtualBox:/tmp/prueba$ head prueba.txt
 ```
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -i 1'd' prueba.txt
-si@si-VirtualBox:/tmp/prueba$ head prueba.txt
+usuario@debian:~$ sed -i 1'd' prueba.txt
+usuario@debian:~$ head prueba.txt
 9
 10
 11
@@ -124,8 +124,8 @@ si@si-VirtualBox:/tmp/prueba$ head prueba.txt
 ```
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -i 1,5'd' prueba.txt
-si@si-VirtualBox:/tmp/prueba$ head prueba.txt
+usuario@debian:~$ sed -i 1,5'd' prueba.txt
+usuario@debian:~$ head prueba.txt
 14
 15
 16
@@ -141,28 +141,28 @@ si@si-VirtualBox:/tmp/prueba$ head prueba.txt
 - Rangos para sustituir.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -i 's/false/bash/g' file.tmp
-si@si-VirtualBox:/tmp/prueba$ cat file.tmp
+usuario@debian:~$ sed -i 's/false/bash/g' file.tmp
+usuario@debian:~$ cat file.tmp
 "user11","p11","/bin/bash","/tmp"
 "user2","p2","/bin/bash","/home/user2"
 "user2","p2","/bin/bash","/home/user2"
 
-si@si-VirtualBox:/tmp/prueba$ sed 2's/bash/false/g' file.tmp
-"user11","p11","/bin/bash","/tmp"
-"user2","p2","/bin/false","/home/user2"
-"user2","p2","/bin/bash","/home/user2"
-
-si@si-VirtualBox:/tmp/prueba$ sed '2s/bash/false/g' file.tmp
+usuario@debian:~$ sed 2's/bash/false/g' file.tmp
 "user11","p11","/bin/bash","/tmp"
 "user2","p2","/bin/false","/home/user2"
 "user2","p2","/bin/bash","/home/user2"
 
-si@si-VirtualBox:/tmp/prueba$ sed 1,3's/bash/false/g' file.tmp
+usuario@debian:~$ sed '2s/bash/false/g' file.tmp
+"user11","p11","/bin/bash","/tmp"
+"user2","p2","/bin/false","/home/user2"
+"user2","p2","/bin/bash","/home/user2"
+
+usuario@debian:~$ sed 1,3's/bash/false/g' file.tmp
 "user11","p11","/bin/false","/tmp"
 "user2","p2","/bin/false","/home/user2"
 "user2","p2","/bin/false","/home/user2"
 
-si@si-VirtualBox:/tmp/prueba$ sed '1,3s/bash/false/g' file.tmp
+usuario@debian:~$ sed '1,3s/bash/false/g' file.tmp
 "user11","p11","/bin/false","/tmp"
 "user2","p2","/bin/false","/home/user2"
 "user2","p2","/bin/false","/home/user2"
@@ -171,12 +171,12 @@ si@si-VirtualBox:/tmp/prueba$ sed '1,3s/bash/false/g' file.tmp
 - Guardar la modificación en otro fichero con `w`
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ sed -e "s/user/usuario/gw fileModificado.tmp" file.tmp
+usuario@debian:~$ sed -e "s/user/usuario/gw fileModificado.tmp" file.tmp
 "usuario11","p11","/bin/bash","/tmp"
 "usuario2","p2","/bin/bash","/home/usuario2"
 "usuario2","p2","/bin/bash","/home/usuario2"
 
-si@si-VirtualBox:/tmp/prueba$ cat fileModificado.tmp
+usuario@debian:~$ cat fileModificado.tmp
 "usuario11","p11","/bin/bash","/tmp"
 "usuario2","p2","/bin/bash","/home/usuario2"
 "usuario2","p2","/bin/bash","/home/usuario2"
@@ -185,7 +185,7 @@ si@si-VirtualBox:/tmp/prueba$ cat fileModificado.tmp
 - Permite el uso de expresiones regulares con la opción `-r`.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ echo 'http://www.example1.local/cig/' | sed -r 's|(http)(://)(www.example1.local/cig)|\1s\2example1.local/cig|'
+usuario@debian:~$ echo 'http://www.example1.local/cig/' | sed -r 's|(http)(://)(www.example1.local/cig)|\1s\2example1.local/cig|'
 https://example1.local/cig/
 ```
 

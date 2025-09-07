@@ -1,6 +1,6 @@
 # Comando du
 
-El comando `du` (disk usage) en sistemas Unix/Linux se utiliza para estimar y mostrar el espacio que ocupa un archivo o directorio en el sistema de archivos. 
+El comando `du` (disk usage) en sistemas Unix/Linux se utiliza para estimar y mostrar el espacio que ocupa un archivo o directorio en el sistema de archivos.
 
 **Opciones comunes**:
 
@@ -10,23 +10,17 @@ El comando `du` (disk usage) en sistemas Unix/Linux se utiliza para estimar y mo
 **Ejemplos de uso**:
 
 - `du -h fichero`: Muestra el tamaño de un archivo en formato legible para humanos.
-- `du -hs /directorio`: Muestra el tamaño total de un directorio (de forma resumida) en formato legible para humanos.
+- `du -sh /directorio`: Muestra el tamaño total de un directorio (de forma resumida) en formato legible para humanos.
 
 **Resumen de las opciones utilizadas**:
 
-| Opción     | Descripción                                                                 |
-|------------|-----------------------------------------------------------------------------|
-| `-h`       | Formato legible para humanos (KB, MB, GB)                                   |
-| `-s`       | Muestra solo el total ocupado por el archivo/directorio especificado        |
+| Opción | Descripción                                                  |
+| ------ | ------------------------------------------------------------ |
+| `-s`   | Muestra solo el total ocupado por el directorio especificado |
+| `-h`   | Formato legible para humanos (KB, MB, GB)                    |
 
 ```bash
-root@debian:~# du /tmp
-4       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8/tmp
-8       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8
-4       /tmp/.ICE-unix
-4       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-systemd-logind.service-Bvohlw/tmp
-8       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-systemd-logind.service-Bvohlw
-root@debian:~# du /tmp
+usuario@debian:~# du /tmp
 4       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8/tmp
 8       /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8
 4       /tmp/.ICE-unix
@@ -41,7 +35,7 @@ root@debian:~# du /tmp
 ```
 
 ```bash
-root@debian:~# du -h /tmp
+usuario@debian:~# du -h /tmp
 4,0K    /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8/tmp
 8,0K    /tmp/systemd-private-61a29f4aa9e843908366c93c8306538e-apache2.service-cvrOY8
 4,0K    /tmp/.ICE-unix
@@ -56,6 +50,6 @@ root@debian:~# du -h /tmp
 ```
 
 ```bash
-root@debian:~# du -hs /tmp
+usuario@debian:~# du -sh /tmp
 48K     /tmp
 ```

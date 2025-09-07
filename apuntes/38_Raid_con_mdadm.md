@@ -18,7 +18,7 @@ Para hacer el montaje de un RAID 5 necesitamos 3 discos de 10G cada uno para ten
 Una vez arrancada la máquina comprobamos que existen los discos.
 
 ```bash
-root@si-VirtualBox:~# lsblk -e7
+root@debian:~# lsblk -e7
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sda      8:0    0   50G  0 disk
 ├─sda1   8:1    0    1M  0 part
@@ -32,15 +32,15 @@ sdd      8:48   0   10G  0 disk
 _**Nota**_: Previamente, aunque en esta práctica no es necesario ya que los discos no se han utilizado anteriormente, es recomendable realizar un borrado del sector cero.
 
 ```bash
-root@si-VirtualBox:~# mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd
+root@debian:~# mdadm --zero-superblock /dev/sdb /dev/sdc /dev/sdd
 ```
 
 1. Procedemos a crear las particiones en formato **GPT** de la siguiente forma. A continuación se realiza el proceso para `/dev/sdb`, esto tendrá que realizarse con `/dev/sdc` y `/dev/sdd`.
 
 ```bash
-root@si-VirtualBox:~# parted -s /dev/sdb mklabel gpt
-root@si-VirtualBox:~# parted -s /dev/sdb mkpart primary 0% 100%
-root@si-VirtualBox:~# parted -s /dev/sdb print
+root@debian:~# parted -s /dev/sdb mklabel gpt
+root@debian:~# parted -s /dev/sdb mkpart primary 0% 100%
+root@debian:~# parted -s /dev/sdb print
 Model: ATA VBOX HARDDISK (scsi)
 Disk /dev/sdb: 10,7GB
 Sector size (logical/physical): 512B/512B
@@ -54,7 +54,7 @@ Number  Start   End     Size    File system  Name     Flags
 Como resultado tendremos lo siguiente.
 
 ```bash
-root@si-VirtualBox:~# lsblk -e7
+root@debian:~# lsblk -e7
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sda      8:0    0   50G  0 disk
 ├─sda1   8:1    0    1M  0 part
@@ -75,16 +75,16 @@ _*Nota*_: Tan correcto es realizarlo haciendo uso del comando `parted` como de l
 2. Llegados a este punto tendremos que instalar la aplicación **mdadm** que permitirá gestionar nuestros RAID.
 
 ```bash
-root@si-VirtualBox:~# apt update
+root@debian:~# apt update
 ...
-root@si-VirtualBox:~# apt install -y mdadm
+root@debian:~# apt install -y mdadm
 ...
 ```
 
 A continuación vamos a proceder a crear nuestro RAID 5 con el siguiente comando que procedemos a explicar.
 
 ```bash
-root@si-VirtualBox:~# mdadm -C /dev/md0 -l raid5 -n 3 /dev/sdb1 /dev/sdc1 /dev/sdd1
+root@debian:~# mdadm -C /dev/md0 -l raid5 -n 3 /dev/sdb1 /dev/sdc1 /dev/sdd1
 mdadm: Defaulting to version 1.2 metadata
 mdadm: array /dev/md0 started.
 ```
@@ -101,11 +101,11 @@ mdadm: array /dev/md0 started.
 3. Es interesante tener otra terminal con la cual poder ver cada segundo la información en detalle de `/dev/md0`.
 
 ```bash
-root@si-VirtualBox:~# watch -n 1 mdadm --detail /dev/md0
+root@debian:~# watch -n 1 mdadm --detail /dev/md0
 ```
 
 ```bash
-Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Thu May 16 12:45:08 2024
+Every 1,0s: mdadm --detail /dev/md0                            debian: Thu May 16 12:45:08 2024
 
 /dev/md0:
            Version : 1.2
@@ -129,7 +129,7 @@ Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Th
 
 Consistency Policy : resync
 
-              Name : si-VirtualBox:0  (local to host si-VirtualBox)
+              Name : debian:0  (local to host debian)
               UUID : 56175065:02460b89:83ee4102:738deb4b
             Events : 18
 
@@ -146,14 +146,14 @@ El comando `watch` nos permite ejecutar en bucle otro comando y le indicamos que
 El primer comando añadirá la información del RAID al fichero `/etc/mdadm/mdadm.conf` para hacer persistente la ruta `/dev/md0`.
 
 ```bash
-root@si-VirtualBox:~# mdadm --detail --scan | grep md0 | tee -a /etc/mdadm/mdadm.conf
-ARRAY /dev/md0 metadata=1.2 name=si-VirtualBox:0 UUID=56175065:02460b89:83ee4102:738deb4b
+root@debian:~# mdadm --detail --scan | grep md0 | tee -a /etc/mdadm/mdadm.conf
+ARRAY /dev/md0 metadata=1.2 name=debian:0 UUID=56175065:02460b89:83ee4102:738deb4b
 ```
 
 El siguiente comando actualiza el arranque para que mdadm se adelante al Sistema Operativo a la hora de inicializar las particiones. La salida del comando se guarda en la ruta `/boot`. El siguiente comando incluye esta configuración de `/dev/md0` en el initramfs, asegurando que el RAID sea detectado correctamente en el próximo reinicio.
 
 ```bash
-root@si-VirtualBox:~# update-initramfs -u
+root@debian:~# update-initramfs -u
 update-initramfs: Generating /boot/initrd.img-6.5.0-35-generic
 ```
 
@@ -166,7 +166,7 @@ _*Nota*_: Initramfs es el encargado de:
 En este punto todas nuestras particiones pertenecen al volumen lógico **md0**.
 
 ```bash
-root@si-VirtualBox:~# lsblk -e7
+root@debian:~# lsblk -e7
 NAME    MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
 sda       8:0    0   50G  0 disk
 ├─sda1    8:1    0    1M  0 part
@@ -188,7 +188,7 @@ sr0      11:0    1 1024M  0 rom
 5. Para poder almacenar datos en nuestro RAID tendremos que darle un sistema de ficheros a las particiones que lo componen.
 
 ```bash
-root@si-VirtualBox:~# mkfs.ext4 /dev/md0
+root@debian:~# mkfs.ext4 /dev/md0
 mke2fs 1.46.5 (30-Dec-2021)
 Creating filesystem with 5237248 4k blocks and 1310720 inodes
 Filesystem UUID: ed1d30dc-5803-4ab5-a4f5-1d72840c9108
@@ -205,9 +205,9 @@ Writing superblocks and filesystem accounting information: done
 6. A continuación será necesario montar nuestro RAID en el sistema. Nuestro RAID se va a montar en la ruta `/mnt/RAID5`.
 
 ```bash
-root@si-VirtualBox:~# mkdir /mnt/RAID5
-root@si-VirtualBox:~# mount /dev/md0 /mnt/RAID5/
-root@si-VirtualBox:~# lsblk -e7
+root@debian:~# mkdir /mnt/RAID5
+root@debian:~# mount /dev/md0 /mnt/RAID5/
+root@debian:~# lsblk -e7
 NAME    MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
 sda       8:0    0   50G  0 disk
 ├─sda1    8:1    0    1M  0 part
@@ -229,20 +229,20 @@ sr0      11:0    1 1024M  0 rom
 7. Para que el montaje del RAID se realice en cada arranque de la máquina tenemos que editar el fichero `/etc/fstab` del siguiente modo.
 
 ```bash
-root@si-VirtualBox:~# cp -pv /etc/fstab /etc/fstab_VIEJO
+root@debian:~# cp -pv /etc/fstab /etc/fstab_VIEJO
 '/etc/fstab' -> '/etc/fstab_VIEJO'
-root@si-VirtualBox:~# echo "/dev/md0 /mnt/RAID5 ext4 defaults,nofail,discard 0 0" | tee -a /etc/fstab
-root@si-VirtualBox:~# mount -a
+root@debian:~# echo "/dev/md0 /mnt/RAID5 ext4 defaults,nofail,discard 0 0" | tee -a /etc/fstab
+root@debian:~# mount -a
 ```
 
 8. En este punto vamos a probar nuestro RAID creando información en su interior.
 
 ```bash
-root@si-VirtualBox:~# mkdir /mnt/RAID5/prueba && for i in $(seq 1 100); do echo "Fichero ${i}" > /mnt/RAID5/prueba/fichero${i}.txt;done
+root@debian:~# mkdir /mnt/RAID5/prueba && for i in $(seq 1 100); do echo "Fichero ${i}" > /mnt/RAID5/prueba/fichero${i}.txt;done
 ```
 
 ```bash
-root@si-VirtualBox:~# ls /mnt/RAID5/prueba/
+root@debian:~# ls /mnt/RAID5/prueba/
 fichero100.txt  fichero25.txt  fichero40.txt  fichero56.txt  fichero71.txt  fichero87.txt
 ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ...
 fichero10.txt   fichero26.txt  fichero41.txt  fichero57.txt  fichero72.txt  fichero88.txt
@@ -251,13 +251,13 @@ fichero10.txt   fichero26.txt  fichero41.txt  fichero57.txt  fichero72.txt  fich
 9. Ya que RAID5 soporta la perdida de un disco vamos a proceder a marcar como fallo la partición `/dev/sdd1`. Esto hará que el RAID pase a degradado pero vamos a poder trabajar sin problemas ya que RAID5 soporta la perdida de un disco.
 
 ```bash
-root@si-VirtualBox:~#
-root@si-VirtualBox:~# mdadm --manage /dev/md0 --fail /dev/sdd1
+root@debian:~#
+root@debian:~# mdadm --manage /dev/md0 --fail /dev/sdd1
 mdadm: set /dev/sdd1 faulty in /dev/md0
 ```
 
 ```bash
-Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Thu May 16 13:25:42 2024
+Every 1,0s: mdadm --detail /dev/md0                            debian: Thu May 16 13:25:42 2024
 
 /dev/md0:
            Version : 1.2
@@ -281,7 +281,7 @@ Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Th
 
 Consistency Policy : resync
 
-              Name : si-VirtualBox:0  (local to host si-VirtualBox)
+              Name : debian:0  (local to host debian)
               UUID : 56175065:02460b89:83ee4102:738deb4b
             Events : 20
 
@@ -294,7 +294,7 @@ Consistency Policy : resync
 ```
 
 ```bash
-root@si-VirtualBox:~# ls /mnt/RAID5/prueba/
+root@debian:~# ls /mnt/RAID5/prueba/
 fichero100.txt  fichero25.txt  fichero40.txt  fichero56.txt  fichero71.txt  fichero87.txt
 ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ...
 fichero10.txt   fichero26.txt  fichero41.txt  fichero57.txt  fichero72.txt  fichero88.txt
@@ -303,12 +303,12 @@ fichero10.txt   fichero26.txt  fichero41.txt  fichero57.txt  fichero72.txt  fich
 10. A continuación vamos a proceder a eliminar el disco y añadir otro nuevo en sustitución de este que será `/dev/sde`.
 
 ```bash
-root@si-VirtualBox:~# mdadm --manage /dev/md0 --remove /dev/sdd1
+root@debian:~# mdadm --manage /dev/md0 --remove /dev/sdd1
 mdadm: hot removed /dev/sdd1 from /dev/md0
 ```
 
 ```bash
-Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Thu May 16 13:37:31 2024
+Every 1,0s: mdadm --detail /dev/md0                            debian: Thu May 16 13:37:31 2024
 
 /dev/md0:
            Version : 1.2
@@ -332,7 +332,7 @@ Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Th
 
 Consistency Policy : resync
 
-              Name : si-VirtualBox:0  (local to host si-VirtualBox)
+              Name : debian:0  (local to host debian)
               UUID : 56175065:02460b89:83ee4102:738deb4b
             Events : 21
 
@@ -345,25 +345,25 @@ Consistency Policy : resync
 11. Tenemos crear una partición en `/dev/sde` de 10G y añadir el nuevo disco al RAID. En el siguiente caso vamos a usar un disco de 20G por lo que tenemos que hacer una partición que ocupe la mitad del disco.
 
 ```bash
-root@si-VirtualBox:~# parted -s /dev/sde mklabel gpt
-root@si-VirtualBox:~# parted -s /dev/sde mkpart primary 0% 50%
+root@debian:~# parted -s /dev/sde mklabel gpt
+root@debian:~# parted -s /dev/sde mkpart primary 0% 50%
 ```
 
 ```bash
-root@si-VirtualBox:~# lsblk -e7
+root@debian:~# lsblk -e7
 ...
 sde       8:64   0   20G  0 disk
 └─sde1    8:65   0   10G  0 part
 ```
 
 ```bash
-root@si-VirtualBox:~#
-root@si-VirtualBox:~# mdadm --manage /dev/md0 --add /dev/sde1
+root@debian:~#
+root@debian:~# mdadm --manage /dev/md0 --add /dev/sde1
 mdadm: added /dev/sde1
 ```
 
 ```bash
-Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Thu May 16 13:46:37 2024
+Every 1,0s: mdadm --detail /dev/md0                            debian: Thu May 16 13:46:37 2024
 
 /dev/md0:
            Version : 1.2
@@ -389,7 +389,7 @@ Consistency Policy : resync
 
     Rebuild Status : 4% complete
 
-              Name : si-VirtualBox:0  (local to host si-VirtualBox)
+              Name : debian:0  (local to host debian)
               UUID : 56175065:02460b89:83ee4102:738deb4b
             Events : 23
 
@@ -402,23 +402,23 @@ Consistency Policy : resync
 12. Por último, mdadm permite tener un pool de discos que puedan entrar en funcionamento tan pronto como uno de los discos en funcionamiento fallen. Para ello añadiremos otro disco diferente y ejecutaremos los siguientes comandos.
 
 ```bash
-root@si-VirtualBox:~# lsblk -e7
+root@debian:~# lsblk -e7
 ...
 sdf       8:80   0   10G  0 disk
 ...
 ```
 
 ```bash
-root@si-VirtualBox:~# parted -s /dev/sdf mklabel gpt
-root@si-VirtualBox:~# parted -s /dev/sdf mkpart primary 0% 100%
-root@si-VirtualBox:~# mdadm --manage /dev/md0 --add /dev/sdf1
+root@debian:~# parted -s /dev/sdf mklabel gpt
+root@debian:~# parted -s /dev/sdf mkpart primary 0% 100%
+root@debian:~# mdadm --manage /dev/md0 --add /dev/sdf1
 mdadm: added /dev/sdf1
 ```
 
 Vemos que en este punto tenemos un disco en espera en el área de recuperación que entrará en funcionamiento si uno de los discos en uso falla.
 
 ```bash
-Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Thu May 16 13:53:48 2024
+Every 1,0s: mdadm --detail /dev/md0                            debian: Thu May 16 13:53:48 2024
 /dev/md0:s: mdadm --detail /dev/md0
            Version : 1.2
      Creation Time : Thu May 16 12:40:41 2024
@@ -441,7 +441,7 @@ Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Th
 
 Consistency Policy : resync
 
-              Name : si-VirtualBox:0  (local to host si-VirtualBox)
+              Name : debian:0  (local to host debian)
               UUID : 56175065:02460b89:83ee4102:738deb4b
             Events : 41
 
@@ -456,12 +456,12 @@ Consistency Policy : resync
 Vamos a probocar el fallo de un disco y veremos como /dev/sdf1 va a entrar en funcionamiento y el RAID sigue en modo **clean**..
 
 ```bash
-root@si-VirtualBox:~# mdadm --manage /dev/md0 --fail /dev/sdb1
+root@debian:~# mdadm --manage /dev/md0 --fail /dev/sdb1
 mdadm: set /dev/sdb1 faulty in /dev/md0
 ```
 
 ```bash
-Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Thu May 16 13:58:31 2024
+Every 1,0s: mdadm --detail /dev/md0                            debian: Thu May 16 13:58:31 2024
 /dev/md0:s: mdadm --detail /dev/md0
            Version : 1.2
      Creation Time : Thu May 16 12:40:41 2024
@@ -484,7 +484,7 @@ Every 1,0s: mdadm --detail /dev/md0                            si-VirtualBox: Th
 
 Consistency Policy : resync
 
-              Name : si-VirtualBox:0  (local to host si-VirtualBox)
+              Name : debian:0  (local to host debian)
               UUID : 56175065:02460b89:83ee4102:738deb4b
             Events : 60
 
