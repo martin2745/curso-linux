@@ -7,28 +7,28 @@ El comando `tr` en Linux es una utilidad de línea de comandos utilizada para tr
 1. **Traducción de caracteres**: `tr` puede traducir un conjunto de caracteres a otro. Por ejemplo, puede convertir letras minúsculas en mayúsculas o viceversa.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ echo "Vamos a cambiar las a minusculas por mayusculas" | tr 'a' 'A'
+usuario@debian:/tmp/prueba$  echo "Vamos a cambiar las a minusculas por mayusculas" | tr 'a' 'A'
 VAmos A cAmbiAr lAs A minusculAs por mAyusculAs
 ```
 
 2. **Eliminación de caracteres**: Usando la opción `-d`, `tr` puede eliminar caracteres específicos de la entrada.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ echo "Vamos a eliminar las letras a" | tr -d 'a'
+usuario@debian:/tmp/prueba$  echo "Vamos a eliminar las letras a" | tr -d 'a'
 Vmos  eliminr ls letrs
 ```
 
 3. **Compresión de caracteres repetidos**: Con la opción `-s`, `tr` puede comprimir secuencias repetidas de caracteres en uno solo.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ echo "A     A   A   B" | tr -s ' '
+usuario@debian:/tmp/prueba$  echo "A     A   A   B" | tr -s ' '
 A A A B
 ```
 
 4. **Uso de clases de caracteres**: `tr` permite el uso de clases de caracteres predefinidas como `[:upper:]` para letras mayúsculas, `[:lower:]` para letras minúsculas, `[:digit:]` para dígitos, etc.
 
 ```bash
-si@si-VirtualBox:/tmp/prueba$ echo "Vamos a cambiar a mayusculas" | tr '[[:lower:]]' '[[:upper:]]'
+usuario@debian:/tmp/prueba$  echo "Vamos a cambiar a mayusculas" | tr '[[:lower:]]' '[[:upper:]]'
 VAMOS A CAMBIAR A MAYUSCULAS
 ```
 

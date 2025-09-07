@@ -68,7 +68,7 @@ _*Nota: Tanto la extensión `tar.gz` como `tgz` son equivalentes.*_
 2. Visualizamos el contenido.
 
 ```bash
-root@debian:/tmp# tar tvfz prueba.tar.gz 
+root@debian:/tmp# tar tvfz prueba.tar.gz
 drwxr-xr-x root/root         0 2025-04-28 17:08 prueba/
 -rw-r--r-- root/root        10 2025-04-28 17:08 prueba/archivo2.txt
 -rw-r--r-- root/root        10 2025-04-28 17:08 prueba/archivo5.txt
@@ -82,16 +82,16 @@ drwxr-xr-x root/root         0 2025-04-28 17:08 prueba/
 -rw-r--r-- root/root        10 2025-04-28 17:08 prueba/archivo9.txt
 ```
 
-Eliminamos el directorio prueba.
+3. Eliminamos el directorio prueba.
 
 ```bash
 root@debian:/tmp# rm -r prueba
 ```
 
-3. Extraemos el contenido.
+4. Extraemos el contenido.
 
 ```bash
-root@debian:/tmp# tar xvfz prueba.tar.gz 
+root@debian:/tmp# tar xvfz prueba.tar.gz
 prueba/
 prueba/archivo2.txt
 prueba/archivo5.txt
@@ -137,10 +137,11 @@ Eliminamos el archivo `prueba.tar.gz` ya que no nos hace falta.
 
 ```bash
 root@debian:/tmp# rm -r /root/prueba/
-root@debian:/tmp# rm prueba.tar.gz 
+root@debian:/tmp# rm prueba.tar.gz
 ```
 
-1. Comprimirmos el directorio *prueba* en *prueba.tar.gz2*.
+1. Comprimirmos el directorio _prueba_ en _prueba.tar.gz2_.
+
 ```bash
 root@debian:/tmp# tar cvfj prueba.tar.bz2 prueba/
 prueba/
@@ -157,8 +158,9 @@ prueba/archivo9.txt
 ```
 
 2. Vemos el contenido del fichero empaquetado en extensión **bz2**.
+
 ```bash
-root@debian:/tmp# tar tvfj prueba.tar.bz2 
+root@debian:/tmp# tar tvfj prueba.tar.bz2
 drwxr-xr-x root/root         0 2025-04-28 17:08 prueba/
 -rw-r--r-- root/root        10 2025-04-28 17:08 prueba/archivo2.txt
 -rw-r--r-- root/root        10 2025-04-28 17:08 prueba/archivo5.txt
@@ -173,8 +175,9 @@ drwxr-xr-x root/root         0 2025-04-28 17:08 prueba/
 ```
 
 3. Descomprimimos su contenido.
+
 ```bash
-root@debian:/tmp# tar xvfj prueba.tar.bz2 
+root@debian:/tmp# tar xvfj prueba.tar.bz2
 prueba/
 prueba/archivo2.txt
 prueba/archivo5.txt
@@ -194,10 +197,11 @@ Eliminamos el archivo `prueba.tar.xz` ya que no nos hace falta.
 
 ```bash
 root@debian:/tmp# rm -r /root/prueba/
-root@debian:/tmp# rm prueba.tar.xz 
+root@debian:/tmp# rm prueba.tar.xz
 ```
 
-1. Comprimirmos el directorio *prueba* en *prueba.tar.xz*.
+1. Comprimirmos el directorio _prueba_ en _prueba.tar.xz_.
+
 ```bash
 root@debian:/tmp# tar cvfj prueba.tar.xz prueba/
 prueba/
@@ -214,8 +218,9 @@ prueba/archivo9.txt
 ```
 
 2. Vemos el contenido del fichero empaquetado en extensión **xz**.
+
 ```bash
-root@debian:/tmp# tar tvfj prueba.tar.xz 
+root@debian:/tmp# tar tvfj prueba.tar.xz
 drwxr-xr-x root/root         0 2025-04-28 17:08 prueba/
 -rw-r--r-- root/root        10 2025-04-28 17:08 prueba/archivo2.txt
 -rw-r--r-- root/root        10 2025-04-28 17:08 prueba/archivo5.txt
@@ -230,8 +235,9 @@ drwxr-xr-x root/root         0 2025-04-28 17:08 prueba/
 ```
 
 3. Descomprimimos su contenido.
+
 ```bash
-root@debian:/tmp# tar xvfj prueba.tar.xz 
+root@debian:/tmp# tar xvfj prueba.tar.xz
 prueba/
 prueba/archivo2.txt
 prueba/archivo5.txt
@@ -247,17 +253,17 @@ prueba/archivo9.txt
 
 ## Otras cuestiones y comandos de compresión
 
-| Comando | Compresor | Finalidad |
-| ------- | --------- | --------- |
-| zcat    | gzip      | Muestra el contenido de un fichero de texto comprimido .gz. |
-| zless   | gzip      | Pagina el contenido de un fichero de texto comprimido .gz. |
+| Comando | Compresor | Finalidad                                                    |
+| ------- | --------- | ------------------------------------------------------------ |
+| zcat    | gzip      | Muestra el contenido de un fichero de texto comprimido .gz.  |
+| zless   | gzip      | Pagina el contenido de un fichero de texto comprimido .gz.   |
 | bzcat   | bzip2     | Muestra el contenido de un fichero de texto comprimido .bz2. |
-| bzless  | bzip2     | Pagina el contenido de un fichero de texto comprimido .bz2. |
-| xzcat   | xz        | Muestra el contenido de un fichero de texto comprimido .xz. |
-| xzless  | xz        | Pagina el contenido de un fichero de texto comprimido .xz. |
+| bzless  | bzip2     | Pagina el contenido de un fichero de texto comprimido .bz2.  |
+| xzcat   | xz        | Muestra el contenido de un fichero de texto comprimido .xz.  |
+| xzless  | xz        | Pagina el contenido de un fichero de texto comprimido .xz.   |
 
 ```bash
-root@debian:/tmp# zcat prueba.tar.gz 
+root@debian:/tmp# zcat prueba.tar.gz
 prueba/0000755000000000000000000000000015004102071011020 5ustar  rootrootprueba/arch9.txt0000644000000000000000000000002115004102071012560 0ustar  rootrootSoy el fichero 9
 prueba/arch7.txt0000644000000000000000000000002115004102071012556 0ustar  rootrootSoy el fichero 7
 prueba/arch8.txt0000644000000000000000000000002115004102071012557 0ustar  rootrootSoy el fichero 8
@@ -277,7 +283,7 @@ El comando zip permite comprimir y descomprimir archivos con extensión `.zip`. 
 ```bash
 root@debian:/tmp# zip -r prueba.zip prueba
   adding: prueba/ (stored 0%)
-root@debian:/tmp# file prueba.zip 
+root@debian:/tmp# file prueba.zip
 prueba.zip: Zip archive data, at least v1.0 to extract, compression method=store
 ```
 
@@ -285,41 +291,41 @@ Para el proceso de descomprimir zip en linux lo realizamos de la siguiente forma
 
 ```bash
 root@debian:/tmp# rm -r prueba
-root@debian:/tmp# unzip prueba.zip 
+root@debian:/tmp# unzip prueba.zip
 Archive:  prueba.zip
    creating: prueba/
- extracting: prueba/arch9.txt        
- extracting: prueba/arch7.txt        
- extracting: prueba/arch8.txt        
- extracting: prueba/arch5.txt        
- extracting: prueba/arch2.txt        
- extracting: prueba/arch6.txt        
- extracting: prueba/arch1.txt        
- extracting: prueba/arch4.txt        
- extracting: prueba/arch3.txt        
- extracting: prueba/arch10.txt       
+ extracting: prueba/arch9.txt
+ extracting: prueba/arch7.txt
+ extracting: prueba/arch8.txt
+ extracting: prueba/arch5.txt
+ extracting: prueba/arch2.txt
+ extracting: prueba/arch6.txt
+ extracting: prueba/arch1.txt
+ extracting: prueba/arch4.txt
+ extracting: prueba/arch3.txt
+ extracting: prueba/arch10.txt
 root@debian:/tmp# ls prueba
 arch10.txt  arch1.txt  arch2.txt  arch3.txt  arch4.txt  arch5.txt  arch6.txt  arch7.txt  arch8.txt  arch9.txt
 ```
 
-_*Nota*_: Si queremos indicar la ruta de destino con *unzip* tenemos el parámetro *-d* para indicar el directorio de destino.
+_*Nota*_: Si queremos indicar la ruta de destino con _unzip_ tenemos el parámetro _-d_ para indicar el directorio de destino.
 
 ```bash
-root@debian:/tmp# unzip -d prueba.zip /root 
+root@debian:/tmp# unzip -d prueba.zip /root
 unzip:  cannot find or open /root, /root.zip or /root.ZIP.
-root@debian:/tmp# unzip -d /root prueba.zip 
+root@debian:/tmp# unzip -d /root prueba.zip
 Archive:  prueba.zip
    creating: /root/prueba/
- extracting: /root/prueba/arch9.txt  
- extracting: /root/prueba/arch7.txt  
- extracting: /root/prueba/arch8.txt  
- extracting: /root/prueba/arch5.txt  
- extracting: /root/prueba/arch2.txt  
- extracting: /root/prueba/arch6.txt  
- extracting: /root/prueba/arch1.txt  
- extracting: /root/prueba/arch4.txt  
- extracting: /root/prueba/arch3.txt  
- extracting: /root/prueba/arch10.txt  
+ extracting: /root/prueba/arch9.txt
+ extracting: /root/prueba/arch7.txt
+ extracting: /root/prueba/arch8.txt
+ extracting: /root/prueba/arch5.txt
+ extracting: /root/prueba/arch2.txt
+ extracting: /root/prueba/arch6.txt
+ extracting: /root/prueba/arch1.txt
+ extracting: /root/prueba/arch4.txt
+ extracting: /root/prueba/arch3.txt
+ extracting: /root/prueba/arch10.txt
 root@debian:/tmp# ls /root
 prueba
 root@debian:/tmp# ls /root/prueba/
@@ -329,11 +335,13 @@ arch10.txt  arch1.txt  arch2.txt  arch3.txt  arch4.txt  arch5.txt  arch6.txt  ar
 # Comando rar
 
 Para comprimir .rar, debemos utilizar
+
 ```bash
 rar -a archivo.rar /carpeta/archivos
 ```
 
 Para descomprimir .rar, debemos utilizar:
+
 ```bash
 rar -x archivo.rar
 ```

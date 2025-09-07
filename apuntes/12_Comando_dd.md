@@ -1,28 +1,28 @@
 # Comando dd
 
-El comando `dd` se utiliza principalmente para copiar y convertir archivos de datos, con opciones muy flexibles para manejar bloques de datos. El comando `dd` (device to device) tiene como misión la copia física, bloque por bloque, de un archivo periférico hacia un archivo periférico. Al principio se utilizaba para la lectura y escritura en cinta magnética, pero se puede utilizar también con cualquier archivo.
+El comando `dd` se utiliza principalmente para copiar y convertir archivos de datos, con opciones muy flexibles para manejar bloques de datos. El comando `dd` (device to device) tiene como misión la copia física, bloque por bloque, de un archivo periférico hacia un archivo periférico. Al principio se utilizaba para la lectura y escritura en cinta magnética, pero se puede utilizar también con cualquier archivo. `dd` viene de data duplicator pero, humorísticamente, también se le conoce como disk destroyer o data destroyer por ser una herramienta muy poderosa.
 
 - **Uso básico**: El formato básico del comando `dd` es:
 
-  ```bash
-  dd if=archivo_de_entrada of=archivo_de_salida
-  ```
+```bash
+dd if=archivo_de_entrada of=archivo_de_salida
+```
 
-  Esto copia el contenido del archivo de entrada (`if` significa "input file") al archivo de salida (`of` significa "output file"). Por ejemplo:
+Esto copia el contenido del archivo de entrada (`if` significa "input file") al archivo de salida (`of` significa "output file"). Por ejemplo:
 
-  ```bash
-  dd if=/dev/sda of=copia_de_seguridad.img
-  ```
+```bash
+dd if=/dev/sda of=copia_de_seguridad.img
+```
 
-  Esto copiaría todo el contenido del disco `/dev/sda` en el archivo `copia_de_seguridad.img`.
+Esto copiaría todo el contenido del disco `/dev/sda` en el archivo `copia_de_seguridad.img`.
 
 - **Parámetros adicionales**: `dd` puede aceptar una serie de parámetros para personalizar su comportamiento, como el tamaño del bloque, el desplazamiento, etc. Por ejemplo:
 
-  ```bash
-  dd if=archivo_de_entrada of=archivo_de_salida bs=tamaño_del_bloque count=número_de_bloques
-  ```
+```bash
+dd if=archivo_de_entrada of=archivo_de_salida bs=tamaño_del_bloque count=número_de_bloques
+```
 
-  Aquí, `bs` es el tamaño del bloque (block size) y `count` es el número de bloques. Esto puede ser útil cuando se quiere ajustar el rendimiento de la copia o la conversión.
+Aquí, `bs` es el tamaño del bloque (block size) y `count` es el número de bloques. Esto puede ser útil cuando se quiere ajustar el rendimiento de la copia o la conversión.
 
 Un comando peligroso en un sistema MBR es ejecutar el comando:
 
@@ -30,7 +30,7 @@ Un comando peligroso en un sistema MBR es ejecutar el comando:
 dd if=/dev/zero of=/dev/sda bs=512 count=1
 ```
 
-A continuación definimos cual es la consecuencia de este comando:
+A continuación definimos cual es la consecuencia de este comando en el proceso de arranque pero antes veamos resumidamente el proceso de arranque del sistema:
 
 ## Proceso de Arranque en MBR
 

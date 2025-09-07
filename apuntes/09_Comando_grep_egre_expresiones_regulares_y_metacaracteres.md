@@ -51,11 +51,11 @@ Las expresiones regulares (regex o regexp) son patrones utilizados para encontra
 
 #### Clases de Caracteres POSIX
 
-**POSIX** (*Portable Operating System Interface for Unix*) es un **estándar** que define cómo deben comportarse los sistemas operativos tipo **Unix** (como Linux, macOS y BSD) para garantizar compatibilidad entre ellos.  
+**POSIX** (_Portable Operating System Interface for Unix_) es un **estándar** que define cómo deben comportarse los sistemas operativos tipo **Unix** (como Linux, macOS y BSD) para garantizar compatibilidad entre ellos.
 
 🔹 **Objetivo:** Permitir que los programas sean **portables** y funcionen en diferentes sistemas sin cambios importantes.  
 🔹 **Incluye:** Comandos, utilidades, programación en shell (`sh`), llamadas al sistema (API).  
-🔹 **Ejemplo:** Un script POSIX-compatible se ejecutará en Bash, Dash y otros shells sin problemas.  
+🔹 **Ejemplo:** Un script POSIX-compatible se ejecutará en Bash, Dash y otros shells sin problemas.
 
 Podemos concluir que **POSIX** es una norma que unifica el comportamiento de sistemas Unix para mejorar la compatibilidad y portabilidad.
 
@@ -83,16 +83,16 @@ grep [opciones] patrón [archivo...]
 ```
 
 - **Opciones Comunes**:
-  - *-v*: Invierte la búsqueda para mostrar líneas que NO coincidan.
-  - *-l*: Sólo indica el nombre del fichero donde ha encontrado alguna coincidencia.
-  - *-w*: El patrón tiene que ser una palabra independiente.
-  - *-n*: Muestra el número de línea junto con la coincidencia.
-  - *-i*: Ignora mayúsculas y minúsculas.
-  - *-c*: Muestra la contidad de lineas que cumplen con el patrón.
-  - *-r*: Busca en los ficheros de forma recursiva.
-  - *-e*: Permite encadenar varios patrones de busqueda.
-  - *-E*: Interprete el patrón de búsqueda como una expresión regular extendida (ERE), lo que significa que puedes utilizar una sintaxis más avanzada de expresiones regulares (también puede emplearse el comando *egrep* en este caso).
-  - *-o*: Solo muestre las partes de las líneas que coinciden con el patrón de búsqueda, en lugar de toda la línea. Esto es útil cuando solo estás interesado en ver qué partes de las líneas coinciden con tu patrón.
+  - _-v_: Invierte la búsqueda para mostrar líneas que NO coincidan.
+  - _-l_: Sólo indica el nombre del fichero donde ha encontrado alguna coincidencia.
+  - _-w_: El patrón tiene que ser una palabra independiente.
+  - _-n_: Muestra el número de línea junto con la coincidencia.
+  - _-i_: Ignora mayúsculas y minúsculas.
+  - _-c_: Muestra la contidad de lineas que cumplen con el patrón.
+  - _-r_: Busca en los ficheros de forma recursiva.
+  - _-e_: Permite encadenar varios patrones de busqueda.
+  - _-E_: Interprete el patrón de búsqueda como una expresión regular extendida (ERE), lo que significa que puedes utilizar una sintaxis más avanzada de expresiones regulares (también puede emplearse el comando _egrep_ en este caso).
+  - _-o_: Solo muestre las partes de las líneas que coinciden con el patrón de búsqueda, en lugar de toda la línea. Esto es útil cuando solo estás interesado en ver qué partes de las líneas coinciden con tu patrón.
 
 ### Comando `grep`
 
@@ -101,47 +101,47 @@ grep [opciones] patrón [archivo...]
 ```bash
 root@debian:~# netstat -putan | grep tcp
 tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      1/init
-tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin 
-tcp        0     52 192.168.33.11:22        192.168.33.1:54291      ESTABLISHED 874/sshd: vagrant [ 
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin
+tcp        0     52 192.168.33.11:22        192.168.33.1:54291      ESTABLISHED 874/sshd: vagrant [
 tcp6       0      0 :::80                   :::*                    LISTEN      681/apache2
 tcp6       0      0 :::111                  :::*                    LISTEN      1/init
-tcp6       0      0 :::22                   :::*                    LISTEN      588/sshd: /usr/sbin 
+tcp6       0      0 :::22                   :::*                    LISTEN      588/sshd: /usr/sbin
 
 root@debian:~# netstat -putan | grep -i listen
 tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      1/init
-tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin 
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin
 tcp6       0      0 :::80                   :::*                    LISTEN      681/apache2
 tcp6       0      0 :::111                  :::*                    LISTEN      1/init
-tcp6       0      0 :::22                   :::*                    LISTEN      588/sshd: /usr/sbin 
+tcp6       0      0 :::22                   :::*                    LISTEN      588/sshd: /usr/sbin
 
 root@debian:~# netstat -putan | grep -w tcp
 tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      1/init
-tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin 
-tcp        0     52 192.168.33.11:22        192.168.33.1:54291      ESTABLISHED 874/sshd: vagrant [ 
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin
+tcp        0     52 192.168.33.11:22        192.168.33.1:54291      ESTABLISHED 874/sshd: vagrant [
 
 root@debian:~# netstat -putan | grep -v tcp
 Active Internet connections (servers and established)
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
 udp        0      0 127.0.0.1:323           0.0.0.0:*                           598/chronyd
-udp        0      0 0.0.0.0:68              0.0.0.0:*                           843/dhclient        
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           843/dhclient
 udp        0      0 0.0.0.0:111             0.0.0.0:*                           1/init
 udp6       0      0 ::1:323                 :::*                                598/chronyd
 udp6       0      0 :::111                  :::*                                1/init
 
 root@debian:~# netstat -putan | grep -n tcp
 3:tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      1/init
-4:tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin 
-5:tcp        0     52 192.168.33.11:22        192.168.33.1:54291      ESTABLISHED 874/sshd: vagrant [ 
+4:tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin
+5:tcp        0     52 192.168.33.11:22        192.168.33.1:54291      ESTABLISHED 874/sshd: vagrant [
 6:tcp6       0      0 :::80                   :::*                    LISTEN      681/apache2
 7:tcp6       0      0 :::111                  :::*                    LISTEN      1/init
-8:tcp6       0      0 :::22                   :::*                    LISTEN      588/sshd: /usr/sbin 
+8:tcp6       0      0 :::22                   :::*                    LISTEN      588/sshd: /usr/sbin
 
 root@debian:~# netstat -putan | grep -w -e tcp -e udp
 tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      1/init
-tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin 
-tcp        0     52 192.168.33.11:22        192.168.33.1:54291      ESTABLISHED 874/sshd: vagrant [ 
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      588/sshd: /usr/sbin
+tcp        0     52 192.168.33.11:22        192.168.33.1:54291      ESTABLISHED 874/sshd: vagrant [
 udp        0      0 127.0.0.1:323           0.0.0.0:*                           598/chronyd
-udp        0      0 0.0.0.0:68              0.0.0.0:*                           843/dhclient        
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           843/dhclient
 udp        0      0 0.0.0.0:111             0.0.0.0:*                           1/init
 
 root@debian:~# grep -o vagrant /etc/passwd
@@ -170,16 +170,16 @@ egrep [opciones] patrón [archivo...]
 
 - Buscar múltiples palabras en un archivo:
 
-  ```bash
-  egrep "patrón1|patrón2" archivo.txt
-  ```
+```bash
+egrep "patrón1|patrón2" archivo.txt
+```
 
 - Buscar una palabra ignorando mayúsculas y minúsculas:
-  ```bash
-  egrep -i "patrón" archivo.txt
-  ```
 
-  
+```bash
+egrep -i "patrón" archivo.txt
+```
+
 ## Metacaracteres
 
 Son caracteres con significado especial que representan clases de caracteres o repeticiones.

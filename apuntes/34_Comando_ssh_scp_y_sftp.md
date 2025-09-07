@@ -5,23 +5,25 @@
 Para instalar y configurar un servidor SSH en Debian, sigue estos pasos básicos desde la terminal:
 
 **1. Actualiza los repositorios:**
+
 ```bash
 sudo apt update
 ```
 
 **2. Instala el servidor SSH (paquete openssh-server):**
+
 ```bash
 sudo apt install openssh-server
 ```
 
-
 **3. Verifica que el servicio SSH esté activo:**
+
 ```bash
 sudo systemctl status ssh
 ```
 
-
 **4. (Opcional) Inicia, habilita y reinicia el servicio SSH para que arranque automáticamente:**
+
 ```bash
 sudo systemctl start ssh
 sudo systemctl enable ssh
@@ -67,6 +69,7 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
 
 En caso de aceptar se creará en el cliente una carpeta oculta `.ssh` con los archivos `known_hosts` y `known_hosts.old`.
+
 - `Archivo known_hosts`: Este archivo se crea para almacenar las claves públicas (no los fingerprints) de los servidores SSH a los que te conectas. Sirve como una base de datos para verificar que el servidor es el mismo en futuras conexiones, evitando ataques como man-in-the-middle.
 - `Archivo known_hosts.old`: Es una copia de seguridad del archivo known_hosts, creada automáticamente cuando se modifica el original (por ejemplo, al actualizar o eliminar entradas). Esto permite restaurar información en caso de errores.
 - `Fingerprint`: Es un hash generado a partir de la clave pública del servidor. Se muestra la primera vez que te conectas para que confirmes la autenticidad del servidor. No se guarda directamente en known_hosts, ahí se almacena un cálculo resultante de este y otros datos como la clave pública del servidor.
@@ -102,7 +105,7 @@ ssh -o StrictHostKeyChecking=no -p 9999 kali@192.168.120.100
 El siguiente comando permitirá que nos conectemos por ssh y lanzará la aplicación xeyes en el cliente.
 
 ```bash
-ssh -X si@192.168.120.101 xeyes
+ssh -X usuario@192.168.120.101 xeyes
 ```
 
 Existen una serie de variables que tienen que editarse en el servidor ssh para poder realizar este proceso. La configuración del servidor está en la ruta ` /etc/ssh/sshd_config`:
@@ -115,14 +118,17 @@ cat -n /etc/ssh/sshd_config | grep X11
 ```
 
 `X11Forwarding`: Directiva que determina si la redirección gráfica es posible mediante conexiones SSH. Solo puede tomar 2 valores: yes/no.
+
 - `X11Forwarding no`: es el valor por defecto. Deshabilita la redirección gráfica del servidor SSH.
 - `X11Forwarding yes`: Habilita la redirección gráfica del servidor SSH.
 
 `X11DisplayOffset`: Directiva que determina el número del display donde espera el servidor gráfico. Por defecto es 10, para evitar interferencias con servidores X11 reales.
+
 - `X11DisplayOffset 10`: es el valor por defecto. Indica el número de display donde espera el servidor gráfico para conexiones SSH.
 - `X11DisplayOffset 100`: Indica el número de display 100 donde espera el servidor gráfico para conexiones SSH.
 
 `X11UseLocalhost`: Directiva que determina si la redirección gráfica es posible en la dirección loopback o en cualquier dirección:
+
 - `X11UseLocalhost yes`: es el valor por defecto. Permite la redirección gráfica a la dirección loopback y define la variable de entorno DISPLAY a localhost, lo cual previene conexiones remotas no permitidas al display.
 - `X11UseLocalhost no`: Habilita la redirección gráfica a todas las interfaces de red.
 
@@ -131,35 +137,40 @@ cat -n /etc/ssh/sshd_config | grep X11
 Previamente se tendrá que instalar `sshpass` para poder hacer uso de esta utilidad. Una vez instalada podemos realizar la conexión en un único paso.
 
 ```bash
-sshpass -p 'abc123.' ssh si@192.168.120.101
+sshpass -p 'abc123.' ssh usuario@192.168.120.101
 ```
 
 ### Cifrado asimétrico
 
-Una conexión usando el protocolo SSH es de por sí segura (más segura que una conexión no cifrada, como telnet) pero presenta ciertos inconvenientes. El primero de ellos hace referencia al uso de contraseñas normales que, como viajan cifradas, no se podrán cifrar. Sin embargo, aunque las claves fuertes de los usuarios podrían limitar el impacto de seguridad, se deja abierta la posibilidad de hacer ataques de fuerza bruta que, si tienen éxito podrían culminar con efectos graves. 
+Una conexión usando el protocolo SSH es de por sí segura (más segura que una conexión no cifrada, como telnet) pero presenta ciertos inconvenientes. El primero de ellos hace referencia al uso de contraseñas normales que, como viajan cifradas, no se podrán cifrar. Sin embargo, aunque las claves fuertes de los usuarios podrían limitar el impacto de seguridad, se deja abierta la posibilidad de hacer ataques de fuerza bruta que, si tienen éxito podrían culminar con efectos graves.
 
-Ante este desafío con SSH se creó un mecanismo de autentificación basado en desafío y en criptografía asimétrica. El cliente cuenta con una clave privada. La clave pública correspondiente se configura en todos los usuarios de servidores remotos que se van a autenticar con la misma clave privada. Ya en el proceso de autenticación el cliente envía información sobre su clave pública al servidor. El servidor busca si para el usuario requerido se ha instalado pública del cliente. Si la encuentra, se envía un desafío al cliente que consiste en un valor aleatorio cifrado con la clave pública del cliente. El cliente, para completar la autenticación satisfactoriamente, debe descifrar el desafío con su clave privada y devolver el valor al servidor. El servidor comprobará si el desafío se ha resuelto correctamente y permitirá el inicio de sesión si así ha sido. 
+Ante este desafío con SSH se creó un mecanismo de autentificación basado en desafío y en criptografía asimétrica. El cliente cuenta con una clave privada. La clave pública correspondiente se configura en todos los usuarios de servidores remotos que se van a autenticar con la misma clave privada. Ya en el proceso de autenticación el cliente envía información sobre su clave pública al servidor. El servidor busca si para el usuario requerido se ha instalado pública del cliente. Si la encuentra, se envía un desafío al cliente que consiste en un valor aleatorio cifrado con la clave pública del cliente. El cliente, para completar la autenticación satisfactoriamente, debe descifrar el desafío con su clave privada y devolver el valor al servidor. El servidor comprobará si el desafío se ha resuelto correctamente y permitirá el inicio de sesión si así ha sido.
 
 Bajo este esquema de autenticación, un par de claves (pública/privada) permite la autentificación en todos los servidores. Como el desafío es aleatorio, un ataque de fuerza bruta es mucho más difícil. Estas son las principales ventajas de este mecanismo de autentificación. Generamos en el cliente el par de claves pública/privada en la ruta `~/.ssh/id_rsa`.
 
-En primer lugar, el usuario creará su identidad digital generando el par de claves privada-pública. Como ya se explicó en la **criptografía asimétrica**, la clave privada debe mantenerse segura a toda costa, mientras que la pública puede distribuirse. La clave privada puede protegerse mediante una *passphrase* (frase de contraseña), lo que significa que, al usarla, habrá que introducir dicha contraseña. Es importante señalar que, al escribir la *passphrase*, el texto no será visible en pantalla.  
+En primer lugar, el usuario creará su identidad digital generando el par de claves privada-pública. Como ya se explicó en la **criptografía asimétrica**, la clave privada debe mantenerse segura a toda costa, mientras que la pública puede distribuirse. La clave privada puede protegerse mediante una _passphrase_ (frase de contraseña), lo que significa que, al usarla, habrá que introducir dicha contraseña. Es importante señalar que, al escribir la _passphrase_, el texto no será visible en pantalla.
 
-**Advertencia clave**:  
-- Si olvidas la *passphrase*, la clave privada no podrá utilizarse, ya que no se podrá descifrar. El cifrado que hace seguro el sistema SSH también hace que la clave sea irrecuperable. La solución en este caso sería generar una nueva clave y distribuir la nueva clave pública en los equipos remotos.  
+**Advertencia clave**:
 
-#### Uso de claves con y sin *passphrase*:  
-- **Con *passphrase***: Es la opción más segura, ideal para uso personal.  
-- **Sin *passphrase***: Útil para scripts automatizados, ya que no requiere intervención manual.  
+- Si olvidas la _passphrase_, la clave privada no podrá utilizarse, ya que no se podrá descifrar. El cifrado que hace seguro el sistema SSH también hace que la clave sea irrecuperable. La solución en este caso sería generar una nueva clave y distribuir la nueva clave pública en los equipos remotos.
 
-#### Comando `ssh-keygen`:  
-Para generar el par de claves, se utiliza el comando `ssh-keygen` con las siguientes opciones principales:  
-- **`-t `**: Especifica el tipo de clave (RSA, DSA, ECDSA, etc.).  
-- **`-b `**: Define el tamaño de la clave (ejemplo: 4096 bits).  
-  - *Nota*: Estas claves solo se usan para autenticación, por lo que aumentar su tamaño no afectará al rendimiento de la CPU durante transferencias SSH.  
-- **`-C ""`**: Añade un comentario para identificar la clave (ejemplo: "clave_servidor").  
-- **`-f `**: Especifica la ruta y nombre de los archivos de claves (ejemplo: `~/.ssh/clave_personal`).  
+#### Uso de claves con y sin _passphrase_:
+
+- **Con _passphrase_**: Es la opción más segura, ideal para uso personal.
+- **Sin _passphrase_**: Útil para scripts automatizados, ya que no requiere intervención manual.
+
+#### Comando `ssh-keygen`:
+
+Para generar el par de claves, se utiliza el comando `ssh-keygen` con las siguientes opciones principales:
+
+- **`-t `**: Especifica el tipo de clave (RSA, DSA, ECDSA, etc.).
+- **`-b `**: Define el tamaño de la clave (ejemplo: 4096 bits).
+  - _Nota_: Estas claves solo se usan para autenticación, por lo que aumentar su tamaño no afectará al rendimiento de la CPU durante transferencias SSH.
+- **`-C ""`**: Añade un comentario para identificar la clave (ejemplo: "clave_servidor").
+- **`-f `**: Especifica la ruta y nombre de los archivos de claves (ejemplo: `~/.ssh/clave_personal`).
 
 #### Ejemplo de uso sin passphrase
+
 ```bash
 ssh-keygen -t rsa -b 4096 -C "clave_para_servidor" -f ~/.ssh/clave_servidor
 ```
@@ -227,11 +238,12 @@ _*Nota*_: En algunas veces podemos hacer el proceso inverso de conectarnos a un 
 
 #### Ejemplo de uso con passphrase
 
-Si hubieramos introducido un *passphrase* se nos hubiera pedido a la hora de hacer ssh tal y como se ve en este ejemplo. Como dijimos el *passphrase* en SSH es una contraseña opcional que se utiliza para proteger tu clave privada. Su utilidad principal es añadir una capa extra de seguridad: aunque alguien obtenga acceso a tu ordenador y copie tu clave privada, no podrá usarla para autenticarse en servidores remotos sin conocer la *passphrase*. En este tendremos dos máquinas, una máquina cliente con el usuarioA y otra máquina servidor a la que nos conectamos con el usuarioB.
+Si hubieramos introducido un _passphrase_ se nos hubiera pedido a la hora de hacer ssh tal y como se ve en este ejemplo. Como dijimos el _passphrase_ en SSH es una contraseña opcional que se utiliza para proteger tu clave privada. Su utilidad principal es añadir una capa extra de seguridad: aunque alguien obtenga acceso a tu ordenador y copie tu clave privada, no podrá usarla para autenticarse en servidores remotos sin conocer la _passphrase_. En este tendremos dos máquinas, una máquina cliente con el usuarioA y otra máquina servidor a la que nos conectamos con el usuarioB.
 
 El usuarioA en la máquina cliente genera el par de claves con el passphrase, comparte la clave y se conecta a máquinaB.
+
 ```bash
-usuarioA@usuario:~$ ssh-keygen
+usuarioA@debian:~$ ssh-keygen
 Generating public/private rsa key pair.
 Enter file in which to save the key (/home/usuarioA/.ssh/id_rsa):
 Created directory '/home/usuarioA/.ssh'.
@@ -239,32 +251,35 @@ Enter passphrase (empty for no passphrase):
 Enter same passphrase again:
 ...
 
-usuarioA@usuario:~$ ssh-copy-id -i .ssh/id_rsa.pub usuarioB@192.168.100.3
+usuarioA@debian:~$ ssh-copy-id -i .ssh/id_rsa.pub usuarioB@192.168.100.3
 ...
 Now try logging into the machine, with:   "ssh 'usuarioB@192.168.100.3'"
 and check to make sure that only the key(s) you wanted were added.
 
-usuarioA@usuario:~$ ssh usuarioB@192.168.100.3
+usuarioA@debian:~$ ssh usuarioB@192.168.100.3
 Enter passphrase for key '/home/usuarioA/.ssh/id_rsa':
 ...
 
-usuarioB@usuario:~$ whoami
+usuarioB@debian:~$ whoami
 usuarioB
 ```
 
-En el servidor para el usuarioB se crea la ruta `/home/.ssh/authorized_keys` con la información de la clave privada compartida por el usuarioA. 
+En el servidor para el usuarioB se crea la ruta `/home/.ssh/authorized_keys` con la información de la clave privada compartida por el usuarioA.
+
 ```bash
-usuarioB@usuario:~$ cat .ssh/authorized_keys
+usuarioB@debian:~$ cat .ssh/authorized_keys
 ssh-rsa AAAAB...m10= usuarioA@usuario
 ```
 
 #### Uso de ssh-agent
 
 **ssh-agent** es un manejador de claves para SSH, es decir, mantiene las passphrases privadas en memoria, descifradas y listas para usarse. Esto nos facilita el hecho de utilizar dichas claves sin necesidad de cargarlas y descifrarlas (en el caso de que hayamos seteado una passphrase) cada vez que vayamos a usarlas. Principalmente aporta:
+
 - **Seguridad**: utilizar una passphrase para la clave es más seguro que utilizar solamente una password, más si alguien se hace con nuestra computadora. De hecho sería conveniente establecer una passphrase a la hora de generar la clave privada.
-- **Comodidad**: A nivel práctico, *ssh-agent* nos permite no tener que volver a introducir la passphrase cada vez que usamos la clave privada. Puede parecer contradictorio establecer una passphrase para añadir seguridad y luego usar un mecanismo que la almacene en memoria, evitando tener que introducirla repetidamente. Sin embargo, esto tiene sentido en escenarios como Ansible, donde un nodo central realiza tareas en cientos de máquinas dependientes. No usar passphrase es poco seguro, pero tener que introducirla en cada conexión puede ser muy engorroso. Por eso, se utiliza *ssh-agent*, que ofrece un equilibrio entre seguridad y comodidad.
+- **Comodidad**: A nivel práctico, _ssh-agent_ nos permite no tener que volver a introducir la passphrase cada vez que usamos la clave privada. Puede parecer contradictorio establecer una passphrase para añadir seguridad y luego usar un mecanismo que la almacene en memoria, evitando tener que introducirla repetidamente. Sin embargo, esto tiene sentido en escenarios como Ansible, donde un nodo central realiza tareas en cientos de máquinas dependientes. No usar passphrase es poco seguro, pero tener que introducirla en cada conexión puede ser muy engorroso. Por eso, se utiliza _ssh-agent_, que ofrece un equilibrio entre seguridad y comodidad.
 
 Desde el punto de vista del servidor SSH, el protocolo funciona de la siguiente manera (muy breve y resumido):
+
 - El cliente le da su clave pública.
 - El servidor genera un mensaje denominado Key Challenge, y lo envía al cliente para realizar la verificación de identidad.
 - El cliente usa la clave privada para realizar la verificación, y responde al servidor.
@@ -275,12 +290,14 @@ Desde el punto de vista del servidor SSH, el protocolo funciona de la siguiente 
 Los principales comandos a emplear son los siguientes.
 
 El comando `eval $(ssh-agent)` se usa para iniciar el agente SSH (ssh-agent) y configurar el entorno para que las claves SSH puedan utilizarse sin necesidad de ingresar la contraseña en cada conexión. Para detener su funcionamiento se hace uso del comando `eval $(ssh-agent -k)`.
+
 ```bash
 eval $(ssh-agent)
 eval $(ssh-agent -k)
 ```
 
 Ahora cuando se ejecuta `eval $(ssh-agent)` se pedira el password del certificado que se guradara en la variable ssh-agent. Podemos establecer el tiempo que queremos que se guarde o que sea de forma continua hasta detener el uso con `eval $(ssh-agent -k)`.
+
 ```bash
 ssh-add -t 1800 # 1800 seconds
 ssh-add -t 45m # 45 minutes
@@ -292,10 +309,11 @@ ssh-add -t 45m /root/.ssh/id_rsa # 45 minutes
 ssh-add -t 2m /root/.ssh/id_rsa # 2 minutes
 ```
 
-A continuación recogemos el procedimiento de *ssh-agent* en el excenario de usuarioA y usuarioB.
+A continuación recogemos el procedimiento de _ssh-agent_ en el excenario de usuarioA y usuarioB.
 En usuarioA generamos el par de claves y compartimos la clave pública con el servidor.
+
 ```bash
-usuarioA@usuario:~$ ssh-keygen
+usuarioA@debian:~$ ssh-keygen
 Generating public/private rsa key pair.
 Enter file in which to save the key (/home/usuarioA/.ssh/id_rsa):
 Created directory '/home/usuarioA/.ssh'.
@@ -303,53 +321,57 @@ Enter passphrase (empty for no passphrase):
 Enter same passphrase again:
 ...
 
-usuarioA@usuario:~$ ssh-copy-id -i .ssh/id_rsa.pub usuarioB@192.168.100.3
+usuarioA@debian:~$ ssh-copy-id -i .ssh/id_rsa.pub usuarioB@192.168.100.3
 Number of key(s) added: 1
 ...
 ```
 
-Ejecutamos el comando *eval $(ssh-agent)* para realizar el procedimiento, decimos que queremos que se almacene el passphrase por tiempo indefinido y realizamos la conexión. A continuación detenemos el procedimiento con *eval $(ssh-agent -k)*. Tambien podríamos realizar este procedimiento por un tiempo determinado.
+Ejecutamos el comando _eval $(ssh-agent)_ para realizar el procedimiento, decimos que queremos que se almacene el passphrase por tiempo indefinido y realizamos la conexión. A continuación detenemos el procedimiento con _eval $(ssh-agent -k)_. Tambien podríamos realizar este procedimiento por un tiempo determinado.
+
 ```bash
-usuarioA@usuario:~$ eval $(ssh-agent)
+usuarioA@debian:~$ eval $(ssh-agent)
 Agent pid 5934
 
-usuarioA@usuario:~$ ssh-add .ssh/id_rsa
+usuarioA@debian:~$ ssh-add .ssh/id_rsa
 Enter passphrase for .ssh/id_rsa:
 Identity added: .ssh/id_rsa (usuarioA@usuario)
 
-usuarioA@usuario:~$ ssh usuarioB@192.168.100.3
+usuarioA@debian:~$ ssh usuarioB@192.168.100.3
 ...
 
-usuarioB@usuario:~$ whoami
+usuarioB@debian:~$ whoami
 usuarioB
 ```
 
 ```bash
-usuarioA@usuario:~$ eval $(ssh-agent -k)
+usuarioA@debian:~$ eval $(ssh-agent -k)
 Agent pid 5934 killed
 
-usuarioA@usuario:~$ ssh usuarioB@192.168.100.3
+usuarioA@debian:~$ ssh usuarioB@192.168.100.3
 Enter passphrase for key '/home/usuarioA/.ssh/id_rsa':
 
-usuarioB@usuario:~$ whoami
+usuarioB@debian:~$ whoami
 usuarioB
 ```
 
 Como punto final supongamos que tenemos un conjunto de máquinas que dependen de nuestro par de claves y necesitamos cambiar el passphrase y no queremos volver a generar un nuevo par de claves, podemos solucionar esto de la siguiente forma. En resumen:
+
 - Si tu clave privada actual no tiene contraseña, puedes añadirle una.
 - Si ya tiene una contraseña, puedes cambiarla o eliminarla.
 
 Permite poner clave o cambiar una clave al certificado privado.
+
 ```bash
 ssh-keygen -p -f <ruta al fichero de la clave privada id_rsa>
 ```
 
 Estas opciones permiten lo siguiente:
+
 - -p: Indica que quieres cambiar el passphrase.
 - -f: Especifica el archivo de clave privada que quieres modificar (por ejemplo ~/.ssh/id_rsa).
 
 ```bash
-usuarioA@usuario:~$ ssh-keygen -p -f .ssh/id_rsa
+usuarioA@debian:~$ ssh-keygen -p -f .ssh/id_rsa
 Enter old passphrase:
 Key has comment 'usuarioA@usuario'
 Enter new passphrase (empty for no passphrase):
@@ -440,16 +462,18 @@ Este caso es incorrecto ya que el comando `df -h` se ejecutaría en el servidor 
 
 ### ssh
 
-*ssh* (Secure Shell) es un protocolo y herramienta en Linux y otros sistemas operativos que permite realizar conexiones remotas seguras a otros sistemas. SSH cifra la conexión, protegiendo la transferencia de datos y la comunicación, lo que lo convierte en la opción preferida para administración remota de servidores, ejecución de comandos remotos, transferencia de archivos segura, y más.
+_ssh_ (Secure Shell) es un protocolo y herramienta en Linux y otros sistemas operativos que permite realizar conexiones remotas seguras a otros sistemas. SSH cifra la conexión, protegiendo la transferencia de datos y la comunicación, lo que lo convierte en la opción preferida para administración remota de servidores, ejecución de comandos remotos, transferencia de archivos segura, y más.
+
 ```bash
 ssh usuario@maquina.curso.local
 ssh operador@192.168.1.5
-ssh root@192.168.1.5 
+ssh root@192.168.1.5
 ssh 192.168.33.150
 ssh -p 52341 juan@192.168.70.99
 ```
 
 Opciones comunes de ssh:
+
 - -i: Especifica un archivo de clave privada para la conexión.
 - -N: No ejecuta ningún comando; solo establece la conexión (útil para túneles).
 - -T: Deshabilita la asignación de pseudo-terminal (para ejecutar comandos simples).
@@ -459,26 +483,31 @@ Opciones comunes de ssh:
 
 ### scp
 
-*scp* (Secure Copy Protocol) es una herramienta de línea de comandos en Linux y Unix que permite copiar archivos y directorios entre un sistema local y un servidor remoto, o entre dos servidores remotos, utilizando una conexión segura mediante SSH. scp cifra los datos en tránsito, protegiendo la transferencia de archivos frente a accesos no autorizados.
+_scp_ (Secure Copy Protocol) es una herramienta de línea de comandos en Linux y Unix que permite copiar archivos y directorios entre un sistema local y un servidor remoto, o entre dos servidores remotos, utilizando una conexión segura mediante SSH. scp cifra los datos en tránsito, protegiendo la transferencia de archivos frente a accesos no autorizados.
+
 - scp /root/algo.txt operador@192.168.70.99:/home/operador
 
 Para que funcione la orden primero tenemos que colocar el puerto antes del fichero a copiar:
+
 ```bash
 scp  -P 52341 algo.txt  operador@192.168.70.99:/home/operador
 scp  -p -P 52341 algo.txt   192.168.70.99:/home/operador
 ```
 
 Esto no funcionaria:
+
 ```bash
 scp algo.txt -P 52341   operador@192.168.70.99:/home/operador
 ```
 
 Donde Ejemplos-scrpts es un directorio:
+
 ```bash
 scp -r Ejemplos-scrpts vagrant@192.168.33.10:/tmp
 ```
 
 Opciones comunes de scp:
+
 - -r: Copia directorios de manera recursiva.
 - -P: Especifica el puerto SSH a utilizar.
 - -C: Habilita la compresión para acelerar la transferencia (útil para archivos grandes).
@@ -486,22 +515,24 @@ Opciones comunes de scp:
 - -v: Activa el modo verboroso para obtener información adicional sobre la transferencia (útil para depuración).
 - -p: en scp preserva los permisos, marcas de tiempo y la propiedad del archivo o directorio al copiarlo al destino. Esto es útil cuando deseas mantener la integridad de los atributos del archivo original, como la hora de creación y modificación, permisos y el propietario.
 
-### sftp 
+### sftp
 
-*SFTP* (SSH File Transfer Protocol) es un protocolo de transferencia de archivos que utiliza una conexión segura mediante SSH. A diferencia de FTP, SFTP cifra tanto la autenticación como la transmisión de datos, lo que lo hace adecuado para transferencias de archivos seguras en redes inseguras.
+_SFTP_ (SSH File Transfer Protocol) es un protocolo de transferencia de archivos que utiliza una conexión segura mediante SSH. A diferencia de FTP, SFTP cifra tanto la autenticación como la transmisión de datos, lo que lo hace adecuado para transferencias de archivos seguras en redes inseguras.
+
 ```bash
 sftp usuario@servidor
 sftp -o Port=52341 juan@192.168.70.99
 ```
 
 Opciones comunes de SFTP:
+
 - -i ruta/a/clave: Usa una clave SSH específica para la autenticación.
 - -b archivo: Ejecuta un conjunto de comandos desde un archivo de texto.
 - -C: Activa la compresión durante la transferencia para archivos grandes
 - -o Port=52341: Especifica el puerto en el que el servidor SSH escucha las conexiones. Esto es útil cuando el servidor SSH no está en el puerto predeterminado (22).
 
 ```bash
-usuarioA@usuario:~$ sftp usuarioB@192.168.100.3
+usuarioA@debian:~$ sftp usuarioB@192.168.100.3
 ...
 sftp> ls
 carpeta      fichero.txt  snap
@@ -514,7 +545,7 @@ Fetching /home/usuarioB/fichero.txt to fichero.txt
 fichero.txt                                                                                                                                                                    100%   60    10.3KB/s   00:00
 sftp> exit
 
-usuarioA@usuario:~$ ls -l
+usuarioA@debian:~$ ls -l
 total 12
 drwxrwxr-x 2 usuarioA usuarioA 4096 may 15 10:45 carpeta
 -rw-rw-r-- 1 usuarioA usuarioA   60 may 15 10:45 fichero.txt
@@ -541,7 +572,6 @@ PS C:\Users\Carballeira> ssh -p 2220 bandit0@bandit.labs.overthewire.org
 
 bandit0@bandit.labs.overthewire.org's password: bandit0
 ```
-
 
 #### bandit0 --> bandit1
 
@@ -676,7 +706,7 @@ bandit7@bandit:~$ cat data.txt | grep millionth | xargs | cut -d ' ' -f2
 dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
 
 bandit7@bandit:~$ cat data.txt | grep millionth | sed 's/\t/ /g' | cut -d ' ' -f2
-dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc 
+dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
 ```
 
 #### bandit8 --> bandit9

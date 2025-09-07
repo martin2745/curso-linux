@@ -7,147 +7,155 @@ A continuación vamos a ver un conjunto de los principales comandos de linux con
 ### Comando whoami
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ whoami
-kali
+usuario@debian:~$ whoami
+usuario
 ```
-**Explicación:** El comando `whoami` muestra el nombre del usuario actual, que en este caso es `kali`.
+
+**Explicación:** El comando `whoami` muestra el nombre del usuario actual, que en este caso es `usuario`.
 
 ### Comando id
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ id
-uid=1000(kali) gid=1000(kali) groups=1000(kali),4(adm),20(dialout),24(cdrom),25(floppy),27(sudo),29(audio),30(dip),44(video),46(plugdev),100(users),101(netdev),118(bluetooth),120(vboxsf),124(wireshark),126(lpadmin),134(scanner),139(kaboxer)
+usuario@debian:~$ id
+uid=1000(usuario) gid=1000(usuario) grupos=1000(usuario),24(cdrom),25(floppy),27(sudo),29(audio),30(dip),44(video),46(plugdev),100(users),106(netdev),112(bluetooth),114(lpadmin),117(scanner)
 ```
-**Explicación:** El comando `id` muestra la información del usuario actual. En este caso, el UID y GID del usuario `kali` son 1000, y muestra los grupos a los que pertenece.
+
+**Explicación:** El comando `id` muestra la información del usuario actual. En este caso, el UID y GID del usuario `usuario` son 1000, y muestra los grupos a los que pertenece.
 
 ### Comando groups
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ groups
-kali adm dialout cdrom floppy sudo audio dip video plugdev users netdev bluetooth vboxsf wireshark lpadmin scanner kaboxer
+usuario@debian:~$ groups
+usuario cdrom floppy sudo audio dip video plugdev users netdev bluetooth lpadmin scanner
 ```
-**Explicación:** El comando `groups` muestra todos los grupos a los que pertenece el usuario `kali`.
+
+**Explicación:** El comando `groups` muestra todos los grupos a los que pertenece el usuario `usuario`.
 
 ### Comando id
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ sudo id
-uid=0(root) gid=0(root) groups=0(root)
+usuario@debian:~$ sudo id
+[sudo] contraseña para usuario:
+uid=0(root) gid=0(root) grupos=0(root)
 ```
+
 **Explicación:** El comando `sudo id` muestra la información de usuario del `root`. El UID y GID son ambos 0, indicando que se trata del superusuario.
 
 ### Comando which
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ which whoami
+usuario@debian:~$ which whoami
 /usr/bin/whoami
 ```
+
 **Explicación:** El comando `which whoami` muestra la ubicación del comando `whoami` en el sistema. En este caso, se encuentra en `/usr/bin/whoami`.
 
 ### Comando cat
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ which cat
-/usr/bin/cat
+usuario@debian:~$ cat .profile
+# ~/.profile: executed by the command interpreter for login shells.
+...
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
 ```
-**Explicación:** El comando `which cat` muestra la ubicación del comando `cat`, que está en `/usr/bin/cat`.
+
+**Explicación:** El comando `cat .profile` muestra la información del archivo `.profile`.
 
 ### Comando grep
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ /usr/bin/cat /etc/group | grep 27
-sudo:x:27:kali
-inetsim:x:127:
+usuario@debian:~$ grep usuario /etc/passwd
+usuario:x:1000:1000:usuario,,,:/home/usuario:/bin/bash
 ```
-**Explicación:** Este comando muestra el contenido del archivo `/etc/group` filtrado por el número 27. Se encuentra que el grupo `sudo` tiene el identificador 27, y el usuario `kali` pertenece a ese grupo.
+
+**Explicación:** Este comando muestra el contenido del archivo `/etc/passwd` filtrado por la palabra `usuario`.
 
 ### Comando echo
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ echo $PATH
-/home/kali/.local/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/home/kali/.dotnet/tools
+usuario@debian:~$ echo $PATH
+/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
 
-root@debian:~# echo -e "Hola\n que tal\t estás"
+usuario@debian:~# echo -e "Hola\n que tal\t estás"
 Hola
  que tal         estás
 ```
-**Explicación:** El comando `echo $PATH` muestra la variable de entorno `PATH`, que contiene los directorios en los que el sistema busca los ejecutables de los comandos. Aquí, se muestra una lista de directorios como `/home/kali/.local/bin`, `/usr/bin`, etc.
 
-_*Nota*_: Muy importante es el uso de las comillas en el comando *echo*.
+**Explicación:** El comando `echo $PATH` muestra la variable de entorno `PATH`, que contiene los directorios en los que el sistema busca los ejecutables de los comandos.
+
+_*Nota*_: Muy importante es el uso de las comillas en el comando _echo_.
 
 ```bash
-root@debian:~# echo "$PWD"
+usuario@debian:~# echo "$PWD"
 /root
-root@debian:~# echo '$PWD'
+usuario@debian:~# echo '$PWD'
 $PWD
 ```
 
 ### Comando pwd
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ pwd
-/home/kali
+usuario@debian:~$ pwd
+/home/usuario
 ```
-**Explicación:** El comando `pwd` (print working directory) muestra el directorio de trabajo actual. En este caso, está en el directorio `/home/kali`.
+
+**Explicación:** El comando `pwd` (print working directory) muestra el directorio de trabajo actual. En este caso, está en el directorio `/home/usuario`.
 
 ### Comando ls
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ ls
-Desktop  Documents  Downloads  Music  Pictures  Public  Templates  Videos
+usuario@debian:~$ ls
+Descargas  Documentos  Escritorio  Imágenes  Música  Plantillas  Público  Vídeos
 ```
-**Explicación:** El comando `ls` lista los archivos y directorios en el directorio actual. En este caso, muestra las carpetas del usuario `kali`: `Desktop`, `Documents`, `Downloads`, `Music`, `Pictures`, `Public`, `Templates`, y `Videos`.
+
+**Explicación:** El comando `ls` lista los archivos y directorios en el directorio actual. En este caso, muestra las carpetas del usuario `Descargas`, `Documentos`, `Escritorio`, `Imágenes`, `Música`, `Plantillas`, `Público` y `Vídeos`.
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ ls -l
+usuario@debian:~$ ls -l
 total 32
-drwxr-xr-x 2 kali kali 4096 Feb 10 11:54 Desktop
-drwxr-xr-x 2 kali kali 4096 Feb 10 11:52 Documents
-drwxr-xr-x 2 kali kali 4096 Feb 10 11:52 Downloads
-drwxr-xr-x 2 kali kali 4096 Feb 10 11:52 Music
-drwxr-xr-x 2 kali kali 4096 Feb 10 11:52 Pictures
-drwxr-xr-x 2 kali kali 4096 Feb 10 11:52 Public
-drwxr-xr-x 2 kali kali 4096 Feb 10 11:52 Templates
-drwxr-xr-x 2 kali kali 4096 Feb 10 11:52 Videos
+drwxr-xr-x 2 usuario usuario 4096 may  2 17:03 Descargas
+drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Documentos
+drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Escritorio
+drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Imágenes
+drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Música
+drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Plantillas
+drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Público
+drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Vídeos
 ```
+
 **Explicación:** El comando `ls -l` muestra una lista detallada de los archivos y directorios en el directorio actual, incluyendo permisos, número de enlaces, propietario, grupo, tamaño y fecha de última modificación.
 
 ### Comando cd
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ cd /
+usuario@debian:~$ cd /
+usuario@debian:/$
 ```
+
 **Explicación:** El comando `cd /` cambia al directorio raíz `/`, que es el directorio más alto del sistema de archivos.
 
 ```bash
-┌──(kali㉿kali)-[/]
-└─$ cd ~
+usuario@debian:/$ cd ~
+usuario@debian:~$
 ```
-**Explicación:** El comando `cd ~` lleva al directorio home del usuario actual, que es `/home/kali`.
+
+**Explicación:** El comando `cd ~` lleva al directorio home del usuario actual, que es `/home/usuario`.
 
 ```bash
-┌──(kali㉿kali)-[~]
-└─$ cd
+usuario@debian:~$ cd
+usuario@debian:~$
 ```
-**Explicación:** El comando `cd` sin argumentos nuevamente lleva al directorio home del usuario actual, que es `/home/kali`.
+
+**Explicación:** El comando `cd` sin argumentos nuevamente lleva al directorio home del usuario actual, que es `/home/usuario`.
 
 ### Comando mkdir
 
 ```bash
-root@debian:/tmp# mkdir uno
-root@debian:/tmp# mkdir -p uno/dos/tres/cuatro
+usuario@debian:/tmp# mkdir uno
+usuario@debian:/tmp# mkdir -p uno/dos/tres/cuatro
 ```
 
 **Explicación:** El comando `mkdir` permite crear directorios de trabajo y con el parámetro `-p` se crea la estructura de directorios indicada.
@@ -162,33 +170,33 @@ root@debian:/tmp# mkdir -p uno/dos/tres/cuatro
 ### Comando head y tail
 
 ```bash
-root@debian:~# head -n 3 /etc/passwd
+usuario@debian:~# head -n 3 /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
 bin:x:2:2:bin:/bin:/usr/sbin/nologin
 
-root@debian:~# head -3 /etc/passwd
+usuario@debian:~# head -3 /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
 bin:x:2:2:bin:/bin:/usr/sbin/nologin
 
-root@debian:~# tail -n 3 /etc/passwd
+usuario@debian:~# tail -n 3 /etc/passwd
 vboxadd:x:999:1::/var/run/vboxadd:/bin/false
 _chrony:x:104:109:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
 usuario:x:1001:1001::/home/usuario:/bin/bash
 
-root@debian:~# tail -3 /etc/passwd
+usuario@debian:~# tail -3 /etc/passwd
 vboxadd:x:999:1::/var/run/vboxadd:/bin/false
 _chrony:x:104:109:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
 usuario:x:1001:1001::/home/usuario:/bin/bash
 ```
 
-**Explicación**: Los comandos `head` y `tail` permiten mostrar por defecto las 10 primeras o últimas lineas de un fichero. Se puede ajustar el número con el parámetro *-n* o indicandolo con el número de lineas a mostrar.
+**Explicación**: Los comandos `head` y `tail` permiten mostrar por defecto las 10 primeras o últimas lineas de un fichero. Se puede ajustar el número con el parámetro _-n_ o indicandolo con el número de lineas a mostrar.
 
 ### Comando man, manpath, --help
 
 ```bash
-vagrant@debian:~$ manpath
+usuario@debian:~$ manpath
 /usr/local/man:/usr/local/share/man:/usr/share/man
 ```
 
@@ -211,10 +219,11 @@ _*Nota*_: Tambien existen otras opciones como `<comando> --help` o `apropos [pal
 ### Comando w
 
 ```bash
-[vagrant@rockylinux8 ~]$ w
- 13:10:15 up  1:25,  1 user,  load average: 0,08, 0,07, 0,02
-USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
-vagrant  pts/0    192.168.33.1     11:46    2.00s  0.15s  0.00s w
+usuario@debian:~$ w
+ 07:23:39 up 19 min,  2 users,  load average: 0,01, 0,01, 0,00
+USER     TTY      DESDE            LOGIN@   IDLE   JCPU   PCPU WHAT
+usuario  tty2     tty2             07:05   19:36   0.02s  0.02s /usr/libexec/gnome-session-binary
+usuario  pts/2    10.0.2.2         07:06    0.00s  0.15s  0.01s w
 ```
 
 **Explicación**: El comando `w` me muestra información de los usuarios conectados a mi sistema. Otros comandos como `loginctl` muestran las sesiones iniciadas.
@@ -222,40 +231,29 @@ vagrant  pts/0    192.168.33.1     11:46    2.00s  0.15s  0.00s w
 ### Comando tty
 
 ```bash
-[vagrant@rockylinux8 ~]$ tty
-/dev/tty/0
+usuario@debian:~$ tty
+/dev/pts/2
 ```
 
-**Explicación**: El comando `tty` muestra la terminal o pseudoterminal abierta. 
+**Explicación**: El comando `tty` muestra la terminal o pseudoterminal abierta.
 
-_*Nota*_: Podemos enviar mensajes a otras terminales, como por ejemplo enviarlo a la pseudoterminal /dev/pts/0 de la siguiente manera.
+_*Nota*_: Podemos enviar mensajes a otras terminales, como por ejemplo enviarlo a la pseudoterminal `/dev/pts/0` de la siguiente manera. Si queremos cambiar entre `tty` hacemos uso de la combinación de teclas (Ctrl + Alt + Fx).
 
 ```bash
-[vagrant@rockylinux8 ~]$ echo "Envio mensaje" > /dev/pts/0
+usuario@debian:~$ echo "Envio mensaje" > /dev/pts/0
 ```
 
 ```bash
-[vagrant@rockylinux8 ~]$ Envio mensaje
-```
-
-### Comando wall
-
-El comando `wall` en Linux se utiliza para enviar un mensaje a todos los usuarios que están conectados al sistema. Es una forma sencilla de difundir un mensaje, generalmente utilizado por los administradores del sistema para advertencias, notificaciones o mensajes importantes.
-
-```bash
-[vagrant@rockylinux8 ~]$ wall hola
-
-Mensaje de difusión general (broadcast) de vagrant@rockylinux8 (pts/0) (Sat Ap
-
-hola
+usuario@debian:~$ Envio mensaje
 ```
 
 ### Comando cal
 
 ```bash
-[root@rockylinux8 ~]# cal
-     abril 2025     
-lu ma mi ju vi sá do
+usuario@debian:~# sudo apt install ncal
+usuario@debian:~# cal
+  Septiembre 2025
+do lu ma mi ju vi sá
     1  2  3  4  5  6
  7  8  9 10 11 12 13
 14 15 16 17 18 19 20
@@ -266,6 +264,7 @@ lu ma mi ju vi sá do
 **Explicación**: El comando `cal` muestra el calendario.
 
 Resumen de comandos:
+
 - cal: Muestra el calendario del mes actual.
 - cal [año]: Muestra el calendario del año especificado.
 - cal [mes] [año]: Muestra el calendario de un mes y año específicos.
@@ -277,6 +276,9 @@ Resumen de comandos:
 ### Comando date
 
 ```bash
+usuario@debian:~# date
+vie 05 sep 2025 07:37:29 CEST
+...
 date
 date --set "2014-11-13 9:30:01"
 date -s "2014-11-13 9:30:01"
@@ -334,12 +336,12 @@ A continuación, se muestra una lista completa de los especificadores de formato
 ### Comando uname
 
 ```bash
-root@debian:~# uname
+usuario@debian:~$ uname
 Linux
-root@debian:~# uname -a
-Linux debian 6.1.0-23-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.99-1 (2024-07-15) x86_64 GNU/Linux
-root@debian:~# uname -r
-6.1.0-23-amd64
+usuario@debian:~$ uname -a
+Linux debian 6.1.0-34-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.135-1 (2025-04-25) x86_64 GNU/Linux
+usuario@debian:~$ uname -r
+6.1.0-34-amd64
 ```
 
 **Explicación**: El comando `uname` muestra información sobre el sistema.
@@ -347,91 +349,109 @@ root@debian:~# uname -r
 _*Nota*_: En la ruta `/etc/debian_version` o `/etc/redhat-release` puedo ver la versión del sistema operativo.
 _*Nota*_: Con el comando `arch` se puede ver la arquitectura del sistema.
 
-### Comando split
-
-```bash
-root@debian:/tmp/split# ls -lh
-total 4,0K
--rw-r--r-- 1 root root 1,4K abr 28 12:14 passwd
-
-root@debian:/tmp/split# split -l 10 passwd ./linea/passwd-
-root@debian:/tmp/split# ls -l linea/
-total 12
--rw-r--r-- 1 root root 424 may  6 10:40 passwd-aa
--rw-r--r-- 1 root root 564 may  6 10:40 passwd-ab
--rw-r--r-- 1 root root 412 may  6 10:40 passwd-ac
-
-root@debian:/tmp/split# split -b 512 passwd ./bloque/passwd-
-root@debian:/tmp/split# ls -l bloque/
-total 12
--rw-r--r-- 1 root root 512 may  6 10:42 passwd-aa
--rw-r--r-- 1 root root 512 may  6 10:42 passwd-ab
--rw-r--r-- 1 root root 376 may  6 10:42 passwd-ac
-```
-
-**Explicación**: El comando `split` permite dividir un fichero en un conjunto de ficheros sucesivos donde le indicamos por cuanto dividimos, pudiendo dividir por linea con el parámetro *-l* o por bloque con el parámetro *-b*.
-
 ### Comando ln
 
 ```bash
-root@debian:/tmp# ln test/ enlace-duro-test
+usuario@debian:~$ cd /tmp
+usuario@debian:/tmp$ echo "fichero test" > test
+usuario@debian:/tmp$ ls test
+test
+usuario@debian:/tmp$ cat test
+fichero test
+
+usuario@debian:/tmp$ ln test enlace-duro-test
+usuario@debian:/tmp$ ls test enlace-duro-test
+enlace-duro-test  test
+
+usuario@debian:/tmp$ cat enlace-duro-test
+fichero test
 ```
 
 **Explicación**: El comando `ln` sirve para crear enlaces en Linux. Aquí tenemos que explicar que existen dos tipos de enlaces.
 
-- Enlaces simbólicos: La manera más sencilla de comprender que es un enlace simbólico en Linux es compararlo con el “enlace directo” o “shortcut” en Windows. El fichero o directorio se encuentra en un único punto del disco y los enlaces son un puntero contra él. Cada enlace simbólico tiene su propio número de inodo lo que permite hacer enlaces simbólicos entre distintos sistemas de ficheros. 
-Para crear enlaces (tanto simbólicos como duros) usamos el comando ln. En este caso vamos a crear un enlace simbólico (parámetro -s) del fichero test:
+- **Enlaces simbólicos**: La manera más sencilla de comprender que es un enlace simbólico en Linux es compararlo con el “enlace directo” o “shortcut” en Windows. El fichero o directorio se encuentra en un único punto del disco y los enlaces son un puntero contra él. Cada enlace simbólico tiene su propio número de inodo lo que permite hacer enlaces simbólicos entre distintos sistemas de ficheros. Para crear enlaces (tanto simbólicos como duros) usamos el comando ln. En este caso vamos a crear un enlace simbólico (parámetro -s) del fichero test:
+
 ```bash
-root@debian:/tmp# ln -s test/ enlace-simbolico-test
-root@debian:/tmp# ls -l enlace*
-lrwxrwxrwx 1 root root 5 abr 28 17:47 enlace-simbolico-test -> test/
-root@debian:/tmp# ls -li enlace-simbolico-test
-2883610 lrwxrwxrwx 1 root root 5 abr 28 17:47 enlace-simbolico-test -> test/
-root@debian:/tmp# ls -lid test
-2883599 drwxr-xr-x 2 root root 4096 abr 28 17:08 test
+usuario@debian:/tmp$ ls -li test enlace-duro-test
+2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:41 enlace-duro-test
+2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:41 test
+
+usuario@debian:/tmp$ ln -s test enlace-simbolico-test
+
+usuario@debian:/tmp$ ls -li test enlace*
+2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:41 test
+2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:41 enlace-duro-test
+2359336 lrwxrwxrwx 1 usuario usuario  4 sep  5 07:49 enlace-simbolico-test -> test
 ```
+
 _*Nota*_: Es importante entender que si borramos el fichero o directorio origen, el enlace simbólico permanece pero los datos desaparecen para siempre.
 
-- Enlaces duros: Los enlaces duros lo que hacen es asociar dos o más ficheros compartiendo el mismo inodo. Esto hace que cada enlace duro es una copia exacta del resto de ficheros asociados, tanto de datos como de permisos, propietario, etc. Esto implica también que cuando se realicen cambios en uno de los enlaces o en el fichero este también se realizará en el resto de enlaces. 
-
 ```bash
-root@debian:/tmp# echo "fichero test" > test.txt
+usuario@debian:/tmp$ rm test
+usuario@debian:/tmp$ ls -li enlace*
+2359319 -rw-r--r-- 1 usuario usuario 13 sep  5 07:41 enlace-duro-test
+2359336 lrwxrwxrwx 1 usuario usuario  4 sep  5 07:49 enlace-simbolico-test -> test
 
-root@debian:/tmp# ls -li test.txt enlace-duro-test 
-2883611 -rw-r--r-- 2 root root 13 abr 28 17:51 enlace-duro-test
-2883611 -rw-r--r-- 2 root root 13 abr 28 17:51 test.txt
+usuario@debian:/tmp$ cat enlace-duro-test
+fichero test
+usuario@debian:/tmp$ cat enlace-simbolico-test
+cat: enlace-simbolico-test: No existe el fichero o el directorio
 ```
 
-En la primera columna verificamos que tienen el mismo número de inodo y en la tercera se especifica cuando enlaces duros tiene el fichero. Si hacéis cambios en uno de ellos veréis que también se hacen en el resto.  Si por ejemplo cambiamos los permisos al fichero test.txt:
+- **Enlaces duros**: Los enlaces duros lo que hacen es asociar dos o más ficheros compartiendo el mismo inodo. Esto hace que cada enlace duro es una copia exacta del resto de ficheros asociados, tanto de datos como de permisos, propietario, etc. Esto implica también que cuando se realicen cambios en uno de los enlaces o en el fichero este también se realizará en el resto de enlaces.
 
 ```bash
-root@debian:/tmp# chmod 755 test.txt 
-root@debian:/tmp# ls -li test.txt enlace-duro-test 
-2883611 -rwxr-xr-x 2 root root 13 abr 28 17:52 enlace-duro-test
-2883611 -rwxr-xr-x 2 root root 13 abr 28 17:52 test.txt
+usuario@debian:/tmp$ rm enlace*
+
+usuario@debian:/tmp$ echo "fichero test" > test.txt
+usuario@debian:/tmp$ ln test.txt enlace-duro-test
+
+usuario@debian:/tmp$ ls -li test.txt enlace-duro-test
+2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:51 enlace-duro-test
+2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:51 test.txt
 ```
 
-_*Nota*_: Es importante entender que los enlaces duros no pueden hacerse contra directorios y tampoco fuera del propio sistema de ficheros.
+En la primera columna verificamos que tienen el mismo número de inodo y en la tercera se especifica cuando enlaces duros tiene el fichero. Si hacéis cambios en uno de ellos veréis que también se hacen en el resto. Si por ejemplo cambiamos los permisos al fichero test.txt:
 
-| soft link | hard link |  
-| --------- | --------- |
-| Se pueden hacer con ficheros y directorios | Solamente se pueden hacer con ficheros |
-| Se pueden hacer entre distintos sistemas de ficheros | No admiten diferentes sistemas de ficheros |
-| Tienen diferente número de inodo | Comparten número de inodo |
+```bash
+usuario@debian:/tmp$ chmod 755 test.txt
+usuario@debian:/tmp$ ls -li test.txt enlace-duro-test
+2359319 -rwxr-xr-x 2 usuario usuario 13 sep  5 07:51 enlace-duro-test
+2359319 -rwxr-xr-x 2 usuario usuario 13 sep  5 07:51 test.txt
+```
+
+_*Nota 2*_: Es importante entender que los enlaces duros no pueden hacerse contra directorios y tampoco fuera del propio sistema de ficheros.
+
+| soft link                                              | hard link                                                       |
+| ------------------------------------------------------ | --------------------------------------------------------------- |
+| Se pueden hacer con ficheros y directorios             | Solamente se pueden hacer con ficheros                          |
+| Se pueden hacer entre distintos sistemas de ficheros   | No admiten diferentes sistemas de ficheros                      |
+| Tienen diferente número de inodo                       | Comparten número de inodo                                       |
 | Si borramos la información original perdemos el enlace | Si borramos la información original el enlace sigue funcionando |
-| Son punteros o accesos directos a memoria | Son copias exactas del fichero de origen |
+| Son punteros o accesos directos a memoria              | Son copias exactas del fichero de origen                        |
 
 ### Comando su –
 
+**Explicación**: El comando `su` y `su -` en Linux se utilizan para cambiar de usuario en el sistema, pero tienen comportamientos diferentes en cuanto al entorno del usuario al que se cambia. A continuación, se explica las diferencias clave entre ambos:
+
+- su (sin guion): Cambia de usuario sin cargar completamente el entorno de inicio de sesión del nuevo usuario. Mantiene el entorno actual del usuario que ejecuta el comando (variables de entorno, directorio actual, etc.). El directorio de trabajo permanece siendo el directorio del usuario desde el que ejecutaste su.
+
 ```bash
-vagrant@debian:~$ echo $HOME
-/home/vagrant
-vagrant@debian:~$ su -
-Contraseña: 
-root@debian:~# echo $HOME
-/root
+usuario@debian:~$ echo $PWD
+/home/usuario
+usuario@debian:~$ su
+Contraseña:
+root@debian:/home/usuario# echo $PWD
+/home/usuario
 ```
 
-**Explicación**: El comando `su` y `su -` en Linux se utilizan para cambiar de usuario en el sistema, pero tienen comportamientos diferentes en cuanto al entorno del usuario al que se cambia. A continuación, se explica las diferencias clave entre ambos:
-- su (sin guion): Cambia de usuario sin cargar completamente el entorno de inicio de sesión del nuevo usuario. Mantiene el entorno actual del usuario que ejecuta el comando (variables de entorno, directorio actual, etc.). El directorio de trabajo permanece siendo el directorio del usuario desde el que ejecutaste su.
 - su - (con guion): Cambia de usuario y carga completamente el entorno de inicio de sesión del nuevo usuario (como si hubieras iniciado sesión directamente como ese usuario). Carga el entorno completo del nuevo usuario, incluyendo las variables de entorno, el directorio de inicio, y archivos de configuración como .bashrc o .profile. El directorio de trabajo cambia al directorio personal (home) del nuevo usuario.
+
+```bash
+usuario@debian:~$ echo $PWD
+/home/usuario
+usuario@debian:~$ su -
+Contraseña:
+root@debian:~# echo $PWD
+/root
+```

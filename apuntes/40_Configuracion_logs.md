@@ -1,18 +1,18 @@
 # El sistema de logs
 
-Cuando el sistema se inicia, se pone en marcha y efectúa cualquier tipo de acción, se registran sus acciones y las de la mayoría de sus servicios en diferentes ficheros. Dos servicios esta especializados en la recepción de los mensajes que tienen como destino estos ficheros.
+Cuando el sistema se inicia se pone en marcha y efectúa cualquier tipo de acción, se registran sus acciones y las de la mayoría de sus servicios en diferentes ficheros. Dos servicios esta especializados en la recepción de los mensajes que tienen como destino estos ficheros.
 
-- *syslogd*: gestiona los logs del sistema. Distribuye los mensajes a archivos, tuberías, destinos remotos, terminales o usuarios, usando las indicaciones especificadas en su archivo de configuración `/etc/syslog.conf`, donde se indica qué se loguea y a dónde se envían estos logs. Por otro lado, es posible configurar el servicio *rsyslog.service* para que equipos remotos puedan escribir sus mensajes de log en el propio servidor que ejecuta el servicio syslog remoto.
-- *klogd*: se encarga de los logs del kernel. Lo normal es que *klogd* envíe sus mensajes a syslogd pero no siempre es así, sobre todo en los eventos de alta prioridad, que salen directamente por pantalla.
+- _syslogd_: gestiona los logs del sistema. Distribuye los mensajes a archivos, tuberías, destinos remotos, terminales o usuarios, usando las indicaciones especificadas en su archivo de configuración `/etc/syslog.conf`, donde se indica qué se loguea y a dónde se envían estos logs. Por otro lado, es posible configurar el servicio _rsyslog.service_ para que equipos remotos puedan escribir sus mensajes de log en el propio servidor que ejecuta el servicio syslog remoto.
+- _klogd_: se encarga de los logs del kernel. Lo normal es que _klogd_ envíe sus mensajes a syslogd pero no siempre es así, sobre todo en los eventos de alta prioridad, que salen directamente por pantalla.
 
 Los logs se guardan en archivos ubicados en el directorio `/var/log`, aunque muchos programas manejan sus propios logs y los guardan en `/var/log/<programa>`. Además, es posible especificar múltiples destinos para un mismo mensaje. Algunos de los log más importantes son:
 
 - `/var/log/messages`: aquí encontraremos los logs que llegan con prioridad info (información), notice (notificación) o warn (aviso).
-- `/var/log/kern.log`: aquí se almacenan los logs del kernel, generados por *klogd*.
+- `/var/log/kern.log`: aquí se almacenan los logs del kernel, generados por _klogd_.
 - `/var/log/auth.log`: en este log se registran los login en el sistema, las veces que hacemos
-su, etc. Los intentos fallidos se registran en líneas con información del tipo invalid password o authentication failure.
+  su, etc. Los intentos fallidos se registran en líneas con información del tipo invalid password o authentication failure.
 - `/var/log/dmesg`: en este archivo se almacena la información que genera el kernel
-durante el arranque del sistema.
+  durante el arranque del sistema.
 
 A continuación, te presento la información solicitada con los fragmentos de código Linux correctamente formateados en bloques de código markdown usando ```bash para facilitar su inclusión en tu documentación.
 
@@ -127,7 +127,7 @@ Por lo tanto, usar `@@` en la configuración de rsyslog en el cliente permite un
 
 ## Probando los logs locales
 
-El comando *logger* en Linux se utiliza para enviar mensajes al sistema de registro de eventos (syslog o rsyslog). Es una forma conveniente de generar mensajes de registro directamente desde la línea de comandos o desde scripts.
+El comando _logger_ en Linux se utiliza para enviar mensajes al sistema de registro de eventos (syslog o rsyslog). Es una forma conveniente de generar mensajes de registro directamente desde la línea de comandos o desde scripts.
 
 Para probar nuestro sistema de forma local, vamos a simular un error en una aplicación  
 de correo. Los logs no se escriben a mano sino a través de la orden “logger”. La sintaxis  
@@ -138,12 +138,14 @@ man logger
 ```
 
 Entrada en el rsyslog.conf, para los logs de mail:
+
 ```bash
 # Log all the mail messages in one place.
 mail.*                                                  -/var/log/maillog
 ```
 
 En nuestro caso vamos a usar la orden:
+
 ```bash
 logger -p mail.info "Esto es una prueba"
 logger -p mail.emerg "Esto es una prueba de emergencia"
@@ -151,7 +153,7 @@ logger -p mail.emerg "Esto es una prueba de emergencia"
 tail -f /var/log/maillog
 ```
 
-La opción -p imprime el mensaje “Esto es una prueba” en el subsitema llamado “mail.err”		
+La opción -p imprime el mensaje “Esto es una prueba” en el subsitema llamado “mail.err”
 
 Equivalente para systemd al comando logger de syslog:
 El comando systemd-cat es una utilidad en Linux que permite enviar mensajes de registro directamente al journal de systemd. Es una alternativa a logger, pero en lugar de enviar los mensajes a syslog o rsyslog, los envía directamente al Journal de systemd.
@@ -161,6 +163,7 @@ systemd-cat
 ```
 
 Execute process with stdout/stderr connected to the journal.
+
 ```bash
 systemd-cat
 
@@ -185,11 +188,13 @@ chmod 2775 /var/log/journal
 ```
 
 Then, restart journald to apply the change:
+
 ```bash
 systemctl restart systemd-journald
 ```
 
 Comandos journalctl:
+
 ```bash
 journalctl                      # Ver todos los logs
 journalctl -f                   # Seguir los logs en tiempo real
@@ -202,16 +207,19 @@ journalctl -r                   # Ver los logs en orden inverso (más reciente p
 ```
 
 Limpiar registros reteniendo como máximo 2GB:
+
 ```bash
 journalctl --vacuum-size=2G
 ```
 
 Limpiar registros y retener sólo los 2 últimos años:
+
 ```bash
 journalctl --vacuum-time=2years
 ```
 
 Ver los logs del service sshd del último minuto:
+
 ```bash
 journalctl --since '1 min ago' -u sshd
 ```
@@ -220,6 +228,7 @@ journalctl --since '1 min ago' -u sshd
 Solo root
 
 Para que un usuario nominal pueda utilizar el comando journalctl, tiene que estar en el grupo systemd-journal:
+
 ```bash
 adduser operador
 passwd operador
@@ -236,43 +245,45 @@ En rsyslog (y en general en los sistemas de registro de logs de Linux), las faci
 
 Las facilidades se utilizan para identificar el tipo de aplicación o servicio que está generando el mensaje de log. Cada facilidad tiene un nombre predefinido y un código numérico asociado. Las facilidades más comunes son:
 
-| Facilidad | Código Numérico | Descripción                                         |
-|-----------|-----------------|-----------------------------------------------------|
+| Facilidad | Código Numérico | Descripción                                            |
+| --------- | --------------- | ------------------------------------------------------ |
 | auth      | 4               | Mensajes relacionados con la autenticación del sistema |
-| authpriv  | 10              | Mensajes de autenticación privados, como SSH         |
-| cron      | 9               | Mensajes relacionados con el servicio cron           |
-| daemon    | 3               | Mensajes de procesos del sistema (como servicios)    |
-| kern      | 0               | Mensajes del kernel                                 |
-| lpr       | 6               | Mensajes de impresión                               |
-| mail      | 2               | Mensajes relacionados con correo electrónico        |
-| news      | 7               | Mensajes de servidores de noticias (NNTP)           |
-| syslog    | 5               | Mensajes generados por el propio servicio syslog    |
-| user      | 1               | Mensajes generados por procesos de usuario          |
-| uucp      | 8               | Mensajes de protocolos UUCP                         |
+| authpriv  | 10              | Mensajes de autenticación privados, como SSH           |
+| cron      | 9               | Mensajes relacionados con el servicio cron             |
+| daemon    | 3               | Mensajes de procesos del sistema (como servicios)      |
+| kern      | 0               | Mensajes del kernel                                    |
+| lpr       | 6               | Mensajes de impresión                                  |
+| mail      | 2               | Mensajes relacionados con correo electrónico           |
+| news      | 7               | Mensajes de servidores de noticias (NNTP)              |
+| syslog    | 5               | Mensajes generados por el propio servicio syslog       |
+| user      | 1               | Mensajes generados por procesos de usuario             |
+| uucp      | 8               | Mensajes de protocolos UUCP                            |
 
 ## Facilidades Locales (local0 a local7)
 
 Las facilidades local0 a local7 están reservadas para uso personalizado o privado. No están asignadas a ningún servicio en particular, lo que permite a los administradores y desarrolladores utilizarlas para registrar mensajes específicos de sus aplicaciones o procesos personalizados.
 
 | Facilidad | Código Numérico |
-|-----------|----------------|
-| local0    | 16             |
-| local1    | 17             |
-| local2    | 18             |
-| local3    | 19             |
-| local4    | 20             |
-| local5    | 21             |
-| local6    | 22             |
-| local7    | 23             |
+| --------- | --------------- |
+| local0    | 16              |
+| local1    | 17              |
+| local2    | 18              |
+| local3    | 19              |
+| local4    | 20              |
+| local5    | 21              |
+| local6    | 22              |
+| local7    | 23              |
 
 ## Ejemplos de Uso de Facilidades Locales
 
 **Configuración en rsyslog:**
+
 ```bash
 vi /etc/rsyslog.conf
 ```
 
 **Añadimos en rules:**
+
 ```bash
 local0.*    /var/log/local0.log
 local1.*    /var/log/local1.log
@@ -284,6 +295,7 @@ systemctl restart rsyslog.service
 ```
 
 **Generar mensajes de log con logger, los ficheros se crean cuando lanzamos el comando logger:**
+
 ```bash
 logger -p local0.info "Mensaje de prueba en local0"
 logger -p local1.warn "Advertencia en local1"
@@ -291,6 +303,7 @@ logger -p local7.error "Error crítico en local7"
 ```
 
 **Verificar los logs:**
+
 ```bash
 tail -f /var/log/local0.log
 tail -f /var/log/local1.log
@@ -300,10 +313,12 @@ tail -f /var/log/local7.log
 ## Recomendaciones para el Uso de Facilidades Locales
 
 1. Organización y Documentación:
+
    - Define claramente el propósito de cada facilidad en tus aplicaciones.
    - Mantén una convención consistente.
 
 2. Rotación de Logs:
+
    - Configura la rotación de logs para evitar que los archivos crezcan sin control.
 
 3. Centralización de Logs:
@@ -313,7 +328,7 @@ tail -f /var/log/local7.log
 
 ## logrotate en Linux
 
-*logrotate* es una herramienta en sistemas Linux utilizada para la gestión y rotación de archivos de registro (logs). Su objetivo principal es archivar, comprimir, eliminar o enviar archivos de registro antiguos para mantener el almacenamiento bajo control y garantizar que los archivos de log no crezcan indefinidamente.
+_logrotate_ es una herramienta en sistemas Linux utilizada para la gestión y rotación de archivos de registro (logs). Su objetivo principal es archivar, comprimir, eliminar o enviar archivos de registro antiguos para mantener el almacenamiento bajo control y garantizar que los archivos de log no crezcan indefinidamente.
 
 ## ¿Por qué usar logrotate?
 
@@ -325,12 +340,14 @@ tail -f /var/log/local7.log
 ## Arquitectura de logrotate
 
 logrotate utiliza archivos de configuración para definir:
+
 - Frecuencia de rotación: Diario, semanal, mensual, etc.
 - Cantidad de archivos a retener.
 - Compresión de logs.
 - Acciones posteriores (como reiniciar servicios).
 
 Rutas importantes:
+
 - `/var/log`
 - `/etc/logrotate.conf` (Archivo de configuración global)
 - `/etc/logrotate.d/` (Directorio que contiene configuraciones específicas por servicio)
@@ -365,10 +382,10 @@ Ejemplo de configuración `/etc/logrotate.d/httpd`:
 - `notifempty`: No rota el archivo si está vacío.
 - `sharedscripts`: Ejecuta los scripts solo una vez por rotación, sin importar cuántos archivos de log se hayan rotado.
 - `delaycompress`: No comprime los logs inmediatamente después de la rotación. La compresión se hace en la siguiente rotación (útil si el servicio aún escribe en el log después de la rotación).
-- `postrotate / endscript`: 
-    - `systemctl reload httpd.service`: Recarga Apache (httpd) para que comience a escribir en los nuevos archivos de log.
-    - `> /dev/null 2>/dev/null`: Silencia la salida estándar y los errores.
-    - `|| true`: Evita que un fallo en el comando detenga logrotate.
+- `postrotate / endscript`:
+  - `systemctl reload httpd.service`: Recarga Apache (httpd) para que comience a escribir en los nuevos archivos de log.
+  - `> /dev/null 2>/dev/null`: Silencia la salida estándar y los errores.
+  - `|| true`: Evita que un fallo en el comando detenga logrotate.
 
 ## Ejemplo de configuración global `/etc/logrotate.conf`
 
@@ -407,36 +424,40 @@ logrotate -f /etc/logrotate.conf
 ## Parámetros size, minsize y maxsize
 
 - **size**: Define el tamaño mínimo que un archivo debe alcanzar para rotarse. No se basa en la frecuencia, solo en el tamaño.
-    ```bash
-    /var/log/app.log {
-        size 10M
-        rotate 5
-        compress
-    }
-    ```
-    Se rotará cuando `app.log` alcance 10MB, sin importar el tiempo transcurrido.
+
+  ```bash
+  /var/log/app.log {
+      size 10M
+      rotate 5
+      compress
+  }
+  ```
+
+  Se rotará cuando `app.log` alcance 10MB, sin importar el tiempo transcurrido.
 
 - **minsize**: Similar a size, pero considera la frecuencia (daily, weekly, monthly). Se rotará solo si el tamaño supera minsize en el periodo definido.
-    ```bash
-    /var/log/app.log {
-        daily
-        minsize 5M
-        rotate 7
-        compress
-    }
-    ```
-    El log se rotará si tiene al menos 5MB al finalizar el día.
+
+  ```bash
+  /var/log/app.log {
+      daily
+      minsize 5M
+      rotate 7
+      compress
+  }
+  ```
+
+  El log se rotará si tiene al menos 5MB al finalizar el día.
 
 - **maxsize**: Forza la rotación cuando el log supera un tamaño determinado. Ignora la frecuencia y se ejecuta en la próxima verificación.
-    ```bash
-    /var/log/app.log {
-        weekly
-        maxsize 50M
-        rotate 4
-        compress
-    }
-    ```
-    El log se rotará automáticamente si supera 50MB, incluso antes de cumplirse la semana.
+  ```bash
+  /var/log/app.log {
+      weekly
+      maxsize 50M
+      rotate 4
+      compress
+  }
+  ```
+  El log se rotará automáticamente si supera 50MB, incluso antes de cumplirse la semana.
 
 ## Tamaño o día, lo que ocurra primero
 
@@ -527,9 +548,11 @@ En logrotate, el archivo de marca de tiempo es utilizado para registrar la últi
 
 **Ubicación del fichero de marca de tiempo**  
 El archivo de marca de tiempo por defecto se encuentra en:
+
 ```
 /var/lib/logrotate/status
 ```
+
 Este archivo contiene la información sobre la última rotación de cada archivo de log gestionado por logrotate.
 
 **Formato del archivo de marca de tiempo**

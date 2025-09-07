@@ -23,7 +23,7 @@ El comando de `awk` anterior realiza:
 - `awk` es muy interesante para poder mostrar la última columna si no sabemos en que posicióne está con el valor `$NF`.
 
 ```bash
-si@si-VirtualBox:~$ cat /etc/passwd | awk -F ':' '{print $NF}'
+usuario@debian:~$ cat /etc/passwd | awk -F ':' '{print $NF}'
 /bin/bash
 /usr/sbin/nologin
 /usr/sbin/nologin
@@ -47,10 +47,10 @@ Lo que significa que `$2` se colocará antes que `$1`, y no habrá espacio ni ot
 
 Este comando puede ser útil para cambiar el orden o el formato de los campos en líneas de texto que siguen un patrón específico, como en este caso, donde se manipula una dirección IP precedida por la etiqueta "addr:".
 
-_**Nota:**_ Es importante tener en cuenta que `cut` y `awk` permite separar por un campo pero en la salida `cut` **conservará el separador** a diferencia de `awk` **que eliminará el separador**, tal y como podemos ver a continuación.
+_*Nota:*_ Es importante tener en cuenta que `cut` y `awk` permite separar por un campo pero en la salida `cut` **conservará el separador** a diferencia de `awk` **que eliminará el separador**, tal y como podemos ver a continuación.
 
 ```bash
-si@si-VirtualBox:~/scripts$ si@si-VirtualBox:~/scripts$ cat script.sh
+usuario@debian:~/scripts$ cat script.sh
 #!/bin/bash
 
 echo "----- SALIDA DE CUT -----"
@@ -65,7 +65,7 @@ tail /etc/passwd | awk -F ':' '{print $1 $6 $NF}'
 ```
 
 ```bash
-si@si-VirtualBox:~/scripts$ si@si-VirtualBox:~/scripts$ bash script.sh
+usuario@debian:~/scripts$ bash script.sh
 ----- SALIDA DE CUT -----
 colord:/var/lib/colord:/usr/sbin/nologin
 geoclue:/var/lib/geoclue:/usr/sbin/nologin
@@ -77,9 +77,6 @@ si:/home/si:/bin/bash
 vboxadd:/var/run/vboxadd:/bin/false
 sshd:/run/sshd:/usr/sbin/nologin
 mysql:/nonexistent:/bin/false
-
-
-
 
 ----- SALIDA DE AWK -----
 colord/var/lib/colord/usr/sbin/nologin
@@ -97,7 +94,7 @@ mysql/nonexistent/bin/false
 Veamos otro ejemplo, esta vez tambien hacemos uso del comando `rev` que permite invertir el orden del resultado.
 
 ```bash
-si@si-VirtualBox:~$ ls -l | awk -F ' ' '{print $NF}'
+usuario@debian:~$ ls -l | awk -F ' ' '{print $NF}'
 40
 Desktop
 Documents
@@ -109,7 +106,8 @@ Public
 snap
 Templates
 Videos
-si@si-VirtualBox:~$ ls -l | awk -F ' ' '{print $NF}' | rev
+
+usuario@debian:~$ ls -l | awk -F ' ' '{print $NF}' | rev
 04
 potkseD
 stnemucoD
@@ -125,7 +123,7 @@ soediV
 
 _*Nota*_: Diferencia entre `NF` y `NR` en awk.
 
-| Variable | Significado | Uso común |
-|----------|------------|-----------|
-| `NR` | Número de la línea actual | Numerar líneas, filtrar líneas específicas |
-| `NF` | Número de columnas en la línea actual | Acceder a la última columna, contar columnas |
+| Variable | Significado                           | Uso común                                    |
+| -------- | ------------------------------------- | -------------------------------------------- |
+| `NR`     | Número de la línea actual             | Numerar líneas, filtrar líneas específicas   |
+| `NF`     | Número de columnas en la línea actual | Acceder a la última columna, contar columnas |
