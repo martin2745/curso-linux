@@ -242,6 +242,43 @@ usuario@debian:~$ cat /etc/debian_version
 12.11
 ```
 
+#### A considerar sobre la instalación de un paquete .deb
+
+Cuando se usa el comando apt install paquete, no se guarda el archivo .deb descargado permanentemente en un lugar visible para el usuario. El sistema APT descarga temporalmente el archivo .deb en un directorio temporal controlado por el sistema, generalmente dentro de `/var/cache/apt/archives/`. Ahí se almacenan los archivos de paquete descargados para su instalación.
+
+```bash
+root@debian:/var/cache/apt/archives# ls -la | wc
+    451    4052   35116
+root@debian:/var/cache/apt/archives# apt clean
+root@debian:/var/cache/apt/archives# ls -la | wc
+      5      38     195
+```
+
+Uno puede tener la duda entre la diferencia de los comandos `clean`, `remove` y `purge` en apt. Podemos resumirlo de la siguiente forma:
+
+- **apt clean**: Este comando elimina todos los archivos `.deb` descargados que se guardan en la caché del sistema, específicamente en `/var/cache/apt/archives/`. Esto libera espacio en disco al eliminar los paquetes de instalación ya descargados, pero no afecta a los paquetes instalados ni a sus configuraciones.
+
+- **apt remove**: Este comando desinstala el paquete especificado, eliminando sus archivos binarios y ejecutables, pero **deja los archivos de configuración** en el sistema. Esto es útil si se planea reinstalar el paquete más adelante y se desea mantener la configuración previa.
+
+- **apt purge**: Es una versión más completa que `remove`. Además de eliminar el paquete, también borra los archivos de configuración asociados. Esto deja el sistema más limpio, sin rastros del paquete eliminado.
+
+Además hay otros comandos relacionados que ayudan a limpiar el sistema:
+
+- `apt autoremove` elimina paquetes que fueron instalados como dependencias pero que ahora ya no se necesitan.
+- `apt autoclean` elimina solo los archivos `.deb` de paquetes antiguos y obsoletos que ya no están en los repositorios.
+
+Resumido en forma de tabla:
+
+| Comando          | Qué elimina                          | Configuración eliminada | Archivos descargados eliminados |
+| ---------------- | ------------------------------------ | ----------------------- | ------------------------------- |
+| `apt clean`      | Archivos `.deb` descargados en caché | No                      | Sí                              |
+| `apt remove`     | Paquete instalado                    | No                      | No                              |
+| `apt purge`      | Paquete instalado                    | Sí                      | No                              |
+| `apt autoremove` | Paquetes dependientes no necesarios  | No                      | No                              |
+| `apt autoclean`  | Archivos `.deb` antiguos y obsoletos | No                      | Sí (selectivo)                  |
+
+Cada uno tiene su función para mantener el sistema ordenado, limpio y con espacio libre en disco.
+
 ## .rpm
 
 ### rpm
