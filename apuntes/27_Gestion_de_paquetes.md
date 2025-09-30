@@ -89,16 +89,18 @@ _*Nota*_: Si queremos volver a realizar la configuración de un paquete cuando s
 Facilita la instalación de paquetes **.deb**, descargándolos de los repositorios y gestionando las dependencias de estos, usamos la herramienta _Advanced Package Tool: apt-get_. Es importante tener en cuenta que al ser un repositorio online, si cada vez que tuvieramos que realizar una descarga tuvieramos que comprobar en que repositorio se encuentra el paquete el proceso podría demorarse mucho, por este motivo se guarda en el sistema en la ruta `/etc/apt/sources.list` con los respositorios en los cuales se encuentran los paquetes y en una caché local los paquetes que se encuentran en cada repostiorio así como la versión de los mismos. Es buena práctica actualizar la información de esta caché antes de realizar la descarga de un paquete.
 
 - `get`: Obtiene los paquetes de los repositorios pero no los instala. Actualmente ya no es necesario.
-- `search`: Accede a los repositorios para poder buscar el paquete deseado.
+- `search`: Accede a la base de datos local de los repositorios para poder buscar el paquete deseado.
 - `install`: Instala uno o varios paquetes.
 - `remove`: Elimina uno o varios paquetes.
+- `autoremove`: Elimina paquetes huérfanos, es decir, no requeridos por ningún otro paquete.
 - `purge`: Elimina uno o varios paquetes y también sus archivos de configuración. Alternativamente podemos utilizar `sudo apt remove --purge nombre_del_paquete`.
 - `download`: Descarga el paquete .deb sin instalarlo.
 - `update`: Actualiza la lista de paquetes disponibles en los repositorios. No instala nada en el sistema.
 - `upgrade`: Actualiza todos los paquetes instalados a las versiones más recientes disponibles de los repositorios y si no están actualizados nos dirá que es necesario instalar.
-- `dist-upgrade`: En caso de que la distribución cambie, es decir, exista una nueva distribución, incluyendo la resolución de dependencias y la eliminación o instalación de nuevos paquetes si es necesario para completar la actualización de forma coherente de los paquetes ya existentes.
+- `dist-upgrade` o `full-upgrade`: En caso de que la distribución cambie, es decir, exista una nueva distribución, incluyendo la resolución de dependencias y la eliminación o instalación de nuevos paquetes si es necesario para completar la actualización de forma coherente de los paquetes ya existentes.
 - `list --installed`: En linux, ejecutar `apt list --installed` permite mostrar todos los paquetes deb instalados en el sistema.
-- `autoremove`: Elimina paquetes huérfanos, es decir, no requeridos por ningún otro paquete.
+- `clean`: Elimina todos los archivos .deb en la caché (`/var/apt/cache/archives`), liberando así espacio y dejando la caché vacía.
+- `autoclean`: Elimina solo los archivos .deb almacenados en la caché que ya no pueden ser descargados desde los repositorios, es decir, versiones antiguas u obsoletas que no se usan ni se pueden actualizar. Esto ayuda a mantener la caché limpia sin eliminar archivos que podrían ser útiles para reinstalar paquetes actuales.
 
 Podemos ver los repositorios donde `apt` hace sus busquedas a continuación:
 
@@ -182,7 +184,20 @@ vim-redact-pass/oldstable 1.7.4-6 all
   stop pass(1) passwords ending up in Vim cache files
 ```
 
-Para realizar la instalación realizamos los siguientes pasos:
+Interpretando lo anterior podemos decir que nos muestra todos los paquetes relacionados con _neovim_. Podemos interpretar la salida como:
+
+```bash
+neovim/oldstable 0.7.2-7 amd64
+  heavily refactored vim fork
+```
+
+- `neovim`: nombre del paquete.
+- `oldstable`: versión o rama de Debian a la que pertenece el paquete.
+- `0.7.2-7`: versión específica del paquete.
+- `amd64`: arquitectura para la que está compilado (64 bits).
+- `heavily refactored vim fork`: breve descripción del paquete (Neovim es un fork de Vim con muchas mejoras).
+
+Para realizar la instalación realizamos los siguientes pasos indicando exactamente cual de los paquetes anteriores vamos a instalar. El siguiente comando descarga el paquete y realiza directamente la instalación del mismo, si queremos descargar el paquete pero no proceder a su instalación podemos hacer uso de `apt download`. Instalamos de la siguiente forma:
 
 ```bash
 root@debian:~# apt install neovim -y
@@ -198,6 +213,8 @@ neovim/oldstable,now 0.7.2-7 amd64 [instalado]
 root@debian:~# nvim /etc/network/interfaces
 ...
 ```
+
+En linux los archivos _.deb_ que apt descarga para instalar paquetes se guardan temporalmente en la carpeta `/var/cache/apt/archives/`. Estos paquetes pueden ser eliminados de forma automática por el sistema o de forma manual haciendo uso del comando `apt clean`.
 
 Si queremos eliminar el paquete procedemos del siguiente modo:
 
@@ -216,6 +233,8 @@ neovim-runtime/oldstable,now 0.7.2-7 all [instalado, autodesinstalable]
 
 _*Nota*_: Tambien podemos hacer uso del comando _apt remove --purge neovim -y_ para eliminar los archivos de configuración.
 
+_*Nota 2*_: Una dependencia es otro paquete que un programa necesita para funcionar correctamente. Cuando instalas un paquete, el gestor de paquetes también instala automáticamente todas sus dependencias, que son librerías o programas auxiliares que el paquete principal requiere para ejecutarse sin errores.
+
 En este punto solo queda eliminar las dependencias huerfanas del sistema como se indica anteriormente una vez eliminado el paquete.
 
 ```bash
@@ -226,6 +245,8 @@ root@debian:~# apt list --installed | grep neovim
 
 WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
 ```
+
+_*Nota*_: Una dependencia es un paquete o libreria necesario para el funcionamiento del paquete que queremos instalar. Del mismo modo que `apt remove` no elimina los archivos de configuración del paquete original, `apt autoremove` no elimina si existen los archivos de configuración de las dependencias, para ello existe `apt autoremove --purge`.
 
 #### Actualizar la distribución de debian 12.10 12.11
 
@@ -240,6 +261,25 @@ root@debian:~# reboot
 ...
 usuario@debian:~$ cat /etc/debian_version
 12.11
+```
+
+#### Actualizar la distribución de Debian 12 (Bookworm) a Debian 13 (Trixie)
+
+```bash
+root@debian:~# cat /etc/debian_version
+12.x
+root@debian:~# apt update
+root@debian:~# apt upgrade -y
+root@debian:~# apt dist-upgrade -y
+root@debian:~# sed -i 's/bookworm/trixie/g' /etc/apt/sources.list
+root@debian:~# sed -i 's/bookworm/trixie/g' /etc/apt/sources.list.d/*.list
+root@debian:~# apt update
+root@debian:~# apt upgrade -y
+root@debian:~# apt dist-upgrade -y
+root@debian:~# reboot
+...
+usuario@debian:~$ cat /etc/debian_version
+13.x
 ```
 
 #### A considerar sobre la instalación de un paquete .deb
