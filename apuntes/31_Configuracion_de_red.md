@@ -397,6 +397,14 @@ El programa _dig_ es una herramienta de consulta avanzada de servidor de nombres
 dig tele2.es
 ```
 
+```bash
+Probar dig con sing-group.org y www.albench.org
+root@debian:~# dig a +short www.aibench.org
+193.147.87.25
+root@debian:~# dig a +short sing-group.org
+193.147.87.25
+```
+
 #### Comando host
 
 La herramienta _host_ devuelve el mismo resultado, pero quizá de manera más sencilla.
@@ -448,3 +456,21 @@ Como parámetros a destacar:
 
 - _-v_: Activa el modo verboroso (verbose), lo que significa que nmap mostrará más información sobre el progreso del escaneo mientras se ejecuta.
 - _-A_: Activa la detección de sistema operativo y versión de servicios, también intenta detectar scripts y realizar un traceroute (ruta de red). Esta opción proporciona un análisis más detallado del host.
+
+### Configuración de proxy en debian
+
+Para modificar el proxy en una máquina Debian editando el archivo `/etc/profile.d/proxy.sh`, debes abrir este archivo con un editor de texto con privilegios de superusuario y luego definir o modificar las variables de entorno que configuran el proxy.
+
+```bash
+# http/https
+export http_proxy="http://xx.xx.xx.xx:yyyy/"
+export https_proxy="http://xx.xx.xx.xx:yyyy/"
+
+# curl
+export HTTP_PROXY="http://xx.xx.xx.xx:yyyy/"
+export HTTPS_PROXY="http://xx.xx.xx.xx:yyyy/"
+```
+
+```bash
+source /etc/profile.d/proxy.sh
+```
