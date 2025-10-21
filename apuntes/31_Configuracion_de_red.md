@@ -156,7 +156,7 @@ nameserver 8.8.4.4
 ### Netplan (Ubuntu > 20.04)
 
 Netplan es un gestor de red que se basa en el uso de YAML (YAML Ain't Markup Language), un lenguaje muy extendido en tareas de configuración siendo base de productos como los populares Ansible y docker-compose.
-Bajo este sistema, la configuración se realiza a través de los ficheros con extensión .yaml que se encuentran en la carpeta /etc/netplan. Durante la instalación de los sistemas Ubuntu ya se genera una configuración inicial para la distribución (típicamente 00-installer-config.yaml) siendo posible generar todos los ficheros de configuración que se desee.
+Bajo este sistema, la configuración se realiza a través de los ficheros con extensión .yaml que se encuentran en la carpeta `/etc/netplan`. Durante la instalación de los sistemas Ubuntu ya se genera una configuración inicial para la distribución (típicamente 00-installer-config.yaml) siendo posible generar todos los ficheros de configuración que se desee.
 A continuación se muestra un fichero de ejemplo para configuraciones de ethernets estáticas y dinámicas.
 
 ```yml
@@ -188,7 +188,7 @@ Para aplicar los cambios realizados en el fichero de netplan basta con ejecutar 
 sudo netplan apply
 ```
 
-Al igual que en sistema /etc/network/interfaces, los este mecanismo de configuración es persistente.
+Al igual que en sistema `/etc/network/interfaces`, este mecanismo de configuración es persistente.
 
 Si no se desea emplear NetPlan se puede reactivar el sistema de interfaces (`/etc/network/interfaces.d/*` ó `/etc/network/interfaces`) con los siguientes comandos:
 
@@ -244,6 +244,36 @@ systemctl mask systemd-networkd.socket systemd-networkd networkd-dispatcher syst
 
 # Elimina Netplan
 apt-get --assume-yes purge nplan netplan.io
+```
+
+Para configurar una ip con netplan deberíamos realizar los siguientes pasos. Para hacer uso de netplan hay que instalar el paquete correspondiente.
+
+```bash
+sudo apt update
+sudo apt install netplan.io
+```
+
+Y posteriormente crear el fichero de configuración de red.
+
+```bash
+cat /etc/netplan/01-netcfg.yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s8:
+      dhcp4: false
+      addresses:
+        - 192.168.2.7/24
+      routes:
+        - to: default
+          via: 192.168.2.1
+```
+
+Por último, aplicamos los cambios.
+
+```bash
+sudo netplan apply
 ```
 
 ## Otros parámetros relevantes de la red
@@ -336,28 +366,6 @@ nc <IP_VICTIMA> 1234
 ```
 
 La cantidad de múltiples usos de netcat (similares a los que podría tener una navaja suiza), ha derivado en calificar este software de esta forma.
-
-#### Comando ss
-
-El comando _ss_ (socket statistics) es una herramienta moderna que proporciona la misma funcionalidad que netstat, pero es más rápida y ligera. Ofrece:
-
-- Conexiones y sockets de red (más rápido que netstat).
-- Filtrado detallado en base a estados, puertos, y protocolos.
-- Información similar sobre rutas y estadísticas de red.
-
-Diferencias clave con respecto a netstat:
-
-- Velocidad: ss es significativamente más rápido.
-- Obsolescencia: netstat está quedando obsoleto en favor de ss en algunas distribuciones modernas.
-- Formato: ss ofrece una sintaxis y salida ligeramente distinta, adaptada a nuevas tecnologías de red.
-
-Ejemplo de comandos:
-
-```bash
-ss -tuln: Muestra los puertos TCP/UDP en escucha en modo numérico.
-ss -anp: Lista todas las conexiones y sockets con el PID y el nombre del proceso.
-ss -putona
-```
 
 #### nmcli
 
