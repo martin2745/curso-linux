@@ -1,5 +1,103 @@
 # Comando ssh, scp y sftp
 
+## Funcionamiento de SSH y establecimiento de conexión
+
+Protocolo SSH (Secure Shell) es un protocolo que garantiza la confidencialidad, integridad y autenticación en las comunicaciones. Su uso más común es como **túnel seguro** protegiendo contra ataques como el rastreo de paquetes. Opera sobre el puerto TCP 22 y está disponible en la mayoría de los sistemas operativos. SSH emplea un sistema criptográfico híbrido (simétrico y asimétrico) y se utiliza ampliamente para:
+
+- Administración remota segura.
+- Transferencia de archivos mediante SCP (secure copy protocol) y SFTP (secure file transfer protocol).
+- Reenvío de puertos, permitiendo su uso como una VPN ligera para acceder a recursos de forma segura.
+
+![proceso](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/proceso.png)
+
+![00](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/00.png)
+
+El proceso de conexión SSH anteriormente mostrado no es más que un conjunto de pasos que podemos ver a continuación junto a una breve explicación.
+
+### Three-way handshake
+
+![01](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/1.png)
+
+En un primer momento vemos el establecimiento de la conexión TCP ya que SSH trabaja sobre el protocolo TCP de capa de transporte. Este protocolo lleva a cabo un proceso conocido como three-way handshake, el cual es el mecanismo utilizado para establecer una conexión fiable antes de transferir datos entre dos sistemas. Este proceso consta de tres pasos.
+
+1. **Primer paquete (SYN)**  
+   Origen: 198.0.2.4  
+   Destino: 198.0.2.7  
+   Protocolo: TCP, puerto origen 51538, puerto destino 22 (SSH)  
+   Contenido: [SYN]  
+   Descripción: La máquina kali actuando como cliente (198.0.2.4) inicia la conexión enviando un segmento TCP con la bandera SYN (Synchronize) para solicitar la sincronización de números de secuencia.
+
+2. **Segundo paquete (SYN-ACK)**  
+   Origen: 198.0.2.7  
+   Destino: 198.0.2.4  
+   Protocolo: TCP, puerto origen 22, puerto destino 51538  
+   Contenido: [SYN, ACK]  
+   Descripción: El servidor (198.0.2.7) responde con un segmento que tiene activas las banderas SYN y ACK. Reconoce la recepción del SYN del cliente (ACK) y envía su propio SYN para solicitar sincronización en sentido contrario.
+
+3. **Tercer paquete (ACK)**  
+   Origen: 198.0.2.4  
+   Destino: 198.0.2.7  
+   Protocolo: TCP, puerto origen 51538, puerto destino 22  
+   Contenido: [ACK]  
+   Descripción: El cliente (198.0.2.4) termina el proceso enviando un segmento con la bandera ACK, confirmando la recepción del SYN-ACK del servidor y completando así el establecimiento de la conexión.
+
+### SSH-TRANS
+
+![02](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/2.png)
+![03](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/3.png)
+
+A continuación, se lleva a cabo protocolo SSH-TRANS donde se realiza el intercambio de versiones de protocolo; el servidor envía su clave pública, su versión del protocolo y la del sistema operativo. El cliente verifica la autenticidad del servidor (autenticación del servidor con criptografía asimétrica).
+
+Podemos ver en las dos imágenes anteriores cómo cliente y servidor intercambian información sobre los sistemas operativos:
+
+**OpenSSH_9.9p1 Debian-3:** Representa OpenSSH versión 9.9p1, una versión moderna y mucho más segura, con nuevas funciones, mejoras de rendimiento y, sobre todo, parches de seguridad recientes, empaquetada para una versión más actual de Debian, la cual corresponde con nuestra máquina Kali.
+
+**OpenSSH_6.0p1 Debian-4+deb7u6:** Representa el software OpenSSH versión 6.0p1, que es una versión antigua, empaquetada para el sistema Debian 7, la cual corresponde con nuestra máquina Snort. Usar una versión antigua puede significar menos características, soporte de algoritmos criptográficos hoy desfasados y más riesgos de vulnerabilidades históricas.
+
+### Intercambio de claves (SSH_MSG_KEXINIT)
+
+![04](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/4.png)
+![05](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/5.png)
+
+**Intercambio de claves (SSH_MSG_KEXINIT):** Comienza la negociación de los parámetros criptográficos de la conexión. Cada lado envía una lista de los algoritmos compatibles en el orden de preferencia del cliente (el cliente es quien elige).
+
+Al final de esta negociación, cliente y servidor acuerdan:
+
+· El método para la generación de la clave de sesión (algoritmo asimétrico – grupo de Diffie-Hellman).  
+· El algoritmo de clave pública (criptografía asimétrica – usado para la autenticación del servidor, generalmente).  
+· El algoritmo de cifrado simétrico, para cifrar toda la conexión SSH (criptografía simétrica).  
+· El algoritmo de autenticación de mensajes MAC y el algoritmo hash (utilizados para garantizar la integridad de los datos), así como otros parámetros necesarios.
+
+### Fingerprint del servidor
+
+![06](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/6.png)
+
+![07](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/7.png)
+
+En la imagen, la sección que aparece bajo "KEX host key (type: ecdsa-sha2-nistp256)" muestra la clave pública del servidor que se transmite durante el mensaje de respuesta al intercambio de claves "Elliptic Curve Diffie-Hellman Key Exchange Reply".
+
+Esta clave pública, representada como una larga secuencia hexadecimal, es recibida por el cliente y es la que se utiliza para calcular el fingerprint del servidor. El fingerprint es un hash, habitualmente SHA256 o MD5, generado a partir de esa clave pública; sirve como identificador único del servidor y es almacenado en el archivo ~/.ssh/known_hosts del cliente para futuras comprobaciones de autenticidad y para prevenir ataques de suplantación en próximas conexiones.
+
+![08](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/8.png)
+
+### Generación de la clave de sesión
+
+![09](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/9.png)
+
+Generalmente se emplea un grupo de «Diffie-Hellman», algoritmo asimétrico que permite a ambos extremos generar una clave de sesión simétrica a partir de valores públicos y privados.
+
+A partir de este momento, comenzaremos a cifrar todos los datos con las nuevas claves de sesión que ambos hemos generado gracias a Diffie-Hellman.  
+Esta clave se anuncia en el mensaje **SSH_MSG_NEWKEYS** y se usa para establecer el canal seguro SSH. A partir de ese momento, comienza la autenticación del cliente, y toda la comunicación se cifra con el algoritmo simétrico negociado y la clave generada.
+
+**Protocolo SSH-AUTH**  
+Protocolo de autenticación: el cliente envía el mensaje **SSH_USERAUTH_REQUEST** para autenticarse. Si tiene éxito, el proceso finaliza.  
+La autenticación puede hacerse por contraseña (no recomendada), clave pública o Kerberos. En el caso de usar contraseña, esta se transmite en texto claro, aunque protegida criptográficamente por el protocolo de la capa de transporte SSH-TRANS.
+
+**Protocolo SSH-CONN**  
+Se ejecuta sobre el protocolo de transporte SSH. Una vez creado el túnel, los datos se intercambian de forma segura.  
+El protocolo de conexión permite multiplexar varios canales lógicos y establecer el reenvío de puertos, que es una función clave de SSH que convierte conexiones TCP inseguras en túneles cifrados.  
+Esto garantiza que la comunicación entre cliente y servidor esté protegida contra interceptaciones o manipulaciones.
+
 ## Comandos para instalar el servidor SSH en Debian
 
 Para instalar y configurar un servidor SSH en Debian, sigue estos pasos básicos desde la terminal:
