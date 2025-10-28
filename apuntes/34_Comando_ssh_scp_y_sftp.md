@@ -63,10 +63,11 @@ Podemos ver en las dos imágenes anteriores cómo cliente y servidor intercambia
 
 Al final de esta negociación, cliente y servidor acuerdan:
 
-· El método para la generación de la clave de sesión (algoritmo asimétrico – grupo de Diffie-Hellman).  
-· El algoritmo de clave pública (criptografía asimétrica – usado para la autenticación del servidor, generalmente).  
-· El algoritmo de cifrado simétrico, para cifrar toda la conexión SSH (criptografía simétrica).  
-· El algoritmo de autenticación de mensajes MAC y el algoritmo hash (utilizados para garantizar la integridad de los datos), así como otros parámetros necesarios.
+- **Algoritmos de intercambio de claves (kex_algorithms)**: Estos métodos permiten negociar y compartir de forma segura una clave secreta entre cliente y servidor. Ejemplos son "sntrup761x25519-sha512" y "curve25519-sha256", que usan criptografía de curva elíptica y funciones hash para establecer una clave común sin exponerla.
+- **Algoritmos de clave de host del servidor (server_host_key_algorithms)**: Se usan para autenticar la identidad del servidor mediante la verificación de su clave pública. Incluyen métodos como "ssh-ed25519-cert-v01" y "ecdsa-sha2-nistp256-cert-v01".
+- **Algoritmos de cifrado (encryption_algorithms_client_to_server y server_to_client)**: Se usan para cifrar la comunicación una vez establecida la conexión segura. Por ejemplo, "chacha20-poly1305@openssh.com" proporciona cifrado y autenticación AEAD rápido y seguro. En este caso
+- **Algoritmos MAC (mac_algorithms_client_to_server y server_to_client)**: Garantizan la integridad y autenticidad de origen de los datos transmitidos, evitando manipulación. Ejemplos son "umac-64-etm@openssh.com" y "hmac-sha2-256-etm@openssh.com".
+- **Algoritmos de compresión (compression_algorithms_client_to_server y server_to_client)**: Opcionalmente comprimen los datos para optimizar la transferencia, usando opciones como "none" o "zlib@openssh.com".
 
 ### Fingerprint del servidor
 
