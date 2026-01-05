@@ -712,129 +712,202 @@ usuario@debian:/tmp$ lsattr -d COMUN/
 
 ## ACLs
 
+Una ACL (Lista de Control de Acceso) es una lista detallada de permisos que se adjunta a un archivo o carpeta. Sirve para superar la limitación de los permisos básicos de Linux (que solo dejan definir permisos para el Propietario, el Grupo y el Resto).
+
 En caso de conflicto entre el usuario propietario/otros (uo de ugo) y las ACLs, prevalecen los permisos uo de ugo.
 
-- `Atributos` → `uo de ugo` → `ACLs`:
+- `Atributos` → `uo de ugo` → `ACLs`
 
 En caso de conflicto entre el grupo propietario (g de ugo)/otros grupos distintos del propietario/otros usuarios distintos del propietario y las ACLs, prevalecen las ACLs.
 
-- `Atributos` → `mascara` → `ACLs` → `g de ugo`:
+- `Atributos` → `mascara` → `ACLs` → `g de ugo`
 
-### `Asignar ACLs a usuario`
+La máscara en las ACL (Listas de Control de Acceso) de Linux es un concepto fundamental que a menudo causa confusión, pero es muy útil una vez que se entiende. Puedes imaginarla como un límite de seguridad o un techo.
+
+_Nota_: La máscara NO afecta al propietario del fichero (user::) ni a los 'otros' (other::). Solo afecta a los grupos y usuarios específicos añadidos vía ACL.
+
+### Soporte de ACL en el sistema de ficheros
+
+Hoy en día el kernel trae incorporado por defecto soporte para ACLs para distintos sistemas de ficheros. Podemos verificarlo con el siguiente comando:
+
+```bash
+root@debian:~# [ -f /boot/config-$(uname -r) ] && grep -i acl /boot/config-$(uname -r)
+# CONFIG_XILINX_EMACLITE is not set
+CONFIG_EXT4_FS_POSIX_ACL=y
+CONFIG_REISERFS_FS_POSIX_ACL=y
+CONFIG_JFS_POSIX_ACL=y
+CONFIG_XFS_POSIX_ACL=y
+CONFIG_BTRFS_FS_POSIX_ACL=y
+CONFIG_F2FS_FS_POSIX_ACL=y
+CONFIG_FS_POSIX_ACL=y
+CONFIG_TMPFS_POSIX_ACL=y
+CONFIG_JFFS2_FS_POSIX_ACL=y
+CONFIG_EROFS_FS_POSIX_ACL=y
+CONFIG_NFS_V3_ACL=y
+CONFIG_NFSD_V3_ACL=y
+CONFIG_NFS_ACL_SUPPORT=m
+CONFIG_CEPH_FS_POSIX_ACL=y
+CONFIG_9P_FS_POSIX_ACL=y
+```
+
+Pero en el caso de que no sea así, debemos activar en el sistema de ficheros el soporte para las ACLs, por lo que deberíamos instalar el paquete acl y modificar el archivo `/etc/fstab`:
+
+```bash
+apt-get update && apt-get -y install acl
+cat /etc/fstab | nl
+...
+7 #
+8 # / was on /dev/sda1 during installation
+9 UUID=3e1ae11e-dac7-4a58-8aec-d06a345171dc / ext4 acl,errors=remount-ro 0 1
+...
+```
+
+En el cuarto campo del fichero `/etc/fstab` correspondiente a las opciones de montaje debemos agregar la opción `acl` y posteriormente debemos remontar el sistema de ficheros modificado. Para no tener que reiniciar podemos emplear cualquiera de los 2 siguientes comandos:
+
+```bash
+mount -a  #Remonta todos los sistemas de ficheros siguiendo el orden en /etc/fstab
+mount -o remount /dev/sda1  #Remonta solamente el sistema de ficheros modificado en /etc/fstab (en este caso /dev/sda1)
+```
+
+### Prácticas
+
+Generar 2 grupos: primaria y secundaria; generar 2 usuarios: ana y brais, perteneciendo ana al grupo primaria y brais al grupo secundaria.
+
+```bash
+root@debian:~# groupadd primaria
+root@debian:~# groupadd secundaria
+
+root@debian:~# useradd -m -d /home/ana -s /bin/bash -g primaria -p $(mkpasswd abc123.) ana
+root@debian:~# useradd -m -d /home/brais -s /bin/bash -g secundaria -p $(mkpasswd abc123.) brais
+root@debian:~# useradd -m -d /home/juan -s /bin/bash -p $(mkpasswd abc123.) juan
+
+root@debian:~# tail -3 /etc/passwd
+ana:x:1001:1002::/home/ana:/bin/bash
+brais:x:1002:1003::/home/brais:/bin/bash
+juan:x:1003:1004::/home/juan:/bin/bash
+
+root@debian:~# tail -2 /etc/group
+primaria:x:1002:
+secundaria:x:1003:
+```
+
+#### Práctica 1: Conflicto de permisos ugo-ACL (Ver Preferencia de permisos (de mayor a menor))
+
+En caso de conflicto entre el usuario propietario/otros ("uo" de ugo) y las ACLs, prevalecen los permisos "uo" de ugo.
+
+Generar la carpeta /revisar perteneciente al usuario ana y grupo primaria con los permisos 550:
+
+```bash
+root@debian:~# rm -rf /revisar && mkdir /revisar && chown ana:primaria /revisar && chmod 550 /revisar
+
+root@debian:~# ls -ld /revisar
+dr-xr-x--- 2 ana primaria 4096 ene  4 15:34 /revisar
+```
+
+Con los permisos ugo el usuario ana no puede crear ficheros/carpetas dentro de /revisar, con lo cual vamos a crear la siguiente ACL:
+
+```bash
+root@debian:~# setfacl -m u:ana:rwx /revisar
+
+root@debian:~# getfacl /revisar
+getfacl: Eliminando '/' inicial en nombres de ruta absolutos
+# file: revisar
+# owner: ana
+# group: primaria
+user::r-x
+user:ana:rwx
+group::r-x
+mask::rwx
+other::---
+```
+
+Podemos ver como el usuario ana tiene los permisos ugo de lectura y ejecución sobre el directorio por lo que puede ver lo que hay dentro del directorio `/revisar` y acceder a este pero no puede crear nuevos archivos o subdirectorios. Por otra parte, tenemos un ACL que indica que ana puede leer, escribir y ejecutar. Llegados a este punto sabemos que en caso de conflicto entre permisos uo y ACL prevalecen los permisos uo.
+
+```bash
+ana@debian:~$ ls /revisar
+ana@debian:~$ cd /revisar
+ana@debian:/revisar$ touch prueba.txt
+touch: no se puede efectuar `touch' sobre 'prueba.txt': Permiso denegado
+```
+
+_Nota_: En el momento que aplicamos un ACL y vemos los permisos vemos que tenemos un símbolo + indicando la presencia de ACLs.
+
+```bash
+root@debian:~# ls -ld /revisar
+dr-xrwx---+ 2 ana primaria 4096 ene  4 15:34 /revisar
+```
+
+#### Práctica 2: Conflicto permisos ugo-ACL (Ver Preferencia de permisos (de mayor a menor))
+
+En caso de conflicto entre el grupo propietario (g de ugo) / otros grupos distintos del propietario / otros usuarios distintos del propietario y las ACLs, prevalecen las ACLs.
+
+Generar la carpeta /revisar perteneciente al usuario ana y grupo primaria con los permisos 550:
+
+```bash
+root@debian:~# rm -rf /revisar && mkdir /revisar && chown ana:primaria /revisar && chmod 550 /revisar
+
+root@debian:~# ls -ld /revisar
+dr-xr-x--- 2 ana primaria 4096 ene  4 15:46 /revisar
+```
+
+Con los permisos ugo otro grupo diferente del grupo propietario sobre el que se aplique una ACL prevalece la ACL. Vamos a darle permisos al grupo secundaria al que pertenece brais:
+
+```bash
+root@debian:~# setfacl -m g:secundaria:rwx /revisar
+
+root@debian:~# getfacl /revisar
+getfacl: Eliminando '/' inicial en nombres de ruta absolutos
+# file: revisar
+# owner: ana
+# group: primaria
+user::r-x
+group::r-x
+group:secundaria:rwx
+mask::rwx
+other::---
+```
+
+Ahora Brais tiene permiso de generar contenido dentro de /revisar, ya que la ACL prevalece sobre los permisos de cualquier grupo y cualquier usuario distinto del propietario de /revisar; es decir, la máscara efectiva de permisos prevalece sobre cualquier grupo o sobre cualquier usuario que no sea el propietario de /revisar (u de ugo).
+
+```bash
+root@debian:~# su - brais
+brais@debian:~$ ls /revisar
+brais@debian:~$ cd /revisar
+brais@debian:/revisar$ touch prueba.txt
+brais@debian:/revisar$ ls -l
+total 0
+-rw-r--r-- 1 brais secundaria 0 ene  4 15:52 prueba.txt
+```
+
+#### Ejemplos de asignación de ACLs
+
+##### Asignar ACLs a usuario
 
 ```bash
 setfacl -R -m u:mateo:rwx prueba/
 ```
 
-```bash
-root@debian:/mnt# setfacl -R -m u:mateo:rwx prueba/
-
-root@debian:/mnt# getfacl -R prueba/
-# file: prueba/
-# owner: root
-# group: root
-user::rwx
-user:mateo:rwx
-group::r--
-mask::rwx
-other::---
-
-# file: prueba//fichero1.txt
-# owner: root
-# group: root
-user::rw-
-user:mateo:rwx
-group::r--
-mask::rwx
-other::r--
-```
-
-### `Asignar ACLs a grupo`
+##### Asignar ACLs a grupo
 
 ```bash
 setfacl -R -m g:dam:r-x prueba/
 ```
 
-```bash
-root@debian:/mnt# setfacl -R -m g:dam:r-x prueba/
+##### Asignación de ACL por defecto
 
-root@debian:/mnt# getfacl -R prueba/
-# file: prueba/
-# owner: root
-# group: root
-user::rwx
-group::r--
-group:dam:r-x
-mask::r-x
-other::---
-
-# file: prueba//fichero1.txt
-# owner: root
-# group: root
-user::rw-
-group::r--
-group:dam:r-x
-mask::r-x
-other::r--
-```
-
-### `Asignación de ACL por defecto`
+Son vitales en carpetas compartidas. Garantizan que cuando se cree un archivo nuevo, tenga ACLs automáticamente sobre él sin tener que ejecutar chmod manualmente cada vez.
 
 ```bash
 setfacl -R -d -m g:dam:w prueba/
 ```
 
-```bash
-root@debian:/mnt# setfacl -R -d -m g:dam:w prueba/
-
-root@debian:/mnt# getfacl -R prueba/
-# file: prueba/
-# owner: root
-# group: root
-user::rwx
-group::r--
-other::---
-default:user::rwx
-default:group::r--
-default:group:dam:-w-
-default:mask::rw-
-default:other::---
-
-# file: prueba//fichero1.txt
-# owner: root
-# group: root
-user::rw-
-group::r--
-other::r--
-```
-
-### `Máscara en ACLs`
+##### Máscara en ACLs
 
 ```bash
 setfacl -m m::rwx prueba/
 ```
 
-```bash
-root@debian:/mnt# setfacl -m m::rwx prueba/
-
-root@debian:/mnt# getfacl -R prueba/
-# file: prueba/
-# owner: root
-# group: root
-user::rwx
-group::r--
-mask::rwx
-other::---
-
-# file: prueba//fichero1.txt
-# owner: root
-# group: root
-user::rw-
-group::r--
-other::r--
-```
-
-### `Otros en ACLs`
+##### Otros en ACLs
 
 ```bash
 setfacl -R -m u::x prueba/
@@ -842,28 +915,7 @@ setfacl -R -m g::r prueba/
 setfacl -R -m o::w prueba/
 ```
 
-```bash
-root@debian:/mnt# setfacl -R -m u::x prueba/
-root@debian:/mnt# setfacl -R -m g::r prueba/
-root@debian:/mnt# setfacl -R -m o::w prueba/
-root@debian:/mnt# getfacl -R prueba/
-# file: prueba/
-# owner: root
-# group: root
-user::--x
-group::r--
-mask::r--
-other::-w-
-
-# file: prueba//fichero1.txt
-# owner: root
-# group: root
-user::--x
-group::r--
-other::-w-
-```
-
-### `Eliminar ACLs`
+##### Eliminar ACLs
 
 ```bash
 setfacl -R -b -k datosEmpresa/
@@ -873,70 +925,550 @@ setfacl -R -b -k datosEmpresa/
 - -b: Elimina las ACL.
 - -k: Elimina las ACL por defecto.
 
+##### Eliminar ACL de un usuario/grupo
+
 ```bash
-root@debian:/mnt# setfacl -R -b -k prueba/
+setfacl -x u:carmencita prueba/
+setfacl -x g:primaria prueba/
+```
 
-root@debian:/mnt# getfacl -R prueba/
-# file: prueba/
-# owner: root
-# group: root
-user::rwx
+### Explicación con ejemplos paso por paso de ACLs
+
+Configuramos el sistema para realizar la práctica que nos llevará a entender las ACL en Linux.
+
+- Creamos un usuario clara con grupo principal asir y usuario juan con grupo principal daw.
+- Añadimos un sistema de archivos nuevo ext4 y lo montamos en `/mnt/datos` de modo que se puedan configurar ACLs tal y como se vio en apartados anteriores.
+- En la raíz del FS `/mnt/datos` creamos el directorio `/mnt/datos/deClara`.
+- También creamos algún directorio y archivo dentro de dicha carpeta: `/mnt/datos/deClara/archivos/agenda.txt`.
+- Ahora cambiamos al usuario clara como usuario de trabajo y accedemos a `/mnt/datos/deClara`.
+
+#### Escenario de partida
+
+```bash
+root@debian:~# mkdir -p /mnt/datos/deClara/archivos && touch /mnt/datos/deClara/archivos/agenda.txt
+root@debian:~# cd /mnt/datos/
+root@debian:/mnt/datos# tree -pug
+[drwxr-xr-x root     root    ]  .
+└── [drwxr-xr-x root     root    ]  deClara
+    └── [drwxr-xr-x root     root    ]  archivos
+        └── [-rw-r--r-- root     root    ]  agenda.txt
+
+3 directories, 1 file
+```
+
+Creamos a los usuarios clara y juan:
+
+```bash
+root@debian:/mnt/datos# groupadd asir
+root@debian:/mnt/datos# groupadd daw
+root@debian:/mnt/datos# tail -2 /etc/group
+asir:x:1001:
+daw:x:1004:
+```
+
+```bash
+root@debian:/mnt/datos# useradd -m -d /home/clara -s /bin/bash -p $(mkpasswd abc123.) -g asir clara
+root@debian:/mnt/datos# useradd -m -d /home/juan -s /bin/bash -p $(mkpasswd abc123.) -g daw juan
+```
+
+Los directorios anteriormente creados en `/mnt/datos` tienen que tener como usuario a clara y grupo propietario asir siendo los permisos 755.
+
+```bash
+root@debian:/mnt/datos# chown -R clara:asir /mnt/datos/deClara/
+root@debian:/mnt/datos# chmod -R 755 /mnt/datos/deClara/
+root@debian:/mnt/datos# tree -pug
+[drwxr-xr-x root     root    ]  .
+└── [drwxr-xr-x clara    asir    ]  deClara
+    └── [drwxr-xr-x clara    asir    ]  archivos
+        └── [-rwxr-xr-x clara    asir    ]  agenda.txt
+
+3 directories, 1 file
+```
+
+Creamos un archivo.txt en `/mnt/datos/deClara`. Se puede ver que el archivo pertenece a clara, grupo asir y tiene permisos rw-r--r- (lectura y escritura para el dueño, y lectura solamente para los usuarios del grupo dueño y para el resto de los usuarios del sistema).
+
+```bash
+root@debian:/mnt/datos# su - clara
+clara@debian:~$ cd /mnt/datos/deClara/
+clara@debian:/mnt/datos/deClara$ echo "Archivo interesante" > archivo.txt
+clara@debian:/mnt/datos/deClara$ ls -l archivo.txt
+-rw-r--r-- 1 clara asir 20 ene  5 09:47 archivo.txt
+```
+
+#### Otorgando permisos a usuarios y grupos
+
+Ahora iniciamos sesión con el usuario juan, accedemos al directorio `/mnt/datos/deClara` y comprobamos que sí damos leído y podemos escribir en el contenido de archivo.txt:
+
+```bash
+clara@debian:/mnt/datos/deClara$ su - juan
+Contraseña:
+juan@debian:~$ cd /mnt/datos/deClara/
+juan@debian:/mnt/datos/deClara$ ls -l
+total 8
+drwxr-xr-x 2 clara asir 4096 ene  5 09:28 archivos
+-rw-r--r-- 1 clara asir   20 ene  5 09:47 archivo.txt
+juan@debian:/mnt/datos/deClara$ cat archivo.txt
+Archivo interesante
+juan@debian:/mnt/datos/deClara$ echo "Otra linea" >> archivo.txt
+-bash: archivo.txt: Permiso denegado
+```
+
+Supongamos que el usuario juan necesita también acceso de lectura y escritura al archivo archivo.txt . Como comentamos antes, no podríamos darle estos permisos al usuario sin asignarlo como dueño, o cambiar el grupo del archivo. Con ACL podríamos otorgar estos permisos utilizando el comando setfacl y el atributo -m o --modify del siguiente modo:
+
+```bash
+root@debian:/mnt/datos/deClara# setfacl -m u:juan:rw- archivo.txt
+```
+
+Podemos ver ahora cómo quedan los permisos sobre el archivo.txt . Se puede apreciar también una entrada para la máscara (mask):
+
+```bash
+root@debian:/mnt/datos/deClara# ls -l archivo.txt
+-rw-rw-r--+ 1 clara asir 20 ene  5 09:47 archivo.txt
+
+root@debian:/mnt/datos/deClara# getfacl archivo.txt
+# file: archivo.txt
+# owner: clara
+# group: asir
+user::rw-
+user:juan:rw-
 group::r--
-other::---
+mask::rw-
+other::r--
+```
 
-# file: prueba//fichero1.txt
-# owner: root
-# group: root
+Ahora podemos comprobar como juan puede escribir una nueva linea en archivo.txt:
+
+```bash
+juan@debian:/mnt/datos/deClara$ echo "Otra linea" >> archivo.txt
+juan@debian:/mnt/datos/deClara$ cat archivo.txt
+Archivo interesante
+Otra linea
+```
+
+_Nota_: Se pueden también otorgar varios permisos en la misma línea separando los mismos por comas, por ejemplo :
+
+```bash
+setfacl -m u:usuario1:rw-,u:usuario2:r--,g:grupo1:r-- archivo.txt
+```
+
+_Nota_: En el caso de que el destino sea un directorio y quisiéramos aplicar la ACL a todos los elementos interiores de manera recursiva, podemos utilizar el modificador -R :
+
+```bash
+setfacl -Rm u:usuario1:rw- directorio
+```
+
+#### Eliminando ACLs
+
+Para eliminar una ACL podemos utilizar el modificador -x o --remove . Por ejemplo, si la ACL creada para el usuario juan fue creada por error, podemos eliminarla con el siguiente comando:
+
+```bash
+setfacl -x u:juan archivo.txt
+```
+
+También se pueden eliminar todas las ACLs creadas para un archivo o directorio utilizando el modificador -b ( o --remove-all ) de este modo:
+
+```bash
+setfacl -b archivo.txt
+```
+
+Por otra parte, en caso de existir ACLs por defecto, estas son elimiadas de la siguiente forma:
+
+```bash
+setfacl -k archivo.txt
+```
+
+#### ACLs por defecto para archivos y directorios
+
+Muchas veces es necesario que todos los elementos, archivos o directorios, que sean creados dentro de un directorio, obtengan las mismas ACLs que el directorio padre. Esto puede lograrse con el modificador -d o --default del comando setfacl.
+En el siguiente ejemplo retocamos los permisos del directorio deClara para que todos los usuarios que no sean clara, ni tampoco los pertenecientes al grupo asir, NO tengan ningún permiso sobre los archivos y directorios creados dentro de dicho directorio (los creados después de configurar este permiso).
+Primeramente nos fijamos en que cualquier usuario (other) puede leer los archivos que se vayan a crear en el interior de deClara pues other tiene permisos de lectura.
+
+```bash
+root@debian:/mnt/datos# getfacl deClara/
+# file: deClara/
+# owner: clara
+# group: asir
+user::rwx
+group::r-x
+other::r-x
+```
+
+Hacemos que no aparezca ese permiso en los próximos archivos o directorios que se creen en adelante dentro del directorio deClara:
+
+```bash
+root@debian:/mnt/datos# setfacl -dm o::- deClara/
+root@debian:/mnt/datos# getfacl deClara/
+# file: deClara/
+# owner: clara
+# group: asir
+user::rwx
+group::r-x
+other::r-x
+default:user::rwx
+default:group::r-x
+default:other::---
+```
+
+Pero sí queremos que los archivos nuevos que se creen aquí dentro deClara, tengan permiso de lectura para el usuario juan:
+
+```bash
+root@debian:/mnt/datos# setfacl -dm u:juan:r deClara/
+```
+
+Comprobamos como van los permisos:
+
+```bash
+root@debian:/mnt/datos# getfacl deClara/
+# file: deClara/
+# owner: clara
+# group: asir
+user::rwx
+group::r-x
+other::r-x
+default:user::rwx
+default:user:juan:r--
+default:group::r-x
+default:mask::r-x
+default:other::---
+```
+
+Ahora podemos comprobar con qué permisos por defecto quedan los nuevos archivos creados dentro de deClara:
+
+```bash
+clara@debian:/mnt/datos/deClara$ echo "Hola" > archivoX.txt
+clara@debian:/mnt/datos/deClara$ getfacl archivoX.txt
+# file: archivoX.txt
+# owner: clara
+# group: asir
+user::rw-
+user:juan:r--
+group::r-x                      #effective:r--
+mask::r--
+other::---
+```
+
+En este punto es importante notar que los subdirectorios de deClara/, creados antes de configurar la ACL de default al directorio padre, no tendrán esos permisos de manera predeterminada. Para que tanto el directorio deClara/ como todos sus subdirectorios incorporen dicha ACL de manera predeterminada, deberíamos haber incorporado la opción -R en los comandos:
+
+```bash
+clara@debian:/mnt/datos$ setfacl -Rdm o::- deClara/
+clara@debian:/mnt/datos$ setfacl -Rdm u:juan:r deClara/
+```
+
+Más adelante nos pararemos a explicar el funcionamiento de mask y, por lo tanto, ese effective que sale a la derecha de group.
+
+#### Usuarios y grupos
+
+Para comprobar cómo otorgar permisos a usuarios y grupos con más detalle, eliminemos el directorio deClara y volvamos a configurarlo como al principio:
+
+```bash
+root@debian:/mnt/datos# rm -rf deClara/
+root@debian:/mnt/datos# mkdir deClara
+root@debian:/mnt/datos# chown -R clara:asir /mnt/datos/deClara/
+root@debian:/mnt/datos# chmod -R 755 /mnt/datos/deClara/
+root@debian:/mnt/datos# getfacl deClara/
+# file: deClara/
+# owner: clara
+# group: asir
+user::rwx
+group::r-x
+other::r-x
+```
+
+```bash
+clara@debian:/mnt/datos/deClara$ echo "Hola" > archivo.txt
+clara@debian:/mnt/datos/deClara$ ls -l archivo.txt
+-rw-r--r-- 1 clara asir 5 ene  5 11:10 archivo.txt
+clara@debian:/mnt/datos/deClara$ getfacl archivo.txt
+# file: archivo.txt
+# owner: clara
+# group: asir
 user::rw-
 group::r--
 other::r--
 ```
 
-### `Eliminar ACLs de un usuario/grupo`
+Vemos que todos los usuarios del sistema tienen permiso de lectura sobre archivo.txt, por lo que vamos a empezar por quitar ese permiso:
 
 ```bash
-usuario@debian:/tmp$ getfacl prueba/
-# file: prueba/
-# owner: usuario
-# group: usuario
-user::rwx
-user:carmencita:r-x
-group::rwx
-mask::rwx
-other::r-x
-
-usuario@debian:/tmp$ setfacl -x u:carmencita prueba/
-usuario@debian:/tmp$ getfacl prueba/
-# file: prueba/
-# owner: usuario
-# group: usuario
-user::rwx
-group::rwx
-mask::rwx
-other::r-x
+clara@debian:/mnt/datos/deClara$ setfacl -m o::- archivo.txt
+clara@debian:/mnt/datos/deClara$ getfacl archivo.txt
+# file: archivo.txt
+# owner: clara
+# group: asir
+user::rw-
+group::r--
+other::---
 ```
+
+Podemos iniciar sesión como juan y ver que, efectivamente, el usuario juan no tiene permiso de lectura sobre archivo.txt.
 
 ```bash
-usuario@debian:/tmp$ getfacl prueba/
-# file: prueba/
-# owner: usuario
-# group: usuario
-user::rwx
-group::rwx
-group:primaria:r-x
-mask::rwx
-other::r-x
-
-usuario@debian:/tmp$ setfacl -x g:primaria prueba/
-usuario@debian:/tmp$ getfacl prueba/
-# file: prueba/
-# owner: usuario
-# group: usuario
-user::rwx
-group::rwx
-mask::rwx
-other::r-x
+juan@debian:~$ cd /mnt/datos/deClara/
+juan@debian:/mnt/datos/deClara$ ls -l archivo.txt
+-rw-r----- 1 clara asir 5 ene  5 11:10 archivo.txt
+juan@debian:/mnt/datos/deClara$ cat archivo.txt
+cat: archivo.txt: Permiso denegado
 ```
+
+Vamos a poner a juan permiso de lectura, pero no directamente, si no a través de su grupo principal daw:
+
+```bash
+# Desde la sesión de clara
+clara@debian:/mnt/datos/deClara$ setfacl -m g:daw:r archivo.txt
+clara@debian:/mnt/datos/deClara$ getfacl archivo.txt
+# file: archivo.txt
+# owner: clara
+# group: asir
+user::rw-
+group::r--
+group:daw:r--
+mask::r--
+other::---
+```
+
+Podemos comprobar que ahora juan tiene permiso de lectura sobre archivo.txt :
+
+```bash
+juan@debian:/mnt/datos/deClara$ cat archivo.txt
+Hola
+```
+
+Pero, lo que no puede es escribir en dicho archivo.txt :
+
+```bash
+juan@debian:/mnt/datos/deClara$ echo "caracola" >> archivo.txt
+-bash: archivo.txt: Permiso denegado
+```
+
+Podemos probar ahora a sólo poner el permiso de escritura explícitamente al usuario juan, pensando que tiene ya lectura por pertenecer al grupo daw.
+
+```bash
+# Desde la sesión de clara
+clara@debian:/mnt/datos/deClara$ setfacl -m u:juan:w archivo.txt
+clara@debian:/mnt/datos/deClara$ getfacl archivo.txt
+# file: archivo.txt
+# owner: clara
+# group: asir
+user::rw-
+user:juan:-w-
+group::r--
+group:daw:r--
+mask::rw-
+other::---
+```
+
+Si iniciamos sesión con juan y probamos, nos llevaremos la mala noticia de que juan sigue sin poder leer el archivo, pues "los permisos son efectivos", es decir, lo que nos devuelve getfacl son los permisos que realmente tiene juan si éste aparece explícitamente en dicha lista.
+
+```bash
+juan@debian:/mnt/datos/deClara$ cat archivo.txt
+cat: archivo.txt: Permiso denegado
+```
+
+Así que, tendremos que configurar los permisos de lectura y escritura explícitamente al usuario juan (demostramos así que "son efectivos", no sirve darle sólo escritura y que lectura los obtenga de pertenecer al grupo daw):
+
+```bash
+clara@debian:/mnt/datos/deClara$ setfacl -m u:juan:rw- archivo.txt
+clara@debian:/mnt/datos/deClara$ getfacl archivo.txt
+# file: archivo.txt
+# owner: clara
+# group: asir
+user::rw-
+user:juan:rw-
+group::r--
+group:daw:r--
+mask::rw-
+other::---
+```
+
+Y comprobamos que juan ahora puede escribir y leer:
+
+```bash
+juan@debian:/mnt/datos/deClara$ cat archivo.txt
+Hola
+juan@debian:/mnt/datos/deClara$ echo "caracola" >> archivo.txt
+juan@debian:/mnt/datos/deClara$ cat archivo.txt
+Hola
+caracola
+```
+
+#### Mask: ¿Qué es la máscara de permisos en ACLs?
+
+Pudimos notar en el punto anterior, que en el momento de crear la ACL, apareció una nueva línea de permisos : mask.
+Hay que recordar primero que las ACL no son más que una extensión de los permisos nativos del sistema. Además, todos los permisos de ACL, ya sea para usuarios o grupos nombrados, son asignados a la clase de permisos de grupo, es decir, las ACL extienden los permisos tradicionales de la terna de grupo.
+
+En otras palabras, al agregar ACLs a la administración de permisos, los permisos de grupo POSIX se ven extendidos con nuevas clases de permisos, por lo que se redefine el significado de los permisos de grupo, tal y como se mencionó arriba.
+
+Ahora bien, con esta perspectiva, las ACLs de usuarios o grupos nombrados podrían requerir mayor acceso al recurso de los propuestos por los permisos nativos POSIX para el grupo
+dueño. Es decir, supongamos que tenemos un archivo con los siguientes permisos:
+
+- -rw-r—r-- clara asir archivo
+
+En este caso, el usuario clara tiene permisos rw-, mientras que el resto de los usuarios pertenecientes al grupo asir solamente tendrían permisos de lectura (r--).
+
+Ahora, supongamos que un usuario NO perteneciente a asir (juan por ejemplo) requiere permisos de lectura y escritura (rw-). El límite superior de permisos de la clase grupo (permisos nativos de grupo y permisos de ACL de usuarios y grupos nombrados) es rw-, para abarcar los permisos nativos y los permisos del usuario nombrado juan. Este límite superior debe quedar escrito en algún sitio. Si modificamos los permisos nativos de grupo para abarcar rw- , los usuarios de grupo asir ahora empezarían a tener permisos de escritura, y eso no es conveniente, no es lo que se quiere.
+Como no pueden usarse los permisos nativos de grupo como límite superior de permisos de clase de grupo, se utiliza un nuevo parámetro que es la máscara o mask.
+
+Podemos ver un ejemplo:
+
+Primeramente vamos a borrar todas las entradas ACL a archivo (_setfacl -b archivo_) y le configuramos los permisos rw-r--r-- clara asir a dicho archivo:
+
+```bash
+clara@debian:/mnt/datos/deClara$ touch archivo && chmod 644 archivo
+clara@debian:/mnt/datos/deClara$ getfacl archivo
+# file: archivo
+# owner: clara
+# group: asir
+user::rw-
+group::r--
+other::r--
+```
+
+Si añadimos permisos de rw- al usuario juan mediante ACL extendida:
+
+```bash
+clara@debian:/mnt/datos/deClara$ setfacl -m u:juan:rw- archivo
+clara@debian:/mnt/datos/deClara$ getfacl archivo
+# file: archivo
+# owner: clara
+# group: asir
+user::rw-
+user:juan:rw-
+group::r--
+mask::rw-
+other::r--
+```
+
+El usuario juan ahora puede leer y escribir el archivo, pero los usuarios del grupo asir siguen manteniendo su permiso de sólo lectura. A partir de la implementación de ACLs extendidas en el archivo, la máscara define el límite máximo de permisos de la clase grupo actualmente configurados, y se actualizará cada vez que carguemos una nueva ACL.
+
+Por ejemplo, si tenemos también en el equipo un usuario diferente y, a ese usuario carlos le damos permiso de ejecución, ahora la máscara pasará a ser rwx para abarcar también ese permiso:
+
+```bash
+clara@debian:/mnt/datos/deClara$ setfacl -m u:usuario:x archivo
+clara@debian:/mnt/datos/deClara$ getfacl archivo
+# file: archivo
+# owner: clara
+# group: asir
+user::rw-
+user:usuario:--x
+user:juan:rw-
+group::r--
+mask::rwx
+other::r--
+```
+
+Otro dato a tener en cuenta también es el siguiente. Como sabemos, el comando chmod permite modificar los bits de permisos nativos POSIX de los archivos y directorios. Los cambios que efectuemos sobre los permisos user y other también se verán reflejados directamente sobre sus respectivas ACLs user y other. Asimismo, podríamos modificar estos bits utilizando setfacl para user omitiendo nombrar ningún usuario. Un ejemplo sería el siguiente comando:
+
+```bash
+chmod u+rwx archivo
+```
+
+Que tendría como equivalente el comando :
+
+```bash
+setfacl -m u::rwx archivo
+```
+
+Y lo mismo ocurre con los permisos asociados a other sustituyendo la letra u por o. Por supuesto, debemos recordar que la sintaxis de setfacl especifica permisos absolutos. Si queremos configurar los permisos asociados a grupo dueño, haremos lo mismo cambiando a la letra g y sin indican ningún grupo:
+
+```bash
+setfacl -m g::rwx archivo
+```
+
+Así, es de suponer el resultado en mask del siguiente ejemplo:
+
+```bash
+clara@debian:/mnt/datos/deClara$ setfacl -b archivo
+clara@debian:/mnt/datos/deClara$ setfacl -m u:juan:rw archivo
+clara@debian:/mnt/datos/deClara$ getfacl archivo
+# file: archivo
+# owner: clara
+# group: asir
+user::rw-
+user:juan:rw-
+group::r--
+mask::rw-
+other::r--
+
+clara@debian:/mnt/datos/deClara$ setfacl -m g::rwx archivo
+clara@debian:/mnt/datos/deClara$ getfacl archivo
+# file: archivo
+# owner: clara
+# group: asir
+user::rw-
+user:juan:rw-
+group::rwx
+mask::rwx
+other::r--
+```
+
+Ahora mask tiene los permisos rwx, lo esperado, puesto que, como se dijo antes, la máscara se recalcula especificando el límite superior de los permisos otorgados a la clase grupo.
+
+Si quitamos ahora los permisos de escritura y ejecución de la ACL group con el siguiente comando:
+
+```bash
+clara@debian:/mnt/datos/deClara$ setfacl -m g::r archivo
+clara@debian:/mnt/datos/deClara$ getfacl archivo
+# file: archivo
+# owner: clara
+# group: asir
+user::rw-
+user:juan:rw-
+group::r--
+mask::rw-
+other::r--
+```
+
+La mask se recalculó para coincidir con el límite superior de los permisos otorgados a la clase grupo.
+
+##### Modificación de la máscara
+
+Pero, la máscara mask también se puede manipular como un tipo de permiso más dentro de las ACLs. Podemos ver un ejemplo. Comenzamos creando archivo y configurando a clara como usuario dueño y asir como grupo dueño. También nos aseguramos que tenga los permisos 644:
+
+```bash
+clara@debian:/mnt/datos/deClara$ ls -l archivo
+-rw-rw-r--+ 1 clara asir 0 ene  5 12:02 archivo
+```
+
+Configuramos también a juan con permisos rw- sobre dicho archivo :
+
+```bash
+clara@debian:/mnt/datos/deClara$ setfacl -m u:juan:rw- archivo
+clara@debian:/mnt/datos/deClara$ getfacl archivo
+# file: archivo
+# owner: clara
+# group: asir
+user::rw-
+user:juan:rw-
+group::r--
+mask::rw-
+other::r--
+```
+
+Ahora vamos a cambiar los permisos de la máscara a r-- ( modificador -m ). ¿Qué pasará así con los permisos de la clase grupo?
+
+```bash
+clara@debian:/mnt/datos/deClara$ setfacl -m m::r archivo
+clara@debian:/mnt/datos/deClara$ getfacl archivo
+# file: archivo
+# owner: clara
+# group: asir
+user::rw-
+user:juan:rw-                   #effective:r--
+group::r--
+mask::r--
+other::r--
+```
+
+Como se ve, la máscara mask queda con el permiso r-- . Anteriormente era rw- puesto que el usuario juan tiene permisos ACL como usuario nombrado, por lo que la máscara se había recalculado. Ahora, como redujimos los permisos de la máscara, se modificó el límite superior de permisos otorgados a todas las entidades de la clase grupo.
+Particularmente en este caso, el usuario juan, si bien mantiene sus permisos de rw-, el permiso de escritura dejó de ser efectivo ya que está limitado por la máscara. Esto es indicado mediante la leyenda efective:r--, es decir juan NO podrá escribir en el archivo, solamente lo podrá leer
+
+```bash
+juan@debian:/mnt/datos/deClara$ cat archivo
+juan@debian:/mnt/datos/deClara$ echo "Primera linea" > archivo
+-bash: archivo: Permiso denegado
+```
+
+### Notas sobre ACLs
 
 _*Notas: Es importante tener en cuenta que las ACL añaden tal cual los permisos que se especifican, es decir `g:dam:r-x` asigna solo permisos a dam de lectura y ejecución, igual que `g:dam:rx`. En caso de que existiera el permiso de escritura, este habría desaparecido.*_
 
@@ -948,7 +1480,7 @@ _*Notas 2: Cuando añadimos ACLs a un fichero o directorio aparece un signo `+` 
 
 _*Notas 3: Es incorrecto hacer `setfacl -m u:rw prueba/` o `setfacl -m g:r-w prueba/` pero **si es correcto** hacer `setfacl -m o:rw prueba/` o `setfacl -m m:rw prueba/`.*_
 
-_*Nota 4: Se pueden juntar los parametros de una ACL para realzar algo como lo siguiente `setfacl -Rbk prueba/`.*_
+_*Nota 4: Se pueden juntar los parametros de una ACL para realzar algo como lo siguiente `setfacl -Rbk prueba/`. La R indica recursividad, la b elimina las ACL y la k las ACL por defecto*_
 
 _*Nota 5: Los permisos de otros son acumulativos, como podemos ver en el siguiente ejemplo, si no eliminamos los permisos de otros se van a añadir a los del usuario. Este es el motivo por el cual lucia que pertenece a dam puede en el primer caso listar el contenido de `/tmp/prueba` y una vez eliminamos los permisos de otros ya no puede.*_
 
@@ -986,13 +1518,6 @@ ls: cannot open directory '/tmp/prueba': Permission denied
 
 ## Capabilities
 
-**getcap, setcap**
-
-- **getcap**: Visualiza las capabilities de archivos.
-- **setcap**: Modifica las capabilities de archivos.
-
-### **Capabilities**
-
 Las capabilities en GNU/Linux son un sistema más granular de control de acceso que se utiliza principalmente para elevar los privilegios de ejecución de un programa o binario específico sin otorgarle privilegios totales.
 
 Permiten a los programas realizar operaciones específicas que normalmente requerirían privilegios elevados, pero solo durante la ejecución de ese programa en particular. En las capabilities, la cadena `=eip` se utiliza para asignar capacidades específicas a un archivo binario. Cada letra en la cadena tiene un significado particular:
@@ -1015,7 +1540,7 @@ Para más información, se puede consultar la página de manual referente a capa
 $ man capabilities
 ```
 
-### **Tipos de capabilities**
+### Tipos de capabilities
 
 Existen diferentes tipos de capabilities que se pueden asignar a un binario. Algunas de ellas son:
 
