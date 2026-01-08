@@ -724,7 +724,7 @@ En caso de conflicto entre el grupo propietario (g de ugo)/otros grupos distinto
 
 La máscara en las ACL (Listas de Control de Acceso) de Linux es un concepto fundamental que a menudo causa confusión, pero es muy útil una vez que se entiende. Puedes imaginarla como un límite de seguridad o un techo.
 
-_Nota_: La máscara NO afecta al propietario del fichero (user::) ni a los 'otros' (other::). Solo afecta a los grupos y usuarios específicos añadidos vía ACL.
+_Nota_: La máscara NO afecta al propietario del fichero ( user:: ) ni a los 'otros' ( other:: ). Solo afecta a los grupos y usuarios específicos añadidos vía ACL.
 
 ### Soporte de ACL en el sistema de ficheros
 
