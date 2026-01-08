@@ -1,4 +1,6 @@
-# Implementación de Infraestructura de Dominio con Samba 4 en Linux
+# 01 Configuración red interna
+
+## Implementación de Infraestructura de Dominio con Samba 4 en Linux
 
 **Escenario:** Despliegue de un Controlador de Dominio (DC) en Ubuntu Server simulando un entorno Microsoft Active Directory.
 
