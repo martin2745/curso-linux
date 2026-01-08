@@ -482,3 +482,8 @@ export HTTPS_PROXY="http://xx.xx.xx.xx:yyyy/"
 ```bash
 source /etc/profile.d/proxy.sh
 ```
+
+_Nota_: Puede ser necesario configurar en el archivo /etc/sudoers.tmp las siguientes variables:
+```bash
+Defaults        env_keep += "http_proxy https_proxy HTTP_PROXY HTTPS_PROXY"
+```
