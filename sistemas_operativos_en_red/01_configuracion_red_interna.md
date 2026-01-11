@@ -17,7 +17,7 @@ En este escenario proponemos el uso de tres máquinas en una red interna de Virt
   - Adaptador en red interna.
 - Ubuntu desktop: 192.168.100.7/24
   - Adaptador en red interna.
-- Windows 11: 192.168.100.8/24
+- Windows 10: 192.168.100.8/24
   - Adaptador en red interna.
 
 ## Componentes Técnicos Fundamentales
@@ -68,9 +68,9 @@ Cuando el usuario intenta iniciar sesión en el cliente:
 
 ## Implementación
 
-Vamos a configurar Windows 11, Ubuntu Desktop y Ubuntu Server.
+Vamos a configurar Windows 10, Ubuntu Desktop y Ubuntu Server.
 
-### Windows 11
+### Windows 10
 
 En un primero momento desde un cmd podemo ejecutar lo siguiente:
 
@@ -126,14 +126,16 @@ Realizamos una configuración estática del equipo desde una terminal por lo que
 
 ```bash
 root@ubuntu:/etc/netplan# cat 01-network-manager-all.yaml
-# Let NetworkManager manage all devices on this system
 network:
   version: 2
   renderer: NetworkManager
   ethernets:
     enp0s3:
+      renderer: networkd
+      dhcp4: no
       addresses:
         - 192.168.100.7/24
+
 
 root@ubuntu:/etc/netplan# netplan apply
 
@@ -180,6 +182,7 @@ network:
     enp0s8:
       addresses:
         - 192.168.100.6/24
+
 root@ubuntuserver:~# netplan apply
 root@ubuntuserver:~# ip -c a
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
