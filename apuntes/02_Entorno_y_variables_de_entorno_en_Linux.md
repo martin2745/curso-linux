@@ -29,8 +29,6 @@
 
 _*Nota*_: En función de nuestra shell podemos trabajar con [.bashrc](https://www.compuhoy.com/que-es-bashrc-en-linux/) o [.zshrc](https://respontodo.com/que-es-zsh-y-por-que-deberia-usarlo-en-lugar-de-bash/) teniendo cada una sus propias particularidades.
 
----
-
 ## Archivos de Configuración de Bash y su Orden de Ejecución
 
 Bash dispone de una serie de archivos de configuración que se ejecutan antes y después de que lo haga el intérprete de comandos. Estos archivos son scripts de bash normales, pero el sistema de ejecución es un tanto complejo, ya que algunos se ejecutan solo si estamos en una shell de sesión, mientras que otros se ejecutan en shells que no son de sesión, y algunos únicamente para ciertos usuarios.
