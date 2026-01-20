@@ -198,12 +198,99 @@ network:
         addresses: [192.168.100.6, 8.8.8.8]
 ```
 
-2. Realiza la siguiente modificación
+2. Script de aprovisionamiento.
 
-Al editar el archivo `/etc/apparmor.d/tunables/home`, estamos ampliando la "zona de confianza" de AppArmor. Le indicamos explícitamente que /home/INSTITUTO/ también es una ubicación válida para albergar carpetas de usuarios. El reinicio del servicio (systemctl restart apparmor) es necesario para recargar estas reglas en el kernel sin necesidad de reiniciar el servidor completo.
+Es necesario ejecutar el siguiente script.
 
 ```bash
-usuario@ud101:~$ grep INSTITUTO /etc/apparmor.d/tunables/home
-@{HOMEDIRS}=/home/ /home/INSTITUTO/
-usuario@ud101:~$ sudo systemctl restart apparmor
+#!/bin/bash
+
+# Comprobar si se está ejecutando como root
+if [ "$EUID" -ne 0 ]; then
+  echo "Por favor, ejecuta este script como root (sudo)."
+  exit 1
+fi
+
+echo "--- INICIANDO APROVISIONAMIENTO PARA ENTORNO AD (SIN SNAP) ---"
+
+# 1. ELIMINAR SNAP COMPLETAMENTE
+# Snap da problemas con carpetas home no estándar (/home/INSTITUTO)
+echo "[1/5] Eliminando paquetes Snap y el demonio snapd..."
+snap remove firefox 2>/dev/null
+apt purge -y snapd
+rm -rf /root/snap /home/*/snap
+rm -rf /var/cache/snapd
+apt-mark hold snapd # Evita que se reinstale accidentalmente
+
+# 2. BLOQUEAR REINSTALACIÓN AUTOMÁTICA DE SNAP
+# Configura APT para que nunca priorice snap
+echo "[2/5] Bloqueando reinstalación de Snap..."
+cat <<EOF > /etc/apt/preferences.d/nosnap.pref
+Package: snapd
+Pin: release a=*
+Pin-Priority: -10
+EOF
+
+# 3. INSTALAR FIREFOX NATIVO (.DEB)
+# Añade el repositorio oficial de Mozilla y le da prioridad
+echo "[3/5] Configurando Firefox nativo (.deb)..."
+add-apt-repository -y ppa:mozillateam/ppa
+echo '
+Package: *
+Pin: release o=LP-PPA-mozillateam
+Pin-Priority: 1001
+' > /etc/apt/preferences.d/mozilla-firefox
+
+apt update
+apt install -y firefox
+
+# 4. HABILITAR FLATPAK (ALTERNATIVA A SNAP)
+# Instala Flatpak y añade el repositorio Flathub
+echo "[4/5] Instalando Flatpak y repositorio Flathub..."
+apt install -y flatpak gnome-software-plugin-flatpak
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# 5. CONFIGURACIÓN GENERAL PARA EL DOMINIO (LA CLAVE DEL FUTURO)
+# Esto permite que CUALQUIER app Flatpak futura pueda leer/escribir en /home/INSTITUTO
+# Sin esto, las apps de Flatpak tendrían el mismo error que Snap.
+echo "[5/5] Aplicando permisos globales para usuarios del dominio..."
+flatpak override --system --filesystem=/home/INSTITUTO
+
+echo "--- APROVISIONAMIENTO COMPLETADO ---"
+echo "Firefox está listo."
+echo "Snap ha sido eliminado."
+echo "Flatpak está configurado y tiene permisos sobre /home/INSTITUTO."
+echo "Es recomendable reiniciar el equipo: sudo reboot"
 ```
+
+### 1. Contexto y Problemática
+
+En la integración de clientes Ubuntu dentro de un dominio Active Directory (AD), nos enfrentamos a un error crítico al intentar ejecutar aplicaciones empaquetadas como **Snap** (específicamente Firefox, que viene así por defecto en Ubuntu).
+
+- **El Problema:** Al intentar abrir el navegador, la aplicación se cerraba inmediatamente lanzando errores de "Permission denied" o fallos de montaje de directorios.
+- **La Causa:** La configuración del dominio crea las carpetas personales de los usuarios en una ruta no estándar: `/home/INSTITUTO/alumno`. El sistema de seguridad de Ubuntu no estaba preparado para reconocer esta ruta como una carpeta de usuario válida.
+
+### 2. Conceptos Técnicos Clave
+
+Para entender el conflicto, hay que definir dos tecnologías que trabajan juntas en Ubuntu:
+
+- **¿Qué es Snap?**
+  Es un sistema de gestión de paquetes que "encapsula" las aplicaciones. A diferencia de los programas tradicionales, una aplicación Snap se ejecuta en una "burbuja" aislada (sandbox). Esto se hace por seguridad: la aplicación no ve todo el sistema operativo, solo lo que se le permite explícitamente. Por defecto, Snap asume que los usuarios siempre están en `/home/usuario` y no sabe cómo gestionar rutas personalizadas de red o de dominio corporativo.
+- **¿Qué es AppArmor?**
+  Es el módulo de seguridad del kernel de Linux. AppArmor vigila a los programas y les prohíbe acceder a archivos que no estén en su lista blanca.
+  En nuestro caso, cuando Firefox intenta escribir en `/home/INSTITUTO/alumno`, AppArmor bloqueaba la acción porque consideraba que esa carpeta era del sistema y no del usuario, impidiendo que el programa arrancara.
+
+### 3. Solución: El Script de Aprovisionamiento
+
+Dado que configurar Snap para que funcione con rutas de red complejas es inestable y propenso a fallos con cada actualización, hemos creado un script de **aprovisionamiento inicial** que soluciona el problema de raíz y prepara el equipo para el futuro.
+
+**¿Qué hace el script exactamente?**
+
+1. **Limpieza (Eliminación de Snap):**
+   Desinstala Firefox versión Snap y elimina el gestor `snapd` por completo. Esto quita la capa de aislamiento rígido que causaba el conflicto con las rutas del dominio.
+2. **Bloqueo (Prevención):**
+   Configura las preferencias de APT para "prohibir" que el sistema vuelva a instalar Snap automáticamente en el futuro.
+3. **Instalación Nativa (Firefox .deb):**
+   Instala la versión clásica de Firefox desde el repositorio oficial de Mozilla. Esta versión actúa como un programa normal de Linux: respeta los permisos del usuario del dominio y puede leer/escribir en `/home/INSTITUTO/` sin restricciones ni bloqueos.
+4. **Preparación para el Futuro (Flatpak):**
+   Instala **Flatpak** (una alternativa a Snap) y le aplica una regla global (`override`) para que tenga acceso de lectura/escritura en `/home/INSTITUTO`. El objetivo es que si el día de mañana un alumno necesita instalar una aplicación moderna que no está en los repositorios básicos (como Visual Studio Code o GIMP actualizado), podrá usar Flatpak y funcionará perfectamente sin dar los errores que daba Snap.
