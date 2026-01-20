@@ -480,3 +480,106 @@ El tercer parámetro es Blanco
 Una forma de ver todos los parámetros es Martín:Gil:Blanco
 Otra forma de ver todos los parámetros es Martín Gil Blanco
 ```
+
+## Variables PS
+
+Las variables PS (que significan Prompt String) son variables de entorno en Linux (específicamente en la shell Bash) que controlan la apariencia y el comportamiento del "prompt" o línea de comandos. Básicamente, definen qué símbolos o textos ves cuando la terminal te está pidiendo que introduzcas información.
+
+Existen 4 variables principales: PS1, PS2, PS3 y PS4. Aquí te explico cada una con ejemplos claros:
+
+| Variable | Uso                                                | Símbolo Típico |
+| :------- | :------------------------------------------------- | :------------- |
+| **PS1**  | **Principal**: Esperando comandos normales.        | `$` o `#`      |
+| **PS2**  | **Continuación**: Comando incompleto (multilínea). | `>`            |
+| **PS3**  | **Selección**: Usado en menús `select` de scripts. | `#?`           |
+| **PS4**  | **Debug**: Traza de ejecución (modo `set -x`).     | `+`            |
+
+### Ejemplos de edición y personalización
+
+A continuación vamos a editar las variables PS de nuestro terminal.
+
+#### 1. Editar PS1 (Tu prompt principal)
+
+Cambiaremos el prompt clásico para que muestre la hora y tenga una flecha personalizada.
+
+```bash
+# \t = hora actual
+# \u = nombre de usuario
+# \w = directorio actual
+export PS1="[\t] \u en \w -> "
+
+```
+
+_Resultado:_
+
+```bash
+usuario@debian:~$ export PS1="[\t] \u en \w -> "
+[15:49:50] usuario en ~ -> whoami
+usuario
+```
+
+#### 2. Editar PS2 (El prompt de continuación)
+
+Cambiaremos el símbolo `>` por algo más visible para cuando escribas comandos largos que ocupan varias líneas.
+
+```bash
+export PS2="...continuando... "
+
+# Pruébalo escribiendo: echo "hola (y pulsa Enter sin cerrar la comilla)
+
+```
+
+_Resultado:_
+
+```bash
+usuario@debian:~$ echo "Hola
+...continuando... adios"
+Hola
+adios
+```
+
+#### 3. Editar PS3 (El prompt de menús)
+
+Este es útil dentro de scripts. Vamos a crear un pequeño "one-liner" para probarlo en la terminal:
+
+```bash
+# Definimos el prompt de pregunta
+export PS3="¿Cuál es tu color favorito? (Elige número): "
+
+# Creamos un menú rápido
+select color in Rojo Verde Azul; do echo "Elegiste $color"; break; done
+
+```
+
+_Resultado:_
+
+```bash
+1) Rojo
+2) Verde
+3) Azul
+¿Cuál es tu color favorito? (Elige número):
+
+```
+
+#### 4. Editar PS4 (El prompt de depuración)
+
+Este es el más útil para programadores. Por defecto es solo un `+`, pero podemos configurarlo para que nos diga **el archivo y la línea exacta** donde se ejecuta el comando.
+
+_Nota: Es importante usar comillas simples `' '` para que `$LINENO` se evalúe al ejecutarse, no al definirse._
+
+```bash
+# Configuramos para ver: [nombre_script][numero_linea]
+export PS4='[$0:$LINENO] + '
+
+# Activamos el modo debug para probarlo
+set -x
+ls -l /tmp
+set +x # Desactivamos debug
+
+```
+
+_Resultado:_
+
+```bash
+[bash:42] + ls -l /tmp
+```
