@@ -9,44 +9,44 @@ Para declarar un array podemos hacerlo de varias maneras.
 - `declare -a`: Utilizado para declarar una variable como un array en Bash. Esto significa que la variable podrá contener múltiples valores, accesibles a través de índices numéricos. Esta opción es útil para asegurar que una variable se comporte como un array, incluso si no contiene valores al principio.
 
 ```bash
-si@si-VirtualBox:~$ vectorUno[0]=nuevo
+usuario@debian:~$ vectorUno[0]=nuevo
 
-si@si-VirtualBox:~$ declare -p | tail -3
+usuario@debian:~$ declare -p | tail -3
 declare -- snap_bin_path="/snap/bin"
 declare -- snap_xdg_path="/var/lib/snapd/desktop"
 declare -a vectorUno=([0]="nuevo")
 
-si@si-VirtualBox:~$ vectorUno[1]=nuevo2
-si@si-VirtualBox:~$ vectorUno[3]=3
+usuario@debian:~$ vectorUno[1]=nuevo2
+usuario@debian:~$ vectorUno[3]=3
 
-si@si-VirtualBox:~$ declare -p | tail -3
+usuario@debian:~$ declare -p | tail -3
 declare -- snap_bin_path="/snap/bin"
 declare -- snap_xdg_path="/var/lib/snapd/desktop"
 declare -a vectorUno=([0]="nuevo" [1]="nuevo2" [3]="3")
 ```
 
 ```bash
-si@si-VirtualBox:~$ vectorDos=(uno dos tres)
-si@si-VirtualBox:~$ declare -p vectorDos
+usuario@debian:~$ vectorDos=(uno dos tres)
+usuario@debian:~$ declare -p vectorDos
 declare -a vectorDos=([0]="uno" [1]="dos" [2]="tres")
 ```
 
 ```bash
-si@si-VirtualBox:~$ vectorTres=([0]=Uno [1]=Dos [4]=Cuatro)
-si@si-VirtualBox:~$ declare -p vectorTres
+usuario@debian:~$ vectorTres=([0]=Uno [1]=Dos [4]=Cuatro)
+usuario@debian:~$ declare -p vectorTres
 declare -a vectorTres=([0]="Uno" [1]="Dos" [4]="Cuatro")
 ```
 
 ```bash
-si@si-VirtualBox:~$ declare -a vectorCuatro[0]=Hola
-si@si-VirtualBox:~$ echo ${vectorCuatro[0]}
+usuario@debian:~$ declare -a vectorCuatro[0]=Hola
+usuario@debian:~$ echo ${vectorCuatro[0]}
 Hola
 ```
 
 - `declare -p`: Esta opción muestra información sobre una o más variables, incluyendo su tipo y valor. Es útil para depurar y entender el estado de las variables en un script de Bash.
 
 ```bash
-si@si-VirtualBox:~$ declare -p vectorUno
+usuario@debian:~$ declare -p vectorUno
 declare -a vectorUno=([0]="nuevo" [1]="nuevo2" [3]="nuevo3")
 ```
 
@@ -78,11 +78,11 @@ echo "Fuera de la función: ${array_local[@]}"  # Esto mostrará un valor vacío
 ### Referenciar Arrays
 
 - `${nombre[índice]}` donde nombre es el nombre del array e índice es la posición entera que contiene su valor correspondiente.
+- `${nombre}` equivale a `${nombre[0]}`
 - `${nombre[@]}` donde nombre es el nombre del array y el índice @ representa todos los elementos del vector. Devuelve una cadena con los elementos separados por espacio.
 - `${nombre[*]}` donde nombre es el nombre del array y el índice \* representa todos los elementos del vector. Devuelve una cadena con los elementos separados por espacio.
 - `"${nombre[@]}"` donde nombre es el nombre del array y el índice @ representa todos los elementos del vector. Devuelve una cadena con los elementos separados por espacio.
 - `"${nombre[*]}"` donde nombre es el nombre del array y el índice \* representa todos los elementos del vector. Devuelve una cadena con los elementos separados por el primer caracter de la variable separador de campos IFS.
-- `${nombre}` equivale a `${nombre[0]}`
 
 ```bash
 $ nombre=(primero segundo tercero)
@@ -124,7 +124,7 @@ echo $i
 done
 ```
 
-- Recorre los índices del array declarado como `nombre` y muestra cada valor en pantalla. Siempre utiliza comillas dobles para evitar errores de separadores como espacios que puedan existir en los valores de los índices. Si empleamos el "${nombre[@]}", con independencia del IFS siempre tendremos los elementos separados por espacio.
+- Recorre los índices del array declarado como `nombre` y muestra cada valor en pantalla. Siempre utiliza comillas dobles para evitar errores de separadores como espacios que puedan existir en los valores de los índices. Si empleamos el "${nombre[@]}", con independencia del IFS siempre tendremos los elementos separados por espacio por lo que es preferible esta opción.
 
 ```bash
 for i in "${nombre[@]}"
@@ -154,31 +154,31 @@ echo ${#nombre[índice]}
 - Muestra el número de caracteres de longitud del índice `índice` para el array declarado como `nombre`.
 
 ```bash
-si@si-VirtualBox:~$ vector3=(uno dos tres)
-si@si-VirtualBox:~$ echo ${vector3[*]}
-uno dos tres
-si@si-VirtualBox:~$ echo ${vector3[@]}
-uno dos tres
-si@si-VirtualBox:~$ echo ${vector3[0]}
-uno
-si@si-VirtualBox:~$ echo ${vector3}
-uno
-si@si-VirtualBox:~$ echo ${vector3[1]}
-dos
-si@si-VirtualBox:~$ echo ${vector3[2]}
-tres
-si@si-VirtualBox:~$ echo ${vector3[3]}
-
-si@si-VirtualBox:~$ echo ${#vector3[@]}
-3
-si@si-VirtualBox:~$ echo ${!vector3[@]}
-0 1 2
-si@si-VirtualBox:~$ echo ${#vector3[0]}
-3
-si@si-VirtualBox:~$ echo ${#vector3[1]}
-3
-si@si-VirtualBox:~$ echo ${#vector3[2]}
-4
+usuario@debian:~$ vector3=(uno dos tres)   # Se define el array con 3 elementos.
+usuario@debian:~$ echo ${vector3[*]}
+uno dos tres                               # Muestra todos los elementos del array.
+usuario@debian:~$ echo ${vector3[@]}
+uno dos tres                               # Muestra todos los elementos (funciona igual que * aquí).
+usuario@debian:~$ echo ${vector3[0]}
+uno                                        # Muestra el contenido del índice 0 (el primero).
+usuario@debian:~$ echo ${vector3}
+uno                                        # Sin indicar índice, por defecto muestra el índice 0.
+usuario@debian:~$ echo ${vector3[1]}
+dos                                        # Muestra el contenido del índice 1 (el segundo).
+usuario@debian:~$ echo ${vector3[2]}
+tres                                       # Muestra el contenido del índice 2 (el tercero).
+usuario@debian:~$ echo ${vector3[3]}
+                                           # Sale vacío porque el índice 3 no existe.
+usuario@debian:~$ echo ${#vector3[@]}
+3                                          # La almohadilla (#) al inicio cuenta el TOTAL de elementos del array.
+usuario@debian:~$ echo ${!vector3[@]}
+0 1 2                                      # El signo (!) lista los ÍNDICES que existen, no los valores.
+usuario@debian:~$ echo ${#vector3[0]}
+3                                          # Cuenta los CARACTERES de la palabra "uno" (u-n-o).
+usuario@debian:~$ echo ${#vector3[1]}
+3                                          # Cuenta los CARACTERES de la palabra "dos" (d-o-s).
+usuario@debian:~$ echo ${#vector3[2]}
+4                                          # Cuenta los CARACTERES de la palabra "tres" (t-r-e-s).
 ```
 
 ### Arrays como parámetros de funciones
@@ -288,23 +288,3 @@ Asigna el valor '4 5 6' al índice 1, ya que en la asignación al índice no se 
 ```bash
 4 5 6
 ```
-
----
-
-### Variables especiales en un script
-
-A continuación se muestra una breve descripción de cada una de estas variables especiales dentro de un script de shell, presentadas en forma de tabla:
-
-| **Variable**  | **Descripción**                                                                                                                         | **Ejemplo**          |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| `$0`          | Nombre del script (o programa) ejecutado.                                                                                               | `echo $0`            |
-| `$1, $2, ...` | Parámetros posicionales. `$1` es el primer parámetro, `$2` el segundo, y así sucesivamente.                                             | `echo $1`, `echo $2` |
-| `$#`          | Número de argumentos pasados al script.                                                                                                 | `echo $#`            |
-| `$?`          | Código de salida del último comando ejecutado. 0 indica éxito, otros valores indican error.                                             | `echo $?`            |
-| `$$`          | PID (Identificador de Proceso) del script en ejecución.                                                                                 | `echo $$`            |
-| `$*`          | Todos los argumentos pasados al script como una sola cadena, separados por el primer caracter de `IFS` (Internal Field Separator).      | `echo "$*"`          |
-| `$@`          | Todos los argumentos pasados al script como una lista de palabras separadas por el primer caracter de `IFS` (Internal Field Separator). | `echo "$@"`          |
-| `${@:4}`      | Expansión que devuelve los argumentos desde el cuarto en adelante como una única cadena.                                                | `echo "${@:4}"`      |
-| `${@:4:2}`    | Expansión que devuelve dos argumentos empezando desde el cuarto (el cuarto y el quinto argumento).                                      | `echo "${@:4:2}"`    |
-
-Estas variables son fundamentales para manipular la entrada, salida y estado de un script de shell en ejecución.
