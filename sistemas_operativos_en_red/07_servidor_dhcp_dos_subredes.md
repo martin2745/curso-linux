@@ -446,3 +446,56 @@ rtt min/avg/max/mdev = 47.483/53.048/55.984/3.937 ms
 El cliente Ubuntu puede ver al servidor y el servidor sabe a quien corresponde la IP. La comunicación DNS está completa.
 
 3. El tercer comando **ping -c3 google.es** prueba que el servidor Samba no solo resuelve lo interno, sino que está **reenviando** correctamente las peticiones de internet (forwarders) y la configuración NAT con _nftables_ es correcta.
+
+### Configuraciones finales del servidor AD-DC
+
+Teniendo en cuenta los cambios realizados anteriormente tenemos que editar los ficheros `/etc/hosts` ya que en este punto vamos a editar `/etc/resolv.conf` como DNS interno.
+
+```bash
+root@dc:~# cat /etc/hosts
+127.0.0.1 localhost
+127.0.1.1 ubuntuserver
+
+# Configuraciones
+# 192.168.100.1   dc.instituto.local dc instituto.local instituto
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+```
+
+Editamos `/etc/resolv.conf` para modificar los datos del DNS interno.
+
+```bash
+root@dc:~# lsattr /etc/resolv.conf
+----i---------e------- /etc/resolv.conf
+
+root@dc:~# chattr -i /etc/resolv.conf
+
+root@dc:~# lsattr /etc/resolv.conf
+--------------e------- /etc/resolv.conf
+
+root@dc:~# nano /etc/resolv.conf
+
+root@dc:~# cat /etc/resolv.conf
+nameserver 192.168.100.1
+nameserver 8.8.8.8
+search instituto.local
+```
+
+Podemos ver que el DNS funciona y resulve la autenticación.
+
+```bash
+root@dc:~# ping -c3 w101
+PING w101.instituto.local (192.168.100.140) 56(84) bytes of data.
+64 bytes from 192.168.100.140: icmp_seq=1 ttl=128 time=1.36 ms
+64 bytes from 192.168.100.140: icmp_seq=2 ttl=128 time=0.637 ms
+64 bytes from 192.168.100.140: icmp_seq=3 ttl=128 time=1.18 ms
+
+--- w101.instituto.local ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2069ms
+rtt min/avg/max/mdev = 0.637/1.058/1.355/0.306 ms
+```
