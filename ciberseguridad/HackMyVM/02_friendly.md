@@ -1,26 +1,29 @@
 # Máquina Friendly - HackMyVM
 
-**Plataforma:** [Máquina Friendly](https://www.google.com/search?q=https://hackmyvm.eu/machines/machine.php%3Fvm%3DFriendly)  
+**Plataforma:** [Máquina Friendly](https://hackmyvm.eu/machines/machine.php?vm=Friendly)  
 **Dificultad:** Fácil  
 **SO:** Linux (Debian)  
 **Autor del reto:** RiJaba1  
 **Técnicas:** FTP Anonymous, Subida de Web Shell (PHP), Reverse Shell, Escalada de privilegios (Abuso de sudo con Vim)
 
------
+---
 
 ## Índice
 
-1.  [Descubrimiento de red](https://www.google.com/search?q=%231-descubrimiento-de-red)
-2.  [Escaneo de Puertos y Servicios](https://www.google.com/search?q=%232-escaneo-de-puertos-y-servicios)
-3.  [Enumeración Web](https://www.google.com/search?q=%233-enumeraci%C3%B3n-web)
-4.  [Acceso y Explotación vía FTP](https://www.google.com/search?q=%234-acceso-y-explotaci%C3%B3n-v%C3%ADa-ftp)
-5.  [Obtención de Acceso Inicial (Shell)](https://www.google.com/search?q=%235-obtenci%C3%B3n-de-acceso-inicial-shell)
-6.  [Tratamiento de la TTY](https://www.google.com/search?q=%236-tratamiento-de-la-tty)
-7.  [Flag de Usuario](https://www.google.com/search?q=%237-flag-de-usuario)
-8.  [Escalada de Privilegios](https://www.google.com/search?q=%238-escalada-de-privilegios)
-9.  [Flag de Root](https://www.google.com/search?q=%239-flag-de-root)
+1. [Descubrimiento de red](#1-descubrimiento-de-red)
+2. [Escaneo de Puertos y Servicios](#2-escaneo-de-puertos-y-servicios)
+3. [Enumeración Web](#3-enumeración-web)
+4. [Acceso y Explotación vía FTP](#4-acceso-y-explotación-vía-ftp)
+5. [Obtención de Acceso Inicial (Shell)](#5-obtención-de-acceso-inicial-shell)
+6. [Tratamiento de la TTY](#6-tratamiento-de-la-tty)
+7. [Flag de Usuario](#7-flag-de-usuario)
+8. [Escalada de Privilegios](#8-escalada-de-privilegios)
+9. [Flag de Root](#9-flag-de-root)
+10. [Resumen de vulnerabilidades](#10-resumen-de-vulnerabilidades)
+11. [Contramedidas recomendadas](#11-contramedidas-recomendadas)
+12. [Herramientas utilizadas](#herramientas-utilizadas)
 
------
+---
 
 Esta documentación detalla el proceso paso a paso para comprometer la máquina **Friendly** de la plataforma HackMyVM. El proceso abarca desde el descubrimiento en la red local hasta la escalada de privilegios a `root`.
 
@@ -42,7 +45,13 @@ Starting arp-scan 1.10.0 with 256 hosts (https://github.com/royhills/arp-scan)
 Ending arp-scan 1.10.0: 256 hosts scanned in 2.200 seconds (116.36 hosts/sec). 4 responded
 ```
 
-**Resultado:** Identificamos que nuestra máquina objetivo (basada en el fabricante de la MAC de VirtualBox) tiene la IP `192.168.100.7`.
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-I eth0` | Interfaz de red a utilizar para el escaneo |
+
+> La IP **192.168.100.7** corresponde a la máquina objetivo Friendly.
+
+---
 
 ## 2. Escaneo de Puertos y Servicios
 
@@ -65,12 +74,22 @@ MAC Address: 08:00:27:A2:9F:C0 (Oracle VirtualBox virtual NIC)
 ...
 ```
 
-**Análisis de resultados:**
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-p-` | Escanea todos los puertos del 1 al 65535 |
+| `-sS` | TCP SYN scan (stealth): no completa el handshake |
+| `-sC` | Ejecuta scripts NSE por defecto |
+| `-sV` | Detección de versión del servicio |
+| `--min-rate` | Mínimo de paquetes por segundo |
+| `-vvv` | Verbosidad máxima |
+| `-n` | No resuelve nombres DNS |
+| `-Pn` | Omite el ping previo (asume host activo) |
 
-  * **Puerto 21 (FTP):** El servicio permite la autenticación anónima (`Anonymous FTP login allowed`). Además, vemos un archivo `index.html`.
-  * **Puerto 80 (HTTP):** Hay un servidor web Apache ejecutándose.
+> El servicio FTP en el puerto 21 permite autenticación anónima, y hay un Apache 2.4.54 en el puerto 80.
 
 La presencia del archivo `index.html` en el FTP nos da una pista crucial: **es muy probable que el directorio raíz del FTP sea el mismo que el directorio raíz del servidor web** (`/var/www/html`).
+
+---
 
 ## 3. Enumeración Web
 
@@ -97,7 +116,15 @@ Progress: 9631 / 207642 (4.64%)
 ...
 ```
 
-**Resultado:** No encontramos directorios relevantes, por lo que volvemos a nuestro vector de ataque principal: el puerto FTP.
+| Parámetro | Descripción |
+|-----------|-------------|
+| `dir` | Modo enumeración de directorios |
+| `-u` | URL objetivo |
+| `-w` | Wordlist a utilizar |
+
+> No encontramos directorios relevantes, por lo que volvemos a nuestro vector de ataque principal: el puerto FTP.
+
+---
 
 ## 4. Acceso y Explotación vía FTP
 
@@ -164,6 +191,8 @@ ftp> put pentest_monkey.php
 │ftp> 
 ```
 
+---
+
 ## 5. Obtención de Acceso Inicial (Shell)
 
 Con el payload ya en el servidor, abrimos un oyente con `netcat` en nuestra máquina atacante por el puerto especificado.
@@ -187,7 +216,9 @@ bash: no job control in this shell
 www-data@friendly:/$ 
 ```
 
-Hemos logrado entrar como el usuario `www-data` (el servicio web).
+> **¡Máquina comprometida!** Tenemos acceso inicial como el usuario `www-data` (el servicio web).
+
+---
 
 ## 6. Tratamiento de la TTY
 
@@ -215,6 +246,8 @@ www-data@friendly:/$ stty rows 54 columns 86
 
 Con estos comandos logramos emular una terminal robusta, con autocompletado y soporte para atajos de teclado.
 
+---
+
 ## 7. Flag de Usuario
 
 Exploramos el sistema empezando por el directorio `/home` para identificar los usuarios legítimos de la máquina. Encontramos el directorio de `RiJaba1` y en su interior la primera flag.
@@ -232,6 +265,10 @@ drwxr-xr-x 2 RiJaba1 RiJaba1 4096 Feb 21  2023 YouTube
 www-data@friendly:/home/RiJaba1$ cat user.txt
 ...
 ```
+
+> **¡Flag de usuario obtenida!**
+
+---
 
 ## 8. Escalada de Privilegios
 
@@ -268,6 +305,10 @@ Automáticamente, Vim nos abre una nueva sesión de terminal con los permisos he
 root@friendly:/home/RiJaba1# 
 ```
 
+> **¡Escalada completada!** Somos `root`.
+
+---
+
 ## 9. Flag de Root
 
 Finalmente, nos dirigimos al directorio raíz (`/root`) para leer la última bandera, pero nos encontramos con un engaño.
@@ -289,3 +330,41 @@ root@friendly:~# find / -name root.txt
 root@friendly:~# cat /var/log/apache2/root.txt
 ...
 ```
+
+> **¡Flag de root obtenida!**
+
+---
+
+## 10. Resumen de vulnerabilidades
+
+| # | Vulnerabilidad | CVE | Criticidad | Impacto |
+|---|---------------|-----|------------|---------|
+| 1 | FTP Anonymous Login | — | Media | Permite a cualquier usuario acceder al sistema FTP sin credenciales. |
+| 2 | Inseguridad en el directorio web (FTP coincide con HTTP) | — | Crítica | Permite subir archivos maliciosos al directorio web y ejecutarlos remotamente (RCE). |
+| 3 | Escalada de privilegios vía Sudo con Vim | — | Alta | Permite a `www-data` ejecutar comandos de shell como `root` abusando de `NOPASSWD`. |
+
+---
+
+## 11. Contramedidas recomendadas
+
+1. **FTP Anonymous Login**: Deshabilitar la opción de acceso anónimo en la configuración de `ProFTPD` y requerir autenticación para acceder al servidor.
+2. **Inseguridad en el directorio web**: Restringir los permisos de escritura del FTP sobre el directorio raíz del servidor web (`/var/www/html`). Si es necesario habilitar subida de archivos, deben ir a una carpeta externa sin permisos de ejecución para configuraciones de Apache o reglas que eviten la interpretación de scripts en PHP.
+3. **Escalada de privilegios vía Sudo**: Eliminar la regla que permite a `www-data` ejecutar `/usr/bin/vim` como `root` sin contraseña en el archivo `sudoers`. Limitar y controlar rigurosamente las aplicaciones interactivas en `sudo`.
+
+---
+
+## Herramientas utilizadas
+
+| Herramienta | Uso |
+|-------------|-----|
+| `arp-scan` | Descubrimiento de hosts en la red local |
+| `nmap` | Escaneo de puertos, detección de servicios y SO |
+| `gobuster` | Fuzzing de directorios web |
+| `ftp` | Conexión e interacción con servidor FTP |
+| `cat` | Lectura de archivos y payloads |
+| `netcat (nc)` | Listener para Reverse Shell |
+| `curl` / Navegador | Interacción web para ejecutar payload |
+| `stty` / `script` | Tratamiento y estabilización de la TTY inestable |
+| `sudo` | Obtención de permisos privilegiados |
+| `vim` | Editor abusado para la escalada de privilegios |
+| `find` | Enumeración y búsqueda de archivos dentro de todo el sistema |

