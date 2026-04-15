@@ -3,7 +3,7 @@
 **Plataforma:** [Máquina Friendly2](https://hackmyvm.eu/machines/machine.php?vm=Friendly2)  
 **Dificultad:** Fácil  
 **SO:** Linux (Debian)  
-**Autor del reto:** —  
+**Autor del reto:** RiJaba1 
 **Técnicas:** Local File Inclusion (LFI), Path Traversal, SSH Cracking (John the Ripper), Path Hijacking
 
 ---
