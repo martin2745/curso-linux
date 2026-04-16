@@ -1,6 +1,6 @@
 # Apache como Servidor Web
 
-**Apache** es un software de servidor web gratuito y de código abierto que recibe solicitudes de navegadores y entrega contenido web (páginas, imágenes, archivos) mediante el protocolo HTTP/HTTPS.
+**Apache** es un software de servidor web gratuito y de código abierto que recibe solicitudes de navegadores y entrega contenido web (páginas, imagenes, archivos) mediante el protocolo HTTP/HTTPS.
 
 - **Características principales:**
   - Multiplataforma: Funciona en Linux, Windows, macOS y otros sistemas operativos.
@@ -13,7 +13,7 @@
 - **Funcionamiento básico:** Atiende las peticiones HTTP enviadas por roots a través de un navegador y responde con los recursos solicitados, garantizando una comunicación segura y eficiente entre cliente y servidor.
 
 - **Modelo Cliente/Servidor en Servicios Web**: El servicio web está basado en el modelo cliente/servidor. Sus componentes principales son:
-- **Recursos y aplicaciones**: Son los documentos, imágenes, sonidos, vídeos y aplicaciones en línea a los que podemos acceder a través de los servidores web. Estos recursos están conectados mediante hipervínculos escritos en lenguajes como el **HTML** (Hyper Text Markup Language).
+- **Recursos y aplicaciones**: Son los documentos, imagenes, sonidos, vídeos y aplicaciones en línea a los que podemos acceder a través de los servidores web. Estos recursos están conectados mediante hipervínculos escritos en lenguajes como el **HTML** (Hyper Text Markup Language).
 - **Direcciones web**: Cadenas de caracteres que identifican los recursos de manera inequívoca y nos permiten acceder a ellos. Se llaman **URIs** o **URLs**.
 - **Clientes web, clientes HTTP o navegadores**: Permiten a los usuarios acceder a los recursos disponibles en los servidores web. Establecen conexiones con los servidores, dialogan con ellos y presentan la información recibida a los usuarios.
 - **Servidores web o servidores HTTP**: Atienden las peticiones de los clientes y envían los recursos solicitados. Normalmente almacenan los recursos en su propio sistema de archivos.
@@ -23,6 +23,31 @@
   JSON es también un lenguaje de marcas muy usado actualmente para intercambiar datos entre clientes y servidores web.
 - **Otras tecnologías web**: Existen muchas otras tecnologías utilizadas para desarrollar aplicaciones web: **CSS, CGI, PHP, ASP, CFM, JSP, .NET, AJAX, Javascript, XQuery, Xpath, XSL,** etc.
 
+
+## Índice
+
+1. [Configuración básica](#configuraci%C3%B3n-b%C3%A1sica)
+   - 1.1 [Puerto de escucha y direccionamiento](#puerto-de-escucha-y-direccionamiento)
+   - 1.2 [Virtual Hosts](#virtual-hosts)
+   - 1.3 [Contextos](#contextos)
+   - 1.4 [Directivas](#directivas)
+   - 1.5 [Las secciones de configuración](#las-secciones-de-configuraci%C3%B3n)
+   - 1.6 [Ficheros .htaccess](#ficheros-htaccess)
+   - 1.7 [Módulos](#m%C3%B3dulos)
+2. [Control de acceso por equipos](#control-de-acceso-por-equipos)
+3. [Contenedores de autorización](#contenedores-de-autorizaci%C3%B3n)
+4. [Control de acceso por usuarios](#control-de-acceso-por-usuarios)
+   - 4.1 [Autenticación Basic](#autenticaci%C3%B3n-basic)
+   - 4.2 [Autenticación Digest](#autenticaci%C3%B3n-digest)
+5. [Ficheros de log](#ficheros-de-log)
+   - 5.1 [Log de errores](#log-de-errores)
+   - 5.2 [Logs de accesos](#logs-de-accesos)
+   - 5.3 [Hosts Virtuales](#hosts-virtuales)
+6. [Mensajes de error personalizados](#mensajes-de-error-personalizados)
+7. [HTTPS](#https)
+
+---
+
 ## Configuración básica
 
 Para instalar **Apache** ejecutamos el siguiente comando en una distribución debian.
@@ -31,6 +56,13 @@ Para instalar **Apache** ejecutamos el siguiente comando en una distribución de
 root@debian:~$ sudo apt update && sudo apt install -y apache2
 ...
 ```
+
+| Parámetro | Descripción |
+|-----------|-------------|
+| `update`  | Actualiza la lista de paquetes disponibles en los repositorios configurados. |
+| `install` | Instala los paquetes especificados junto con sus dependencias. |
+| `-y`      | Asume 'sí' (yes) en todas las confirmaciones, automatizando la instalación de paquetes. |
+
 
 Vemos que el servicio está en ejecución.
 
@@ -50,6 +82,13 @@ root@debian:~$ systemctl status apache2
              └─2940 /usr/sbin/apache2 -k start
 ```
 
+| Parámetro | Descripción |
+|-----------|-------------|
+| `status`  | Muestra el estado actual del servicio, si está activo, fallido o detenido, y sus logs más recientes. |
+| `restart` | Detiene y vuelve a arrancar el servicio por completo, desconectando a los clientes activos. |
+| `reload`  | Recarga los archivos de configuración sin detener por completo el servicio ni desconectar a los usuarios. |
+
+
 Si nos fijamos en los procesos en ejecución podemos ver que el que ejecuta el servicio es **www-data** y se ejecuta sobre el puerto 80.
 
 ```bash
@@ -63,6 +102,12 @@ root     3081  0.0  0.0   6356  2056 pts/0    S+   17:46   0:00 grep apache
 root@debian:~$ ss -putan | grep 80
 tcp   LISTEN 0      511                   *:80               *:*
 ```
+
+| Comando/Parámetro | Descripción |
+|-------------------|-------------|
+| `ps -aux`         | Muestra todos los procesos en ejecución (`a`), para todos los usuarios (`x`) indicando el del usuario actual (`u`). |
+| `ss -putan`       | Muestra todos los sockets de red escuchando (`l` o `n` para IPs) especificando los de TCP (`t`), UDP (`u`) indicando la IP numérica y puerto sin resolver el nombre (`n`), mostrando además los procesos asociados (`p`) y escuchando/no-escuchando (`a`). |
+
 
 Si nosotros vemos el contenido en un navegador en la ip y puerto correspondiente veremos la página de muestra de Apache que está definida en la ruta `/var/www/html/index.html`.
 
@@ -87,18 +132,18 @@ drwxr-xr-x 2 root root  4096 sep 10 17:40 sites-enabled
 
 La explicación de cada archivo incluido en el directorio /etc/apache2 es la siguiente:
 
-- **apache2.conf:** El archivo principal de configuración de Apache2. Contiene toda la configuración global.
-- **conf-available:** Este directorio contiene archivos de configuración disponibles. Todos los archivos que en versiones anteriores estaban en /etc/apache2/conf.d deberían moverse a /etc/apache2/conf-available.
-- **conf-enabled:** Mantiene enlaces simbólicos a los archivos en /etc/apache2/conf-available. Cuando un archivo de configuración está enlazado mediante un enlace simbólico, estará activo la siguiente vez que se reinicie Apache.
+- **`apache2.conf`:** El archivo principal de configuración de Apache2. Contiene toda la configuración global.
+- **conf-available:** Este directorio contiene archivos de configuración disponibles. Todos los archivos que en versiones anteriores estaban en /etc/`apache2/conf`.d deberían moverse a /etc/`apache2/conf`-available.
+- **conf-enabled:** Mantiene enlaces simbólicos a los archivos en /etc/`apache2/conf`-available. Cuando un archivo de configuración está enlazado mediante un enlace simbólico, estará activo la siguiente vez que se reinicie Apache.
 - **envvars:** Archivo con variables de entorno y sus valores.
 - **mods-available:** Este directorio contiene archivos de configuración para cargar módulos y configurarlos. Sin embargo, no todos los módulos tienen archivos de configuración específicos.
 - **mods-enabled:** Mantiene enlaces simbólicos a los archivos en /etc/apache2/mods-available. Cuando un archivo de configuración de módulo está enlazado mediante un enlace simbólico será activado después del siguiente reinicio de Apache.
-- **ports.conf:** Aloja las directivas que determinan los puertos TCP en los que Apache escucha y atiende peticiones.
+- **`ports.conf`:** Aloja las directivas que determinan los puertos TCP en los que Apache escucha y atiende peticiones.
 - **sites-available:** Este directorio tiene los archivos de configuración de los Hosts Virtuales de Apache. Los Hosts Virtuales permiten que Apache esté configurado para múltiples sitios con configuraciones separadas.
 - **sites-enabled:** Al igual que mods-enabled, sites-enabled contiene enlaces simbólicos a archivos dentro de /etc/apache2/sites-available. De manera similar, cuando se crea un enlace simbólico el sitio virtual estará activo una vez se reinicie Apache.
 - **magic:** Instrucciones para determinar los tipos MIME basándose en los primeros bytes de cada archivo.
 
-_*Nota*_: Diferencia entre módulo y configuración.
+> **Nota:** Diferencia entre módulo y configuración.
 
 Un **módulo** es una extensión que añade funcionalidades específicas al servidor web, como soporte para distintos tipos de contenido, autenticación, compresión, etc. Los módulos se pueden cargar o descargar para ampliar o reducir las capacidades de Apache.
 
@@ -106,7 +151,7 @@ Una **configuración** (archivo de configuración) define cómo se comporta Apac
 
 Cuando se inicia el demonio HTTP, este se enlaza a alguna dirección IP y puerto del equipo local y espera por peticiones de clientes. Por defecto, escucha en todas las direcciones del equipo. Sin embargo, puede ser necesario indicarle que escuche en puertos específicos o solo en alguna dirección o en una combinación de ambos. Con frecuencia, todo esto se combina con la propiedad de _Host Virtual_, que determina cómo el demonio httpd responde a las diferentes direcciones, nombres de equipo y puertos.
 
-La directiva **Listen** le indica al servidor que acepte peticiones solo en alguno(s) puerto(s) específico(s) o en combinaciones de direcciones y puertos. Si únicamente se especifica una directiva **Listen**, el servidor escucha peticiones en ese puerto en todas sus direcciones. Si se especifica una dirección IP junto con el puerto, atenderá peticiones en ese puerto e interfaz. Se pueden definir múltiples directivas **Listen** junto con puertos y direcciones. El servidor atenderá peticiones en cualquiera de ellos.
+La directiva **`Listen`** le indica al servidor que acepte peticiones solo en alguno(s) puerto(s) específico(s) o en combinaciones de direcciones y puertos. Si únicamente se especifica una directiva **`Listen`**, el servidor escucha peticiones en ese puerto en todas sus direcciones. Si se especifica una dirección IP junto con el puerto, atenderá peticiones en ese puerto e interfaz. Se pueden definir múltiples directivas **`Listen`** junto con puertos y direcciones. El servidor atenderá peticiones en cualquiera de ellos.
 
 ```bash
 root@debian:~$ cat /etc/apache2/ports.conf
@@ -206,7 +251,7 @@ root@debian:/var/www# tree
     └── index.html
 ```
 
-_*Nota:*_ Hacemos lo mismo para ejemplo2.com.
+> **Nota:** Hacemos lo mismo para ejemplo2.com.
 
 A continuación modificamos el archivo `/etc/apache2/ports.conf` con la información de los Virtual Hosts.
 
@@ -241,9 +286,9 @@ Listen 80
 root@debian:~# systemctl restart apache2
 ```
 
-_*Nota*_: En el caso de estos apuntes, hacemos uso de una MV debian en VirtualBox con un adaptador Nat y mapeamos el puerto 3000 al puerto 80 de la máquina. Por este motivo tendremos que en el navegador introducir la siguiente ruta: http://ejemplo1.com:3000/ y http://ejemplo2.com:3000/
-_*Nota 2*_: Al no existir resolución de DNS entre ejemplo1.com y la IP 127.0.0.1 tenemos las opciones de editar los ficheros `/etc/hosts` de nuestro anfitrion si estamos en un equipo linux o el fichero `C:\Windows\System32\drivers\etc\hosts` si estamos en un equipo Windows.
-_*Nota 3*_: Es posible que la caché del navegador mantenga información de búsquedas anteriores y de problemas a la hora de hacer estos ejercicios, es recomendable eliminar los datos de caché.
+> **Nota:** En el caso de estos apuntes, hacemos uso de una MV debian en VirtualBox con un adaptador Nat y mapeamos el puerto 3000 al puerto 80 de la máquina. Por este motivo tendremos que en el navegador introducir la siguiente ruta: http://ejemplo1.com:3000/ y http://ejemplo2.com:3000/
+> **Nota:** Al no existir resolución de DNS entre ejemplo1.com y la IP 127.0.0.1 tenemos las opciones de editar los ficheros `/etc/hosts` de nuestro anfitrion si estamos en un equipo linux o el fichero `C:\Windows\System32\drivers\etc\hosts` si estamos en un equipo Windows.
+> **Advertencia:** Es posible que la caché del navegador mantenga información de búsquedas anteriores y de problemas a la hora de hacer estos ejercicios, es recomendable eliminar los datos de caché.
 
 #### Hosts Virtuales basados en nombres
 
@@ -309,23 +354,23 @@ En este punto, podemos acceder a los sitios haciendo uso de las rutas `http://10
 
 Los contextos indican dónde se permite establecer una directiva. Es una lista separada por comas de los siguientes valores:
 
-- server config: Esto significa que la directiva puede ser utilizada en los archivos de configuración de Apache (por ejemplo, apache2.conf), pero no dentro de los contenedores <VirtualHost> o <Directory>. Tampoco se permite en los archivos .htaccess.
+- server config: Esto significa que la directiva puede ser utilizada en los archivos de configuración de Apache (por ejemplo, `apache2.conf`), pero no dentro de los contenedores <VirtualHost> o <Directory>. Tampoco se permite en los archivos .htaccess.
 - virtual host: Este contexto significa que una directiva puede aparecer dentro de un contexto <VirtualHost> que se encuentre en cualquier archivo de configuración.
 - directory: Una directiva válida en este contexto puede emplearse dentro de contenedores <Directory>, <Location>, <Files>, <If> y <Proxy> en los archivos de configuración, sujetos a las restricciones descritas en la sección de configuración.
 - .htaccess: Si una directiva es válida en este contexto, significa que puede aparecer en un archivo de configuración de directorio denominado .htaccess. Estos pueden no ser procesados dependiendo de las directivas de anulación activas.
 
 Cada directiva únicamente es válida dentro de su contexto. Si se intenta utilizar fuera del contexto designado, aparecerá un error de configuración que puede ocasionar que el servidor maneje incorrectamente peticiones en dicho contexto o que simplemente no funcione (por ejemplo, impidiendo que se inicie).
 
-Las ubicaciones de una directiva son el resultado de una operación booleana de todos los contextos válidos. En otras palabras, si una directiva está marcada como válida dentro de server config y .htaccess, puede utilizarse tanto en el archivo apache2.conf como en ficheros .htaccess, pero no dentro de <Directory> o <VirtualHost>.
+Las ubicaciones de una directiva son el resultado de una operación booleana de todos los contextos válidos. En otras palabras, si una directiva está marcada como válida dentro de server config y .htaccess, puede utilizarse tanto en el archivo `apache2.conf` como en ficheros .htaccess, pero no dentro de <Directory> o <VirtualHost>.
 
 ### Directivas
 
-#### Listen
+#### `Listen`
 
-La directiva **Listen** le indica al servidor que acepte peticiones solo en uno o varios puertos específicos, o en combinaciones de direcciones y puertos.  
-Si únicamente se especifica una directiva **Listen**, el servidor escuchará en ese puerto en todas sus direcciones.  
+La directiva **`Listen`** le indica al servidor que acepte peticiones solo en uno o varios puertos específicos, o en combinaciones de direcciones y puertos.  
+Si únicamente se especifica una directiva **`Listen`**, el servidor escuchará en ese puerto en todas sus direcciones.  
 Si se especifica una dirección IP junto con el puerto, atenderá las peticiones en ese puerto e interfaz.  
-Se pueden definir múltiples directivas **Listen** con distintos puertos y direcciones. El servidor aceptará conexiones en todos ellos.
+Se pueden definir múltiples directivas **`Listen`** con distintos puertos y direcciones. El servidor aceptará conexiones en todos ellos.
 
 Por ejemplo, para que el servidor acepte peticiones en los puertos 80 y 8000 en todas sus interfaces de red, se usará:
 
@@ -374,7 +419,7 @@ Esta práctica permite alojar varios sitios en el mismo servidor físico sin que
 
 ##### Mejorando nuestros Virtual Hosts
 
-Aunque la forma que hicimos anteriormente posicionando el código en `/etc/apache2/ports.conf` funciona, sería más correcto crear un **sitio** para cada web en especial. De este modo deberiamos seguir los siguientes pasos:
+Aunque la forma que hicimos anteriormente posicionando el código en `/etc/apache2/ports.conf` funciona, sería más correcto crear un **sitio** para cada web en especial. De este modo deberíamos seguir los siguientes pasos:
 
 1. El archivo de `ports.conf` quedaría con la siguiente información.
 
@@ -417,7 +462,7 @@ root@debian:/etc/apache2# cat sites-available/ejemplo2.conf
 </VirtualHost>
 ```
 
-3. Habilitamos los sitios con el comando **a2ensite** (si quisieramos deshabilitarlo usariamos **a2dissite**) y reiniciamos apache.
+3. Habilitamos los sitios con el comando **`a2ensite`** (si quisieramos deshabilitarlo usariamos **`a2dissite`**) y reiniciamos apache.
 
 ```bash
 root@debian:/etc/apache2# a2ensite ejemplo1.conf
@@ -431,7 +476,12 @@ To activate the new configuration, you need to run:
 root@debian:/etc/apache2# systemctl reload apache
 ```
 
-_*Nota*_: Como resultado se genera el correspondiente enlace simbólico a la ruta `/etc/apache2/sites-avaliable`.
+| Comando | Descripción |
+|---------|-------------|
+| `a2ensite` | Habilita un sitio web creando automáticamente un enlace en `sites-enabled` hacia el archivo original situado en `sites-available`. |
+| `a2dissite`| Deshabilita el sitio web (borra el enlace en `sites-enabled`). |
+
+> **Nota:** Como resultado se genera el correspondiente enlace simbólico a la ruta `/etc/apache2/sites-avaliable`.
 
 ```bash
 root@debian:/etc/apache2# ls -l sites-enabled
@@ -471,7 +521,7 @@ lrwxrwxrwx 1 root root 32 sep 11 14:56 ejemplo2.conf -> ../sites-available/ejemp
 
 Así, un acceso a `http://www.ejemplo.com/index.html` se refiere a `/www/ejemplo1/web/index.html`. Si la ruta al directorio raíz no es absoluta, se asume que es relativa al contenido de la directiva ServerRoot.
 
-**Nota:** El DocumentRoot debería especificarse sin la barra final.
+> **Importante:** El DocumentRoot debería especificarse sin la barra final.
 
 #### Alias
 
@@ -506,7 +556,7 @@ Alias "/image" "/ftp/pub/image"
 </Directory>
 ```
 
-Vamos pues a realizar la prueba con una imágen.
+Vamos pues a realizar la prueba con una imagen.
 
 ```bash
 root@debian:/# mkdir -p /var/www/ejemplo1/images
@@ -715,7 +765,7 @@ Permitir que usuarios sin privilegios modifiquen la configuración del servidor 
 
 También se puede cambiar el valor de la directiva AccessFileName para especificar otro nombre para buscar estos ficheros, pero si se cambia, hay que usar un bloque <Files> para prevenir accesos no intencionados, lo cual no se recomienda por razones de seguridad.
 
-En el fichero principal de configuración apache2.conf suele aparecer algo así:
+En el fichero principal de configuración `apache2.conf` suele aparecer algo así:
 
 ```bash
 AccessFileName .htaccess
@@ -730,14 +780,21 @@ La primera línea indica a Apache que busque ficheros .htaccess en los directori
 ### Módulos
 
 La inclusión de módulos para ampliar la funcionalidad de Apache se realiza con la directiva **LoadModule** seguida del nombre del módulo y el nombre del archivo (o biblioteca) que lo contiene. Se necesitarán tantas directivas **LoadModule** como módulos vayan a ser usados.  
-En Debian/Ubuntu, los módulos pueden ser habilitados o deshabilitados con los comandos **a2enmod** y **a2dismod**. El nombre del módulo coincide con el nombre del archivo que lo contiene (sin la extensión . conf).
+En Debian/Ubuntu, los módulos pueden ser habilitados o deshabilitados con los comandos **`a2enmod`** y **`a2dismod`**. El nombre del módulo coincide con el nombre del archivo que lo contiene (sin la extensión . conf).
 
 ```bash
 a2enmod usertrack
 a2dismod usertrack
 ```
 
+| Comando | Descripción |
+|---------|-------------|
+| `a2enmod` | Habilita un módulo interno de Apache creando su hipervínculo en `mods-enabled`. |
+| `a2dismod`| Desactiva un módulo alojado en `mods-enabled`. |
+
 Siempre es obligatorio, al habilitar o deshabilitar módulos, reiniciar el servicio Apache2.
+
+---
 
 ## Control de acceso por equipos
 
@@ -779,6 +836,8 @@ Así, para denegar la visita usando una negación, el bloque debe tener al menos
 </RequireAll>
 ```
 
+---
+
 ## Contenedores de autorización
 
 La directiva `Require` comprueba si un determinado usuario puede acceder de acuerdo con un proveedor de autorización y unas restricciones especificadas. El módulo `mod_authz_core` proporciona varios proveedores de autorización, de los cuales los más empleados son:
@@ -796,6 +855,8 @@ Ambos suelen encontrarse dentro de secciones `<Directory>`.
 Así, de la misma forma que la directiva `Require not`, no puede autorizar una petición de forma independiente, ya que nunca devuelve un resultado exitoso. Sin embargo, sí puede emplearse para restringir un conjunto de usuarios que de otro modo tendrían acceso a un recurso.
 
 Los contenedores de autorización `<RequireAll>`, `<RequireAny>` y `<RequireNone>` se pueden combinar entre sí y con la directiva `Require` para construir una lógica de autorización compleja.
+
+---
 
 ## Control de acceso por usuarios
 
@@ -836,6 +897,12 @@ htpasswd -c /usr/local/apache/passwd/passwords rbowen
 htpasswd /usr/local/apache/passwd/passwords joesmith
 ```
 
+| Parámetro / Argumento | Descripción |
+|-----------------------|-------------|
+| `-c`      | Crea un archivo nuevo de contraseñas. Advertencia: si se usa en un archivo existente, borra todo su contenido. |
+| (ruta_archivo) | Archivo de texto plano local donde guardar las credenciales. |
+| (usuario) | Identificador o login del usuario administrado. |
+
 Finalmente, la directiva `Require`, sola o agrupada con `<RequireAll>`, `<RequireAny>` o `<RequireNone>`, indica qué usuarios pueden ver el contenido del directorio. Un ejemplo de configuración puede ser este:
 
 ```bash
@@ -863,6 +930,11 @@ htdigest -c /usr/local/apache/passwd/passwords myrealm rbowen
 # Para añadir usuarios después.
 htdigest /usr/local/apache/passwd/passwords myrealm joesmith
 ```
+
+| Parámetro / Argumento | Descripción |
+|-----------------------|-------------|
+| `-c`      | Crea un nuevo fichero para autenticación Digest. Cuidado con reescribir. |
+| `myrealm` | Dominio de autorización que debe encajar idénticamente con el campo `AuthName` (p. ej. `myrealm`) especificado en el VirtualHost/.htaccess. |
 
 Finalmente, la directiva `Require`, sola o agrupada con `<RequireAll>`, `<RequireAny>` o `<RequireNone>`, indica qué usuarios tienen permiso para ver el contenido del directorio. Un ejemplo de configuración puede ser este:
 
@@ -903,6 +975,8 @@ Require valid-user
 ```
 
 Con esta directiva, cualquiera que aparezca en el fichero de contraseñas y ponga la contraseña correcta podrá acceder.
+
+---
 
 ## Ficheros de log
 
@@ -989,6 +1063,8 @@ CustomLog logs/access_log commonvhost
 
 En este caso, `%v` se usa para registrar el nombre del host virtual que está sirviendo la petición.
 
+---
+
 ## Mensajes de error personalizados
 
 Aunque el servidor HTTP Apache dispone de respuestas genéricas para los códigos de estado HTTP 4xx y 5xx, estas respuestas a veces son un poco concisas, poco informativas y pueden intimidar a los usuarios del sitio. Se pueden proporcionar respuestas personalizadas, que son más amigables, en otro idioma diferente al inglés o más acordes con el diseño del sitio web. Las respuestas personalizadas se pueden definir para cada código de estado HTTP considerado como una condición de error, es decir, para códigos 4xx y 5xx.
@@ -1019,6 +1095,8 @@ Donde la acción puede ser:
 - Una URL externa a la que redirigir (si la acción es una URL válida).
 - Texto a mostrar (en cualquier otro caso). El texto debe ir entre comillas dobles (") si consta de más de una palabra.
 
+---
+
 ## HTTPS
 
 TLS, o transport layer security, y su predecesor SSL, secure sockets layer, son los protocolos seguros creados para envolver el tráfico normal en una capa de seguridad. Estos protocolos permiten que el tráfico se transmita de forma segura entre las partes remotas sin la posibilidad de que sea interceptado y leído por cualquiera que esté en medio. Son también instrumentos para validar la identidad de dominios y servidores a través de internet estableciendo canales seguros y auténticos mediante una autoridad certificadora.
@@ -1027,8 +1105,19 @@ El soporte de SSL viene de serie con el paquete de Apache2 en Ubuntu/Debian. Sol
 
 En este momento podemos pensar en hosts virtuales que soporten conexiones con protocolos http y https, pero no es aconsejable. Es mejor crear un host virtual nuevo que soporte SSL.
 
-Lo esencial que hay que hacer para que HTTPS funcione es tener un par de clave privada y certificado digital. La manera de obtener clave privada y certificado no es relevante. Es posible obtener un certificado digital auto firmado con el siguiente comando:  
+Lo esencial que hay que hacer para que HTTPS funcione es tener un par de clave privada y certificado digital. La manera de obtener clave privada y certificado no es relevante. Es posible obtener un certificado digital auto firmado con el siguiente comando:
+
+```bash
 openssl req -new -x509 -days 365 -nodes -out meusitio.pem -keyout meusitio.key
+```
+
+| Parámetro | Descripción |
+|-----------|-------------|
+| `req -new`| Genera una nueva petición de firma (CSR) para certificados. |
+| `-x509`   | Formato estándar para emitir un certificado auto-firmado de clave pública. |
+| `-days 365`| Define en días el tiempo de validez del certificado. |
+| `-nodes`  | Genera una clave privada sin contraseña (NO DES). |
+| `-out / -keyout` | Especifica archivos de salida para clave pública (`.pem`/`.crt`) y clave privada (`.key`). |
 
 Si hacemos eso, tenemos que tener en cuenta que cualquier navegador puede no reconocer el certificado y será necesaria una excepción.
 
