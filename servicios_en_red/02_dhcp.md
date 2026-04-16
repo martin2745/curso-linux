@@ -11,6 +11,20 @@ Dado que partimos de la red `192.168.100.0/24`, vamos a aplicar **Subnetting** p
 1. **Subred 1 (LAN1)**: `192.168.100.0/25` (IPs de la .1 a la .126).
 2. **Subred 2 (LAN2)**: `192.168.100.128/25` (IPs de la .129 a la .254).
 
+
+## Índice
+
+1. [Configuración previa de IPs estáticas en el Servidor](#configuraci%C3%B3n-previa-de-ips-est%C3%A1ticas-en-el-servidor)
+2. [Implementación del servidor DHCP](#implementaci%C3%B3n-del-servidor-dhcp)
+   - 2.1 [1. Instalación del paquete](#1-instalaci%C3%B3n-del-paquete)
+   - 2.2 [2. Definición de las Interfaces de Escucha](#2-definici%C3%B3n-de-las-interfaces-de-escucha)
+   - 2.3 [3. Configuración del Servicio (dhcpd.conf)](#3-configuraci%C3%B3n-del-servicio-dhcpdconf)
+   - 2.4 [4. Reinicio y Verificación del Servicio](#4-reinicio-y-verificaci%C3%B3n-del-servicio)
+3. [Comprobación en los clientes](#comprobaci%C3%B3n-en-los-clientes)
+   - 3.1 [Cliente Ubuntu Desktop (Subred 1)](#cliente-ubuntu-desktop-subred-1)
+
+---
+
 ## Configuración previa de IPs estáticas en el Servidor
 
 Antes de instalar el servicio DHCP, debemos configurar las interfaces de red del servidor para que actúen como **Puerta de Enlace (Gateway)** de cada subred.
@@ -43,6 +57,11 @@ root@debian:~# netplan apply
 root@debian:~# ip address show
 ```
 
+| Comando / Parámetro | Descripción |
+|---------------------|-------------|
+| `netplan apply`     | Aplica inmediatamente la nueva configuración descrita en los archivos YAML de Netplan. |
+| `ip address show`   | Muestra la configuración actual de todas las interfaces de red del sistema. |
+
 ```bash
 enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
     link/ether 08:00:27:a0:71:dc brd ff:ff:ff:ff:ff:ff
@@ -54,6 +73,8 @@ enp0s9: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group
        valid_lft forever preferred_lft forever
 ```
 
+---
+
 ## Implementación del servidor DHCP
 
 ### 1. Instalación del paquete
@@ -63,6 +84,12 @@ Actualizamos repositorios e instalamos el software estándar para DHCP en Linux 
 ```bash
 root@debian:~# apt update && apt install -y isc-dhcp-server
 ```
+
+| Parámetro | Descripción |
+|-----------|-------------|
+| `update`  | Actualiza la caché local de repositorios de paquetes disponibles. |
+| `install` | Descarga e instala el servicio DHCP indicado. |
+| `-y`      | Responde afirmativamente automáticamente a cualquier mensaje de confirmación durante la instalación. |
 
 ### 2. Definición de las Interfaces de Escucha
 
@@ -80,7 +107,7 @@ INTERFACESv4="enp0s8 enp0s9"
 
 **INTERFACESv4**: Indicamos las dos tarjetas de red internas (LAN1 y LAN2). No incluimos la `enp0s3` porque esa es la conexión a Internet y ya recibe IP de otro router, no queremos repartir IPs hacia fuera.
 
-### 3. Configuración del Servicio (dhcpd.conf)
+### 3. Configuración del Servicio (`dhcpd.conf`)
 
 Editamos el archivo principal `/etc/dhcp/dhcpd.conf` para definir los parámetros de red que entregaremos a los clientes.
 
@@ -150,6 +177,11 @@ root@debian:~# systemctl restart isc-dhcp-server
 root@debian:~# systemctl status isc-dhcp-server
 ```
 
+| Comando / Opción | Descripción |
+|------------------|-------------|
+| `restart`        | Reinicia completamente el servicio DHCP para recargar su configuración principal (`dhcpd.conf`). |
+| `status`         | Muestra si el servicio se ha iniciado correctamente o si presenta errores en su registro. |
+
 Si todo es correcto, veremos que el servicio está escuchando en ambas subredes:
 
 ```bash
@@ -161,6 +193,8 @@ ene 21 19:48:57 servidor dhcpd[1480]: Sending on   LPF/enp0s9/../192.168.100.128
 ene 21 19:48:57 servidor dhcpd[1480]: Listening on LPF/enp0s8/../192.168.100.0/25
 ene 21 19:48:57 servidor dhcpd[1480]: Sending on   LPF/enp0s8/../192.168.100.0/25
 ```
+
+---
 
 ## Comprobación en los clientes
 
@@ -177,7 +211,7 @@ network:
       dhcp4: true
 ```
 
-Verificamos la conexión haciendo ping a la puerta de enlace (nuestro servidor):
+Verificamos la conexión haciendo `ping` a la puerta de enlace (nuestro servidor):
 
 ```bash
 usuario@debian:~# ping -c 4 192.168.100.1
@@ -187,3 +221,8 @@ PING 192.168.100.1 (192.168.100.1) 56(84) bytes of data.
 --- 192.168.100.1 ping statistics ---
 4 packets transmitted, 4 received, 0% packet loss
 ```
+
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-c 4`    | Limita la prueba de red a enviar exclusivamente 4 paquetes de latido ICMP (echo request) cortando así la transmisión infinita del ping. |
+| `IP`      | La dirección de la máquina destino que se desea alcanzar para verificar la conectividad a nivel de red. |
