@@ -1,0 +1,221 @@
+# =============================================================================
+# FICHERO: estructura-completa-ies.ldif
+# DESCRIPCIÓN: Crea de una sola vez toda la estructura del directorio LDAP
+#              del Centro Educativo IES Ejemplo adaptada a la nueva jerarquía.
+# =============================================================================
+
+# =============================================================================
+# BLOQUE 1 — UNIDADES ORGANIZATIVAS PRINCIPALES
+# =============================================================================
+
+dn: ou=usuarios,dc=ies,dc=local
+objectClass: organizationalUnit
+ou: usuarios
+description: Contenedor principal de todos los usuarios del centro
+
+dn: ou=grupos,dc=ies,dc=local
+objectClass: organizationalUnit
+ou: grupos
+description: Grupos de curso del centro educativo
+
+# =============================================================================
+# BLOQUE 2 — SUBUNIDADES ORGANIZATIVAS DE USUARIOS
+# =============================================================================
+
+dn: ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: organizationalUnit
+ou: alumnos
+description: Alumnos matriculados en el centro
+
+dn: ou=profesores,ou=usuarios,dc=ies,dc=local
+objectClass: organizationalUnit
+ou: profesores
+description: Profesores del departamento de informatica
+
+# =============================================================================
+# BLOQUE 3 — SUBUNIDADES ORGANIZATIVAS DE CURSOS (DENTRO DE ALUMNOS)
+# =============================================================================
+
+dn: ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: organizationalUnit
+ou: SMR1
+description: Alumnos de 1o de Sistemas Microinformaticos y Redes
+
+dn: ou=SMR2,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: organizationalUnit
+ou: SMR2
+description: Alumnos de 2o de Sistemas Microinformaticos y Redes
+
+dn: ou=FPB1,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: organizationalUnit
+ou: FPB1
+description: Alumnos de 1o de Formacion Profesional Basica
+
+dn: ou=FPB2,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: organizationalUnit
+ou: FPB2
+description: Alumnos de 2o de Formacion Profesional Basica
+
+# =============================================================================
+# BLOQUE 4 — GRUPOS DE CURSO
+# Esquema de GIDs: SMR1(10000), SMR2(11000), FPB1(12000), FPB2(13000)
+# =============================================================================
+
+dn: cn=SMR1,ou=grupos,dc=ies,dc=local
+objectClass: posixGroup
+cn: SMR1
+gidNumber: 10000
+description: Sistemas Microinformaticos y Redes 1 curso
+memberUid: a.garcia
+memberUid: c.lopez
+
+dn: cn=SMR2,ou=grupos,dc=ies,dc=local
+objectClass: posixGroup
+cn: SMR2
+gidNumber: 11000
+description: Sistemas Microinformaticos y Redes 2 curso
+memberUid: l.moreno
+
+dn: cn=FPB1,ou=grupos,dc=ies,dc=local
+objectClass: posixGroup
+cn: FPB1
+gidNumber: 12000
+description: Formacion Profesional Basica 1 curso
+memberUid: m.fernandez
+
+dn: cn=FPB2,ou=grupos,dc=ies,dc=local
+objectClass: posixGroup
+cn: FPB2
+gidNumber: 13000
+description: Formacion Profesional Basica 2 curso
+memberUid: j.martin
+
+# =============================================================================
+# BLOQUE 5 — ALUMNOS (Ubicados en sus respectivas OUs de curso)
+# =============================================================================
+
+# --- ALUMNOS DE SMR1 (gidNumber: 10000) ---
+
+dn: uid=a.garcia,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: a.garcia
+cn: Ana Garcia Lopez
+sn: Garcia Lopez
+givenName: Ana
+mail: a.garcia@ies.local
+telephoneNumber: 600000001
+uidNumber: 10001
+gidNumber: 10000
+homeDirectory: /home/alumnos/a.garcia
+loginShell: /bin/bash
+userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
+
+dn: uid=c.lopez,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: c.lopez
+cn: Carlos Lopez Martinez
+sn: Lopez Martinez
+givenName: Carlos
+mail: c.lopez@ies.local
+telephoneNumber: 600000002
+uidNumber: 10002
+gidNumber: 10000
+homeDirectory: /home/alumnos/c.lopez
+loginShell: /bin/bash
+userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
+
+# --- ALUMNOS DE SMR2 (gidNumber: 11000) ---
+
+dn: uid=l.moreno,ou=SMR2,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: l.moreno
+cn: Laura Moreno Ruiz
+sn: Moreno Ruiz
+givenName: Laura
+mail: l.moreno@ies.local
+telephoneNumber: 600000003
+uidNumber: 11001
+gidNumber: 11000
+homeDirectory: /home/alumnos/l.moreno
+loginShell: /bin/bash
+userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
+
+# --- ALUMNOS DE FPB1 (gidNumber: 12000) ---
+
+dn: uid=m.fernandez,ou=FPB1,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: m.fernandez
+cn: Miguel Fernandez Torres
+sn: Fernandez Torres
+givenName: Miguel
+mail: m.fernandez@ies.local
+telephoneNumber: 600000004
+uidNumber: 12001
+gidNumber: 12000
+homeDirectory: /home/alumnos/m.fernandez
+loginShell: /bin/bash
+userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
+
+# --- ALUMNOS DE FPB2 (gidNumber: 13000) ---
+
+dn: uid=j.martin,ou=FPB2,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: j.martin
+cn: Julia Martin Diaz
+sn: Martin Diaz
+givenName: Julia
+mail: j.martin@ies.local
+telephoneNumber: 600000005
+uidNumber: 13001
+gidNumber: 13000
+homeDirectory: /home/alumnos/j.martin
+loginShell: /bin/bash
+userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
+
+# =============================================================================
+# BLOQUE 6 — PROFESORES
+# =============================================================================
+
+dn: uid=p.rodriguez,ou=profesores,ou=usuarios,dc=ies,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: p.rodriguez
+cn: Pedro Rodriguez Gomez
+sn: Rodriguez Gomez
+givenName: Pedro
+mail: p.rodriguez@ies.local
+departmentNumber: Informatica
+telephoneNumber: 600100001
+uidNumber: 20001
+gidNumber: 30001
+homeDirectory: /home/profesores/p.rodriguez
+loginShell: /bin/bash
+userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
+
+dn: uid=l.sanchez,ou=profesores,ou=usuarios,dc=ies,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: l.sanchez
+cn: Lucia Sanchez Vega
+sn: Sanchez Vega
+givenName: Lucia
+mail: l.sanchez@ies.local
+departmentNumber: Informatica
+telephoneNumber: 600100002
+uidNumber: 20002
+gidNumber: 30001
+homeDirectory: /home/profesores/l.sanchez
+loginShell: /bin/bash
+userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
