@@ -1,5 +1,20 @@
 # 01 Reconocimiento y acceso con Kali Linux
 
+## Índice
+
+- [nmap](#nmap)
+  - [Parte I. Reconocimiento/Escaneo de vulnerabilidades desde Kali utilizando `nmap`](#parte-i-reconocimientoescaneo-de-vulnerabilidades-desde-kali-utilizando-`nmap`)
+- [Metasploit](#metasploit)
+  - [Parte II. Utilizando Metasploit Framework (MSF)](#parte-ii-utilizando-metasploit-framework-msf)
+  - [Práctica: Uso de Metasploit Framework (MSF) para pruebas de intrusión](#práctica-uso-de-metasploit-framework-msf-para-pruebas-de-intrusión)
+  - [Comandos básicos de Metasploit Framework](#comandos-básicos-de-metasploit-framework)
+  - [Ejercicio 1](#ejercicio-1)
+  - [Ejercicio 2](#ejercicio-2)
+  - [Ejercicio 3](#ejercicio-3)
+  - [ANEXO de nmap](#anexo-de-nmap)
+
+---
+
 ## nmap
 
 Nmap es una herramienta de código abierto en Linux, utilizada principalmente para explorar redes, analizar puertos y realizar auditorías de seguridad de sistemas informáticos. Permite identificar qué dispositivos están conectados a la red, descubrir los puertos abiertos, detectar servicios, versiones y sistemas operativos presentes en los equipos. Es ampliamente usada tanto por administradores de sistemas como por profesionales de la seguridad informática.
@@ -48,17 +63,17 @@ Podemos ver que nuestra máquina kali es la 198.0.2.4/24.
        valid_lft forever preferred_lft forever
 ```
 
-### Parte I. Reconocimiento/Escaneo de vulnerabilidades desde Kali utilizando _nmap_
+### Parte I. Reconocimiento/Escaneo de vulnerabilidades desde Kali utilizando `nmap`
 
 #### Ejercicio 1
 
-Recopile información sobre la máquina objetivo (metasploitable) utilizando _nmap_.
+Recopile información sobre la máquina objetivo (metasploitable) utilizando `nmap`.
 
-Para comenzar a hacer uso de la herramienta ejecutamos el comando _nmap_ indicando todo el rango de direcciones IP a escanear (con los parámetros `sS` hacemos un escaneo sigiloso y con `sV` vemos la versión del servicio).
+Para comenzar a hacer uso de la herramienta ejecutamos el comando `nmap` indicando todo el rango de direcciones IP a escanear (con los parámetros `sS` hacemos un escaneo sigiloso y con `sV` vemos la versión del servicio).
 
 **-sS (sondeo TCP SYN)**: El sondeo SYN es el utilizado por omisión y el más popular por buenas razones. Puede realizarse rápidamente, sondeando miles de puertos por segundo en una red. El sondeo SYN es relativamente sigiloso y poco molesto, ya que no llega a completar las conexiones TCP.
 
-_*Nota*_: Los comandos **nmap -sSV 198.0.2.2** y **nmap -sS sV 198.0.2.2** son equivalentes.
+> > **Nota:** Los comandos **nmap -sSV 198.0.2.2** y **nmap -sS sV 198.0.2.2** son equivalentes.
 
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -192,7 +207,7 @@ OS details: Linux 2.6.32
 ...
 ```
 
-_*Nota*_: Como alternativa tengo el comando _arp-scan_ para poder ver las ips de las máquinas de mi red.
+> > **Nota:** Como alternativa tengo el comando _arp-scan_ para poder ver las ips de las máquinas de mi red.
 
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -254,10 +269,12 @@ Añadimos una IP a nuestra interfaz eth0 para que parezca un ataque desde el equ
 
 La idea es realizar un Spoofeando la IP con Nmap haciendo uso de los siguientes parámetros:
 
-- **-sS:** Realiza un escaneo SYN (también llamado "escaneo sigiloso"). En lugar de completar la conexión TCP (como haría un navegador web), solo envía el primer paquete SYN. Si recibe un SYN-ACK, sabe que el puerto está abierto. Este método es rápido y menos ruidoso que un escaneo completo.
-- **-S 198.0.2.10:** Suplanta la dirección IP de origen. Hace que los paquetes parezcan provenir de la IP `198.0.2.10` en lugar de la IP real del atacante. Esto se usa para evadir controles de acceso o enrutamiento basados en IP, pero requiere privilegios elevados (como `sudo`) y no permite recibir respuestas directamente.
-- **-e eth0:** Especifica que el escaneo debe realizarse a través de la interfaz de red `eth0`. Esto es útil en máquinas con múltiples interfaces de red.
-- **-Pn 198.0.2.6:** Es la IP del objetivo que se desea escanear. El parámetro `-Pn` de Nmap indica que se debe omitir la detección previa de hosts activos y asumir que el objetivo está encendido, lo que permite escanear directamente los puertos aun si el sistema bloquea o no responde a solicitudes de "ping" o paquetes de descubrimiento.
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-sS` | Realiza un escaneo SYN (también llamado "escaneo sigiloso"). En lugar de completar la conexión TCP, solo envía el primer paquete SYN. |
+| `-S 198.0.2.10` | Suplanta la dirección IP de origen. Hace que los paquetes parezcan provenir de la IP `198.0.2.10` en lugar de la IP real del atacante. |
+| `-e eth0` | Especifica que el escaneo debe realizarse a través de la interfaz de red `eth0`. |
+| `-Pn 198.0.2.6` | `198.0.2.6` es la IP objetivo. `-Pn` indica que se debe omitir la detección previa de hosts activos y asumir que el objetivo está encendido. |
 
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -321,7 +338,7 @@ Oct 14 00:31:56 ui11 in.rlogind[4793]: connect from 198.0.2.4 (198.0.2.4)
 
 De este modo podemos acceder a la máquina y ver su información. Podemos ver que hay una conexión desde la 198.0.2.4 ya que hemos realizado **rlogin -l root 198.0.2.6**, si queremos que se almacene otra IP tendríamos que modificar nuestra interfaz de red para la conexión.
 
-Para tratar de acceder a la máquina objetivo de otra forma a través de otros servicios vamos a realizar diferentes ataques de fuerza bruta sobre los puertos abiertos tanto con _nmap_ como con la herramienta _hydra_.
+Para tratar de acceder a la máquina objetivo de otra forma a través de otros servicios vamos a realizar diferentes ataques de fuerza bruta sobre los puertos abiertos tanto con `nmap` como con la herramienta `hydra`.
 
 **Hydra** es una herramienta de código abierto usada en pruebas de penetración para realizar ataques de fuerza bruta y descubrir contraseñas en distintos servicios de red, como SSH, FTP, SMB, HTTP, MySQL, entre otros. Funciona probando sistemáticamente combinaciones de nombres de usuario y contraseñas, generalmente usando listas de palabras (diccionarios), hasta encontrar las credenciales válidas. Se destaca por su rapidez y capacidad de realizar múltiples intentos en paralelo, facilitando así la evaluación de la seguridad de sistemas mediante la simulación de ataques reales.
 
@@ -451,6 +468,8 @@ Para mitigar las vulnerabilidades relacionadas con los puertos abiertos detectad
 
 6. **Segmentación de red:**  
    Aplicar segmentación adecuada para aislar sistemas críticos y limitar el movimiento lateral en caso de compromiso.
+
+---
 
 ## Metasploit
 
@@ -770,7 +789,7 @@ nmap -sX 192.168.1.1
 
 Envía paquetes TCP con las banderas FIN, PSH y URG activas (como un árbol de Navidad) para evadir firewalls simples y descubrir puertos.
 
-_*Nota*_: Estos comandos permiten controlar el tipo y el alcance del escaneo que nmap realiza, desde listar simples objetivos, hacer un ping para descubrir hosts, hasta enviar paquetes específicos para burlar firewalls o detectar sistemas activos. Es muy interesante ver la captura de los diferentes paquete con Wireshark.
+> > **Nota:** Estos comandos permiten controlar el tipo y el alcance del escaneo que nmap realiza, desde listar simples objetivos, hacer un ping para descubrir hosts, hasta enviar paquetes específicos para burlar firewalls o detectar sistemas activos. Es muy interesante ver la captura de los diferentes paquete con Wireshark.
 
 ###### Especificación de puertos con nmap
 

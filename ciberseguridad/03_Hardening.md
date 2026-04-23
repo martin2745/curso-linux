@@ -1,14 +1,31 @@
 # 03 Hardening en Linux
 
+## Índice
+
+- [Objetivos](#objetivos)
+- [Indicaciones](#indicaciones)
+- [PARTE I. Hardening de una máquina local utilizando la herramienta Lynis](#parte-i-hardening-de-una-máquina-local-utilizando-la-herramienta-lynis)
+  - [1. Creación y gestión de usuario](#1-creación-y-gestión-de-usuario)
+  - [2. Instalar y configurar OpenSSH](#2-instalar-y-configurar-openssh)
+  - [3. Auditoría básica inicial con Lynis](#3-auditoría-básica-inicial-con-lynis)
+  - [4. Resolver sugerencias detectadas por Lynis](#4-resolver-sugerencias-detectadas-por-lynis)
+  - [5. Comprobación final de resultados](#5-comprobación-final-de-resultados)
+
+---
+
 El bastionado o «hardening» es un proceso continuo que se basa en aplicar las configuraciones correctas junto con una serie de medidas para securizar nuestros sistemas y redes. La auditoría constituye un aspecto importante del bastionado de sistemas, ya que permite detectar posibles configuraciones erróneas o servicios no protegidos. Entre las herramientas de auditoría en Linux tenemos Lynis, que es una herramienta de código abierto. Lynis tiene un conjunto automatizado de «scripts» desarrollados para probar un sistema Linux. Esta herramienta permite realizar un extenso análisis de salud de los sistemas para reforzar su bastionado.
 
 En este estudio de caso, realizaremos el «hardening» de una máquina Linux para mejorar su seguridad. Utilizaremos una máquina virtual con Ubuntu 20.04, lo que les permitirá experimentar de forma segura sin afectar tu equipo real. Al final, entenderán cómo analizar un sistema, aplicar recomendaciones de hardening y verificar los cambios.
+
+---
 
 ## Objetivos
 
 1. Demostrar el uso de una herramienta de auditoría de seguridad (Lynis) para el bastionado de sistemas Linux y compararla con una similar en Windows.
 2. Analizar, sintetizar y organizar la información dentro del área de seguridad informática.
 3. Documentar el informe utilizando las referencias y citas correctamente según la norma IEEE.
+
+---
 
 ## Indicaciones
 
@@ -25,6 +42,8 @@ Se empleará la VM Ubuntu 20.04 con una interfaz de red conectada en NAT.
    - `apt install lynis -y`
 
 Para realizar el trabajo se deben responder las siguientes «Cuestiones» que computan los 10 puntos, repartidos en tres partes (revisar la bibliografía de este estudio de caso).
+
+---
 
 ## PARTE I. Hardening de una máquina local utilizando la herramienta Lynis
 
@@ -182,9 +201,13 @@ $ sudo lynis audit system > /home/tunombre/lynis_inicial.txt 2>&1
 usuario@ubuntu-20:~$ sudo apt update && sudo apt install -y lynis
 ```
 
+A continuación, ejecutamos la herramienta para realizar la primera auditoría del sistema:
+
 ```bash
 root@ubuntu-20:~# lynis audit system > /home/martin/lynis_inicial.txt 2>&1
 ```
+
+Tras la ejecución, podemos verificar que se ha generado el reporte correctamente:
 
 ```bash
 usuario@ubuntu-20:~$ su - martin
@@ -196,6 +219,8 @@ martin@ubuntu-20:~$ ls -l
 total 32
 -rw-r--r-- 1 root root 32483 dic  1 10:49 lynis_inicial.txt
 ```
+
+Finalmente, examinamos el contenido del reporte para detectar problemas:
 
 ```bash
 martin@ubuntu-20:~$ cat lynis_inicial.txt

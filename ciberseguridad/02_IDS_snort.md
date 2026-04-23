@@ -1,10 +1,28 @@
 # 02 IDS snort
 
+## Índice
+
+- [Sistemas de Detección de Intrusos en Red (NIDS)](#sistemas-de-detección-de-intrusos-en-red-nids)
+- [Herramientas de código abierto: Snort y Suricata](#herramientas-de-código-abierto-snort-y-suricata)
+- [Funcionamiento y aplicación práctica](#funcionamiento-y-aplicación-práctica)
+- [Objetivos](#objetivos)
+- [Laboratorio](#laboratorio)
+- [Práctica Snort: Detección de SSH y Ping](#práctica-snort-detección-de-ssh-y-ping)
+  - [1. Creación de regla para detectar conexiones SSH entrantes](#1-creación-de-regla-para-detectar-conexiones-ssh-entrantes)
+  - [2. Creación del usuario practica que tratará de conectarse por SSH](#2-creación-del-usuario-practica-que-tratará-de-conectarse-por-ssh)
+  - [2. Creación de regla para detectar conexiones Ping entrantes](#2-creación-de-regla-para-detectar-conexiones-ping-entrantes)
+- [Alerta sobre ataque SYN Flood](#alerta-sobre-ataque-syn-flood)
+- [Consolidación de conocimientos](#consolidación-de-conocimientos)
+
+---
+
 ## Sistemas de Detección de Intrusos en Red (NIDS)
 
 Actualmente, el notable aumento en la cantidad de ciberataques dirigidos a empresas e infraestructuras críticas requiere el uso de múltiples herramientas para securizar nuestros sistemas. Entre estas herramientas destacan los **Sistemas de Detección de Intrusos en Red** (NIDS, por sus siglas en inglés).
 
 Estas herramientas buscan identificar de forma anticipada anomalías que puedan indicar el inicio de un ciberataque, con el fin de **prevenirlo o mitigarlo** con la mayor rapidez posible. Los NIDS son capaces de analizar el tráfico de red en tiempo real **sin interrumpir el flujo de datos**, ya que funcionan generalmente de manera pasiva, supervisando tanto el tráfico entrante y saliente como el tráfico local.
+
+---
 
 ## Herramientas de código abierto: Snort y Suricata
 
@@ -20,13 +38,17 @@ Entre las principales utilidades de Snort se encuentran:
 - El **registro de paquetes** para la depuración del tráfico de red (_Packet Logger_).
 - Las **funciones de sistema de prevención de intrusiones en red (NIDS)**.
 
+---
+
 ## Funcionamiento y aplicación práctica
 
 En el modo NIDS, Snort solo registrará los paquetes que se consideren maliciosos, utilizando las características preestablecidas para ello a través de sus reglas.
 
 La acción que ejecuta Snort también se define en las reglas establecidas por el **administrador de red**. Dichas reglas son fáciles de implementar, lo que permite diferenciar la actividad regular de Internet de la actividad anómala o maliciosa.
 
-En este estudio se abordarán la **creación de variables y reglas en Snort** y su **ejecución en los modos sniffer e IDS** . Dentro de las reglas se trabajará la detección de diversos ataques mediante el uso de la herramienta _hping3_, instalada por defecto en **Kali Linux**, que será nuestra máquina atacante.
+En este estudio se abordarán la **creación de variables y reglas en Snort** y su **ejecución en los modos sniffer e IDS** . Dentro de las reglas se trabajará la detección de diversos ataques mediante el uso de la herramienta `hping3`, instalada por defecto en **Kali Linux**, que será nuestra máquina atacante.
+
+---
 
 ## Objetivos
 
@@ -35,9 +57,13 @@ En este estudio se abordarán la **creación de variables y reglas en Snort** y 
 3. Crear nuevas variables y reglas con fines específicos en Snort.
 4. Analizar, sintetizar y organizar la información dentro del área de Ciberseguridad.
 
+---
+
 ## Laboratorio
 
 Para esta práctica vamos a hacer uso de una máquina kali y una máquina linux con snort. Estas dos máquinas estarán en una red Nat.
+
+---
 
 ## Práctica Snort: Detección de SSH y Ping
 
@@ -200,12 +226,14 @@ En esta práctica vamos a partir de que `/var/log/snort` está completamente vac
 root@ui1:~# snort -i eth0 -b -l /var/log/snort -c /etc/snort/snort.conf
 ```
 
-El comando `snort -i eth0 -b -l /var/log/snort -c /etc/snort/snort.conf` hace lo siguiente de forma resumida:
+El comando `snort` utiliza la siguiente configuración para su ejecución:
 
-- `-i eth0`: escucha el tráfico en la interfaz de red eth0.
-- `-b`: guarda los paquetes capturados en archivos binarios (pcap).
-- `-l /var/log/snort`: guarda los archivos (pcap y alertas) en el directorio /var/log/snort.
-- `-c /etc/snort/snort.conf`: usa la configuración y reglas definidas en ese archivo para detectar y registrar alertas.
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-i eth0` | Escucha el tráfico en la interfaz de red eth0. |
+| `-b`      | Guarda los paquetes capturados en archivos binarios (pcap). |
+| `-l /var/log/snort` | Guarda los archivos (pcap y alertas) en el directorio `/var/log/snort`. |
+| `-c /etc/snort/snort.conf` | Usa la configuración y reglas definidas en ese archivo para detectar y registrar alertas. |
 
 Si desde la kali accedemos a la máquina snort podemos comprobar que se crea los ficheros de log con la información del tráfico y vemos como se ha detectado un acceso desde la máquina kali (198.0.2.4/24) a la máquina snort al puerto 22 (198.0.2.7).
 
@@ -241,7 +269,7 @@ TCP TTL:64 TOS:0x10 ID:25807 IpLen:20 DgmLen:52 DF
 TCP Options (3) => NOP NOP TS: 3567599196 86280
 ```
 
-_*Nota*_: El archivo snort.log.1761134953 puede ser visto por herramientas como _tcpdump_ con su parámetro _-r_ o por wireshark (previamente estableciendo la extensión del paquete como .pcap).
+> **Nota:** El archivo snort.log.1761134953 puede ser visto por herramientas como _tcpdump_ con su parámetro _-r_ o por wireshark (previamente estableciendo la extensión del paquete como .pcap).
 
 ### 2. **Creación de regla para detectar conexiones Ping entrantes**
 
@@ -313,6 +341,8 @@ ICMP TTL:64 TOS:0x0 ID:49352 IpLen:20 DgmLen:84 DF
 Type:8  Code:0  ID:9396   Seq:1  ECHO
 ```
 
+---
+
 ## Alerta sobre ataque SYN Flood
 
 - a) Configure en Snort una regla para detectar ataques del tipo SYN Flood, con el mensaje "Tunombre: Recibimos un ataque por SYN Flood!".
@@ -366,7 +396,7 @@ Nmap done: 1 IP address (1 host up) scanned in 13.24 seconds
            Raw packets sent: 1001 (44.028KB) | Rcvd: 1001 (40.032KB)
 ```
 
-Ejecutamos el ataque SYN Flood haciendo uso de _hping3_.
+Ejecutamos el ataque SYN Flood haciendo uso de `hping3`.
 
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -374,11 +404,11 @@ Ejecutamos el ataque SYN Flood haciendo uso de _hping3_.
 ...
 ```
 
-El comando presenta los siguientes parámetros:
-
-- -S: Solo SYN.
-- -p 22: Destino puerto 22 ya que es el único puerto abierto detectado por _nmap_.
-- --flood: Genera paquetes lo más rápido posible.
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-S`      | Solo SYN. |
+| `-p 22`   | Destino puerto 22 ya que es el único puerto abierto detectado por `nmap`. |
+| `--flood` | Genera paquetes lo más rápido posible. |
 
 ```bash
 ┌──(kali㉿kali)-[~]
@@ -402,6 +432,8 @@ TCP TTL:64 TOS:0x0 ID:13987 IpLen:20 DgmLen:40
 ```
 
 Un SYN flood genera muchos paquetes TCP con sólo el flag SYN activado, saturando la cola de conexiones semicompletadas del servidor y prohibiendo el acceso de usuarios legítimos.
+
+---
 
 ## Consolidación de conocimientos
 
