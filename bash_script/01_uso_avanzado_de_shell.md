@@ -1,21 +1,38 @@
 # Uso avanzado de shell
 
+## Índice
+
+1. [Alias](#alias)
+2. [Keyword (Palabra clave de shell)](#keyword-palabra-clave-de-shell)
+3. [Function (Función de shell)](#function-funcion-de-shell)
+4. [Builtin (Comando interno del shell)](#builtin-comando-interno-del-shell)
+5. [File (Ejecutable en el sistema)](#file-ejecutable-en-el-sistema)
+6. [Ejemplo de Prioridad en Acción](#ejemplo-de-prioridad-en-accion)
+7. [Variables en shell](#variables-en-shell)
+8. [Formas de declarar, ver y exportar variables](#formas-de-declarar-ver-y-exportar-variables)
+   8.1. [Ejemplos de uso y declaración de variables](#ejemplos-de-uso-y-declaracion-de-variables)
+9. [SubShell](#subshell)
+
+---
+
 El shell, como intérprete de comandos, actúa como intermediario entre el usuario y el núcleo del sistema, interpretando instrucciones, gestionando procesos, permitiendo la manipulación eficiente de archivos y facilitando la creación de scripts que automatizan tareas repetitivas o complejas. En Linux, cuando ejecutas un comando en la terminal, el sistema sigue un **orden de preferencia** para determinar qué ejecutar. El orden es el siguiente:
 
 1. **Alias**: Si existe, lo usa primero.
 2. **Keyword**: Si el comando es una palabra clave reservada, la ejecuta.
 3. **Function**: Si hay una función con ese nombre, la ejecuta.
-4. **Builtin**: Si es un comando interno del shell, lo usa (por ejemplo el comando **cd**).
-5. **File**: Finalmente, busca un ejecutable en **$PATH**.
+4. **Builtin**: Si es un comando interno del shell, lo usa (por ejemplo el comando `cd`).
+5. **File**: Finalmente, busca un ejecutable en `$PATH`.
 
 Esto nos permite personalizar y modificar el comportamiento de los comandos según tus necesidades.
 
-## 1. **Alias**
+---
+
+## Alias
 
 - Son atajos que el usuario define para simplificar comandos más largos.
-- Se crean con **alias nombre='comando'**.
-- Se revisan con **alias** o **type nombre**.
-- Se eliminan con el comando **unalias**.
+- Se crean con `alias nombre='comando'`.
+- Se revisan con `alias` o `type nombre`.
+- Se eliminan con el comando `unalias`.
 - **Ejemplo:**
 
 ```bash
@@ -27,9 +44,11 @@ ls is /bin/ls
 
 Si escribimos **ls**, el shell usará el alias definido en el **.bashrc** antes de cualquier otro tipo de comando.
 
-## 2. **Keyword (Palabra clave de shell)**
+---
 
-- Son palabras reservadas del shell con significado especial, como **if**, **for**, **while**, **case**, etc.
+## Keyword (Palabra clave de shell)
+
+- Son palabras reservadas del shell con significado especial, como `if`, `for`, `while`, `case`, etc.
 - **Ejemplo:**
 
 ```bash
@@ -39,7 +58,9 @@ usuario@debian:~$ if [ 5 -eq 5 ]; then echo "5 es igual a 5"; fi
 
 - Aquí, `if` es una **keyword**, no un comando ejecutable.
 
-## 3. **Function (Función de shell)**
+---
+
+## Function (Función de shell)
 
 - Definidas dentro del shell, permiten agrupar comandos en una estructura reutilizable.
 - Se crean con la sintaxis:
@@ -50,8 +71,8 @@ comandos
 }
 ```
 
-- Se revisan con **declare -f nombre** o **type nombre**.
-- Se eliminan con el comando **unset -f nombre**
+- Se revisan con `declare -f nombre` o `type nombre`.
+- Se eliminan con el comando `unset -f nombre`
 - **Ejemplo:**
 
 ```bash
@@ -84,11 +105,13 @@ Me llamo Marcos :)
 
 - Si ejecutas **nombre**, se usará esta función antes que un comando del sistema si existiera.
 
-## 4. **Builtin (Comando interno del shell)**
+---
+
+## Builtin (Comando interno del shell)
 
 - Son comandos incorporados dentro del shell, ejecutados sin llamar a un programa externo.
-- Algunos ejemplos: **cd**, **echo**, **exit**, **read**, **set**.
-- Se revisan con **help comando** o **type comando**.
+- Algunos ejemplos: `cd`, `echo`, `exit`, `read`, `set`.
+- Se revisan con **help comando** o `type comando`.
 - **Ejemplo:**
 
 ```bash
@@ -96,12 +119,14 @@ usuario@debian:~$ echo "Me llamo Martín :)"
 Me llamo Martín :)
 ```
 
-- Aquí, **echo** es un **shell builtin**, pero si existe un alias **alias echo='echo -e'**, el alias tendrá prioridad.
+- Aquí, `echo` es un **shell builtin**, pero si existe un alias `alias echo='echo -e'`, el alias tendrá prioridad.
 
-## 5. **File (Ejecutable en el sistema)**
+---
 
-- Si no se encuentra en las opciones anteriores, el shell busca en los directorios de **$PATH**.
-- Usa **which comando** o **type comando** para verificar.
+## File (Ejecutable en el sistema)
+
+- Si no se encuentra en las opciones anteriores, el shell busca en los directorios de `$PATH`.
+- Usa `which comando` o `type comando` para verificar.
 - **Ejemplo:**
 
 ```bash
@@ -119,7 +144,9 @@ ls is /bin/ls
 
 - Aquí, el shell ejecuta el alias de **ls** creado en el **.bashrc** pero si no existiera, ejecutaría el archivo **ls** ubicado en `/usr/bin/ls`.
 
-## **Ejemplo de Prioridad en Acción**
+---
+
+## Ejemplo de Prioridad en Acción
 
 Todo lo anterior se puede ver reflejado a continuación.
 
@@ -178,6 +205,8 @@ usuario@debian:~$ ls
 Descargas  Documentos  Escritorio  Imágenes  Música  Plantillas  Público  Vídeos # Se muestra con colores
 ```
 
+---
+
 ## Variables en shell
 
 Una variable es un identificador al que se le asigna un valor, que puede ser leído por el shell y otros comandos, alterando su comportamiento según el contenido de la variable. Los valores pueden ser únicos o múltiples, separados por espacios u otros caracteres. Para asignar un valor, se escribe el nombre de la variable seguido de un signo igual (=) y el valor. Los nombres deben iniciar con una letra o subrayado, y solo pueden contener letras, números y subrayado. Son sensibles a mayúsculas y minúsculas, y es recomendable usar comillas al asignar valores con caracteres especiales.
@@ -187,7 +216,7 @@ En Bash, las variables se usan para configurar preferencias y modificar el compo
 - **Variables locales**: Disponibles en el shell donde se crean.
 - **Variables de entorno**: Disponibles para el shell y los procesos que inicia, así como subshells.
 
-_*Nota*_: Por convención, los nombres en minúsculas se usan para variables locales y en mayúsculas para variables de entorno, aunque no es una regla obligatoria.
+> **Nota:** Por convención, los nombres en minúsculas se usan para variables locales y en mayúsculas para variables de entorno, aunque no es una regla obligatoria.
 
 Las variables se pueden declarar y mostrar de diferentes maneras. A continuación se muestran diferentes ejemplos:
 
@@ -261,6 +290,8 @@ usuario@debian:~$ echo $a_$b_$c
 ```
 
 _*Nota: Siempre es preferible hacer uso de `{}` para invocar a variables.*_
+
+---
 
 ## Formas de declarar, ver y exportar variables
 
@@ -336,18 +367,18 @@ usuario@debian:~$ unset papelera
 usuario@debian:~$ echo $papelera
 ```
 
-6. El comando **env** ejecuta un programa con un entorno modificado según los parámetros con los que se ejecute. Esto significa que ejecuta un programa definiendo qué variables de entorno reconoce. Sin opciones o nombre de programa, el comando muestra el entorno resultante (las variables globales del entorno), similar al comando **printenv**.
+6. El comando `env` ejecuta un programa con un entorno modificado según los parámetros con los que se ejecute. Esto significa que ejecuta un programa definiendo qué variables de entorno reconoce. Sin opciones o nombre de programa, el comando muestra el entorno resultante (las variables globales del entorno), similar al comando **printenv**.
 
-- **env bash**: Este comando ejecuta el shell de bash con el entorno actual, es decir, utiliza las variables de entorno existentes tal como están en ese momento.
+- `env bash`: Este comando ejecuta el shell de bash con el entorno actual, es decir, utiliza las variables de entorno existentes tal como están en ese momento.
 
-- **env variable=JEJEJE bash**: Aquí se ejecuta el shell de bash con una variable de entorno llamada **variable** establecida en el valor "JEJEJE". Esto significa que al abrir el shell, la variable **variable** tendrá el valor "JEJEJE".
+- `env variable=JEJEJE bash`: Aquí se ejecuta el shell de bash con una variable de entorno llamada **variable** establecida en el valor "JEJEJE". Esto significa que al abrir el shell, la variable **variable** tendrá el valor "JEJEJE".
 
-- **env -i bash**: Este comando ejecuta el shell de bash con un entorno vacío. La opción `-i` indica "ignorar el entorno existente", por lo que no se pasan variables de entorno al nuevo shell bash, dejándolo con un entorno limpio.
+- `env -i bash`: Este comando ejecuta el shell de bash con un entorno vacío. La opción `-i` indica "ignorar el entorno existente", por lo que no se pasan variables de entorno al nuevo shell bash, dejándolo con un entorno limpio.
 
 A modo de resumen podemos decir:
 
-- **env**: variables de un entorno (las variables exportadas).
-- **set**: todas las variables (varibles exportadas y no exportadas).
+- `env`: variables de un entorno (las variables exportadas).
+- `set`: todas las variables (varibles exportadas y no exportadas).
 
 ```bash
 usuario@debian:~$ alumno="Martin"
@@ -421,6 +452,8 @@ usuario@debian:~$ export noBorrar
 usuario@debian:~$ declare -p | grep noBorrar
 declare -rx noBorrar="No me puedes borrar JAJA"
 ```
+
+---
 
 ## SubShell
 

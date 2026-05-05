@@ -1,32 +1,33 @@
 # CheatSheet de bash
 
-Aquí encontrarás las principales estructuras y ejemplos de bash resumidas.
-
 ## Índice
 
-1. [Estructuras](#estructuras)
-   - [Recorrer ficheros](#1-recorrer-ficheros)
-   - [Control de flujo](#2-control-de-flujo)
-   - [Menú](#3-menú)
-   - [Funciones](#4-funciones)
-   - [ErrorLevel: $?](#5-errorlevel)
-   - [Arrays](#6-arrays)
-   - [Contadores](#7-contadores)
+1. [Índice](#indice)
+2. [Estructuras](#estructuras)
+   2.1. [1. Recorrer ficheros](#1-recorrer-ficheros)
+   2.2. [2. Control de flujo](#2-control-de-flujo)
+   2.3. [3. Menú](#3-menu)
+   2.4. [4. Funciones](#4-funciones)
+   2.5. [5. ErrorLevel: $?](#5-errorlevel-)
+   2.6. [6. Arrays](#6-arrays)
+   2.7. [7. Contadores](#7-contadores)
+3. [Ejemplos](#ejemplos)
+   3.1. [1. Comillas](#1-comillas)
+   3.2. [2. Parámetros $](#2-parametros-)
+   3.3. [3. Operaciones matemáticas](#3-operaciones-matematicas)
+   3.4. [4. Pedir variables](#4-pedir-variables)
+   3.5. [5. Condicional](#5-condicional)
+   3.6. [6. Contador](#6-contador)
+   3.7. [7. While](#7-while)
+   3.8. [8. Until](#8-until)
+   3.9. [9. Menú con case](#9-menu-con-case)
+   3.10. [10. Funciones](#10-funciones)
+   3.11. [11. Backup del /home de un usuario](#11-backup-del-home-de-un-usuario)
+   3.12. [12. Backup del directorio indicado por el usuario](#12-backup-del-directorio-indicado-por-el-usuario)
 
-2. [Ejemplos](#ejemplos)
-   - [Comillas](#1-comillas)
-   - [Parámetros $](#2-parámetros)
-   - [Operaciones matemáticas](#3-operaciones-matemáticas)
-   - [Pedir variables](#4-pedir-variables)
-   - [Condicional](#5-condicional)
-   - [Mejorando la condición](#5-mejorando-la-condición)
-   - [Contador](#6-contador)
-   - [While](#7-while)
-   - [Until](#8-until)
-   - [Menú con case](#9-menú-con-case)
-   - [Funciones](#10-funciones)
-   - [Backup del /home de un usuario](#11-backup-del-home-de-un-usuario)
-   - [Backup del directorio indicado por el usuario](#12-backup-del-directorio-indicado-por-el-usuario)
+---
+
+Aquí encontrarás las principales estructuras y ejemplos de bash resumidas.
 
 ## Estructuras
 
@@ -538,6 +539,8 @@ do
     echo Valor de i: $i
 done
 ```
+
+---
 
 ## Ejemplos
 

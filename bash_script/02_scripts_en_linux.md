@@ -1,6 +1,24 @@
 # Scripts en linux
 
+## Índice
+
+1. [Ejecución de un script](#ejecucion-de-un-script)
+2. [Variables locales y globales en un script](#variables-locales-y-globales-en-un-script)
+   2.1. [Sin especificar nada (implícitamente global):](#sin-especificar-nada-implicitamente-global)
+   2.2. [Con `local`:](#con-local)
+   2.3. [Con `declare`:](#con-declare)
+   2.4. [Con `declare -g`:](#con-declare--g)
+3. [Diferencia entre el uso del operador [ y [[](#diferencia-entre-el-uso-del-operador--y-)
+   3.1. [Comando test o []](#comando-test-o-)
+4. [Variables especiales en un script](#variables-especiales-en-un-script)
+5. [Variables PS](#variables-ps)
+   5.1. [Ejemplos de edición y personalización](#ejemplos-de-edicion-y-personalizacion)
+
+---
+
 Un script en Linux es un archivo de texto plano que contiene una secuencia de comandos o instrucciones escritas para ser ejecutadas por un intérprete de comandos, como Bash, en sistemas Unix o Linux. Estos archivos permiten automatizar tareas, gestionar procesos complejos y ejecutar múltiples comandos de manera secuencial sin intervención manual.
+
+---
 
 ## Ejecución de un script
 
@@ -19,15 +37,15 @@ Los scripts tienen una primera linea, el _shebang_, también conocido como hashb
 #!/usr/bin/env python
 ```
 
-- **chmod -x env.sh && bash env.sh**: Si ejecutamos bash env.sh, no es necesario tener permisos de ejecución en el script y estamos **ejecutando el script en una subshell**, por lo que al finalizar el script se elimina la subshell.
+- `chmod -x env.sh && bash env.sh`: Si ejecutamos bash env.sh, no es necesario tener permisos de ejecución en el script y estamos **ejecutando el script en una subshell**, por lo que al finalizar el script se elimina la subshell.
 
-- **chmod +x env.sh && ./env.sh**: Si el shebang es #!/bin/bash y lo ejecutamos mediante ./env.sh, siempre y cuando el script tenga permisos de ejecución, estamos **ejecutando el script en una subshell**, por lo que al finalizar el script se elimina la subshell. Es análogo a la ejecución mediante el comando bash.
+- `chmod +x env.sh && ./env.sh`: Si el shebang es #!/bin/bash y lo ejecutamos mediante ./env.sh, siempre y cuando el script tenga permisos de ejecución, estamos **ejecutando el script en una subshell**, por lo que al finalizar el script se elimina la subshell. Es análogo a la ejecución mediante el comando bash.
 
-- **chmod -x env.sh && . ./env.sh**: Si ejecutamos mediante . ./env.sh o source ./env.sh, no es necesario tener permisos de ejecución y estamos **ejecutando el script en la shell actual**.
+- `chmod -x env.sh && . ./env.sh`: Si ejecutamos mediante . ./env.sh o source ./env.sh, no es necesario tener permisos de ejecución y estamos **ejecutando el script en la shell actual**.
 
 Es fundamental comprender de que forma se ejecutan nuestros scripts para poder comprender si van a modificar aspectos de nuestro entorno o no. En el siguiente ejemplo podemos apreciar como el nivel de shell que es diferente en función de como lanzamos nuestro script.
 
-Script **env-ejemplo1.sh**
+Script `env-ejemplo1.sh`
 
 ```bash
 #!/bin/bash
@@ -79,9 +97,9 @@ usuario@debian:~$ cat env1.txt | grep SHLVL
 SHLVL=0
 ```
 
-Este es el motivo por el cual cuando queremos modificar nuestro entorno se hace uso de ficheros como **.bashrc** y este se lanza con **source**. El objetivo es hacer una modificación de nuestro entorno.
+Este es el motivo por el cual cuando queremos modificar nuestro entorno se hace uso de ficheros como **.bashrc** y este se lanza con `source`. El objetivo es hacer una modificación de nuestro entorno.
 
-Cargamos .bashrc con **.** por lo tanto al ser lo mismo que **source** se convierten en variables de entorno las variables locales definidas dentro a las que se le aplica un **export**.
+Cargamos .bashrc con **.** por lo tanto al ser lo mismo que `source` se convierten en variables de entorno las variables locales definidas dentro a las que se le aplica un **export**.
 
 ```bash
 usuario@debian:~$ cat .profile | grep ".bashrc"
@@ -89,6 +107,8 @@ usuario@debian:~$ cat .profile | grep ".bashrc"
     if [ -f "$HOME/.bashrc" ]; then
 	. "$HOME/.bashrc"
 ```
+
+---
 
 ## Variables locales y globales en un script
 
@@ -170,7 +190,7 @@ mi_funcion() {
 }
 ```
 
-- **Descripción:** Similar a **local**, **variable_local** será local a la función **mi_funcion()** y no estará disponible fuera de ella. El uso de **declare** implica una forma más explícita de declarar variables en Bash.
+- **Descripción:** Similar a **local**, **variable_local** será local a la función **mi_funcion()** y no estará disponible fuera de ella. El uso de `declare` implica una forma más explícita de declarar variables en Bash.
 
 ### Con `declare -g`:
 
@@ -185,8 +205,10 @@ mi_funcion() {
 #### Resumen:
 
 - **Global (implícito):** Sin ninguna palabra clave, la variable es global.
-- **Local:** Se define usando **local** o **declare** dentro de la función.
-- **Global explícito:** Se usa **declare -g** para declarar una variable global dentro de una función.
+- **Local:** Se define usando **local** o `declare` dentro de la función.
+- **Global explícito:** Se usa `declare -g` para declarar una variable global dentro de una función.
+
+---
 
 ## Diferencia entre el uso del operador [ y [[
 
@@ -439,6 +461,8 @@ En el caso de hacer uso del `[[]]` la tabla resultante sería la siguiente:
 
 Estas opciones son muy útiles para escribir scripts de shell que necesiten realizar comprobaciones de condiciones antes de ejecutar ciertas operaciones.
 
+---
+
 ## Variables especiales en un script
 
 A continuación se muestra una breve descripción de cada una de estas variables especiales dentro de un script de shell, presentadas en forma de tabla:
@@ -480,6 +504,8 @@ El tercer parámetro es Blanco
 Una forma de ver todos los parámetros es Martín:Gil:Blanco
 Otra forma de ver todos los parámetros es Martín Gil Blanco
 ```
+
+---
 
 ## Variables PS
 

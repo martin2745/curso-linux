@@ -1,5 +1,19 @@
 # arrays en bash
 
+## Índice
+
+1. [Teoría de arrays](#teoria-de-arrays)
+   1.1. [declarar arrays](#declarar-arrays)
+   1.2. [Referenciar Arrays](#referenciar-arrays)
+   1.3. [Eliminar arrays](#eliminar-arrays)
+   1.4. [Recorrer arrays](#recorrer-arrays)
+   1.5. [Longitud de los arrays e índices](#longitud-de-los-arrays-e-indices)
+   1.6. [Arrays como parámetros de funciones](#arrays-como-parametros-de-funciones)
+2. [Prácticas sobre arrays](#practicas-sobre-arrays)
+   2.1. [Declarar y eliminar arrays](#declarar-y-eliminar-arrays)
+
+---
+
 ## Teoría de arrays
 
 ### declarar arrays
@@ -195,6 +209,8 @@ nombres=(Anxo Brais) # Se declara la variable array nombres con los valores Anxo
 f_nombre "nombres[@]" # Llamada a la ejecución de la función llamada f_nombre donde el primer parámetro $1 toma el valor "nombres[@]", lo cual es equivalente a los valores de todos los índices del array llamado nombres
 ```
 
+---
+
 ## Prácticas sobre arrays
 
 ### Declarar y eliminar arrays
@@ -255,7 +271,7 @@ No puede eliminar el elemento de la posición 1 de la variable "curso" ya que es
 unset curso[1]
 ```
 
-_*Nota: No es lo mismo pedir por teclado unos datos para el array que pedir los datos para un índice concreto del array.*_
+> **Nota:** No es lo mismo pedir por teclado unos datos para el array que pedir los datos para un índice concreto del array.
 
 1. ### Pedir datos para un array
 
