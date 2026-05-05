@@ -1,6 +1,35 @@
 # Comandos básicos
 
-A continuación vamos a ver un conjunto de los principales comandos de linux con su explicación.
+## Índice
+
+1. [Comandos principales básicos](#comandos-principales-básicos)
+   - [Comando whoami](#comando-whoami)
+   - [Comando id](#comando-id)
+   - [Comando groups](#comando-groups)
+   - [Comando which](#comando-which)
+   - [Comando cat](#comando-cat)
+   - [Comando grep](#comando-grep)
+   - [Comando echo](#comando-echo)
+   - [Comando pwd](#comando-pwd)
+   - [Comando ls](#comando-ls)
+   - [Comando cd](#comando-cd)
+   - [Comando mkdir](#comando-mkdir)
+   - [Comandos cat, more, less y tac](#comandos-cat-more-less-y-tac)
+   - [Comandos head y tail](#comandos-head-y-tail)
+   - [Comandos man, manpath, --help](#comandos-man-manpath---help)
+   - [Comando w](#comando-w)
+   - [Comando tty](#comando-tty)
+   - [Comando cal](#comando-cal)
+   - [Comando date](#comando-date)
+   - [Comando uname](#comando-uname)
+   - [Comando ln](#comando-ln)
+   - [Comando su –](#comando-su-)
+
+---
+
+A continuación vamos a ver un conjunto de los principales comandos de Linux con su explicación. La comprensión de estas herramientas es fundamental para desenvolverse con soltura en la línea de comandos.
+
+---
 
 ## Comandos principales básicos
 
@@ -11,7 +40,9 @@ usuario@debian:~$ whoami
 usuario
 ```
 
-**Explicación:** El comando `whoami` muestra el nombre del usuario actual, que en este caso es `usuario`.
+**Explicación:** El comando `whoami` (del inglés *who am I*, "quién soy yo") muestra el nombre del usuario efectivo con el que estás operando actualmente, que en este caso es `usuario`. Es útil en scripts para verificar si se está ejecutando como `root`.
+
+---
 
 ### Comando id
 
@@ -20,7 +51,19 @@ usuario@debian:~$ id
 uid=1000(usuario) gid=1000(usuario) grupos=1000(usuario),24(cdrom),25(floppy),27(sudo),29(audio),30(dip),44(video),46(plugdev),100(users),106(netdev),112(bluetooth),114(lpadmin),117(scanner)
 ```
 
-**Explicación:** El comando `id` muestra la información del usuario actual. En este caso, el UID y GID del usuario `usuario` son 1000, y muestra los grupos a los que pertenece.
+**Explicación:** El comando `id` muestra la información detallada del usuario actual. En este caso, el UID (*User Identifier*) y GID (*Group Identifier* principal) del usuario `usuario` son 1000. También muestra todos los grupos secundarios a los que pertenece, lo cual determina a qué recursos de hardware o archivos tiene acceso por permisos de grupo.
+
+Para revisar la información de un usuario diferente, o en este caso del superusuario mediante `sudo`, ejecutamos lo siguiente:
+
+```bash
+usuario@debian:~$ sudo id
+[sudo] contraseña para usuario:
+uid=0(root) gid=0(root) grupos=0(root)
+```
+
+**Explicación:** Al ejecutar `sudo id` logramos ejecutar la herramienta bajo el contexto temporal de administrador. El UID y GID de `root` son siempre 0, indicando que se trata del superusuario absoluto del sistema.
+
+---
 
 ### Comando groups
 
@@ -29,17 +72,9 @@ usuario@debian:~$ groups
 usuario cdrom floppy sudo audio dip video plugdev users netdev bluetooth lpadmin scanner
 ```
 
-**Explicación:** El comando `groups` muestra todos los grupos a los que pertenece el usuario `usuario`.
+**Explicación:** El comando `groups` muestra únicamente el nombre de todos los grupos (principales y secundarios) a los que pertenece el usuario `usuario` actual, sin mostrar identificadores numéricos.
 
-### Comando id
-
-```bash
-usuario@debian:~$ sudo id
-[sudo] contraseña para usuario:
-uid=0(root) gid=0(root) grupos=0(root)
-```
-
-**Explicación:** El comando `sudo id` muestra la información de usuario del `root`. El UID y GID son ambos 0, indicando que se trata del superusuario.
+---
 
 ### Comando which
 
@@ -48,7 +83,9 @@ usuario@debian:~$ which whoami
 /usr/bin/whoami
 ```
 
-**Explicación:** El comando `which whoami` muestra la ubicación del comando `whoami` en el sistema. En este caso, se encuentra en `/usr/bin/whoami`.
+**Explicación:** El comando `which whoami` muestra la ubicación o ruta absoluta del ejecutable del comando `whoami` en el sistema. Para encontrarlo, la herramienta `which` lee los directorios definidos en tu variable de entorno `$PATH` y devuelve la primera coincidencia.
+
+---
 
 ### Comando cat
 
@@ -62,7 +99,9 @@ if [ -d "$HOME/.local/bin" ] ; then
 fi
 ```
 
-**Explicación:** El comando `cat .profile` muestra la información del archivo `.profile`.
+**Explicación:** El comando `cat .profile` vuelca y muestra el contenido completo del archivo de texto `.profile` directamente en la salida estándar de la consola. El nombre viene de concatenar (*concatenate*).
+
+---
 
 ### Comando grep
 
@@ -71,22 +110,30 @@ usuario@debian:~$ grep usuario /etc/passwd
 usuario:x:1000:1000:usuario,,,:/home/usuario:/bin/bash
 ```
 
-**Explicación:** Este comando muestra el contenido del archivo `/etc/passwd` filtrado por la palabra `usuario`.
+**Explicación:** El comando `grep` permite buscar patrones dentro de archivos o salidas de comandos. En este ejemplo, filtra y muestra únicamente la línea del archivo `/etc/passwd` que contiene exactamente la palabra `usuario`.
+
+---
 
 ### Comando echo
 
 ```bash
 usuario@debian:~$ echo $PATH
 /usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+```
 
+**Explicación:** El comando `echo` imprime en pantalla el texto o variables que se le pasen por argumento. Aquí se emplea `echo $PATH` para mostrar el valor almacenado en la variable de entorno `$PATH`, la cual contiene los directorios en los que el sistema busca los ejecutables.
+
+A continuación, vemos cómo usar caracteres de escape especiales añadiendo el parámetro `-e`:
+
+```bash
 usuario@debian:~# echo -e "Hola\n que tal\t estás"
 Hola
  que tal         estás
 ```
 
-**Explicación:** El comando `echo $PATH` muestra la variable de entorno `PATH`, que contiene los directorios en los que el sistema busca los ejecutables de los comandos.
+**Explicación:** El parámetro `-e` habilita la interpretación de secuencias de escape como `\n` (nueva línea) y `\t` (tabulación).
 
-_*Nota*_: Muy importante es el uso de las comillas en el comando _echo_.
+> **Nota:** Es muy importante tener en cuenta la diferencia del uso de las comillas dobles y simples en el comando `echo` al evaluar variables:
 
 ```bash
 usuario@debian:~# echo "$PWD"
@@ -95,6 +142,10 @@ usuario@debian:~# echo '$PWD'
 $PWD
 ```
 
+**Explicación:** Las comillas dobles (`" "`) permiten la expansión de variables (reemplazando `$PWD` por `/root`), mientras que las comillas simples (`' '`) interpretan todo el contenido de forma estrictamente literal.
+
+---
+
 ### Comando pwd
 
 ```bash
@@ -102,7 +153,9 @@ usuario@debian:~$ pwd
 /home/usuario
 ```
 
-**Explicación:** El comando `pwd` (print working directory) muestra el directorio de trabajo actual. En este caso, está en el directorio `/home/usuario`.
+**Explicación:** El comando `pwd` (*Print Working Directory*) muestra la ruta absoluta del directorio de trabajo en el que te encuentras posicionado actualmente. En este caso, el usuario está en el directorio `/home/usuario`.
+
+---
 
 ### Comando ls
 
@@ -111,7 +164,9 @@ usuario@debian:~$ ls
 Descargas  Documentos  Escritorio  Imágenes  Música  Plantillas  Público  Vídeos
 ```
 
-**Explicación:** El comando `ls` lista los archivos y directorios en el directorio actual. En este caso, muestra las carpetas del usuario `Descargas`, `Documentos`, `Escritorio`, `Imágenes`, `Música`, `Plantillas`, `Público` y `Vídeos`.
+**Explicación:** El comando `ls` lista los archivos y subdirectorios presentes en el directorio de trabajo actual (o el indicado). Aquí muestra las carpetas estándar de perfil de usuario.
+
+Para obtener más información, podemos pasarle opciones:
 
 ```bash
 usuario@debian:~$ ls -l
@@ -126,7 +181,13 @@ drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Público
 drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Vídeos
 ```
 
-**Explicación:** El comando `ls -l` muestra una lista detallada de los archivos y directorios en el directorio actual, incluyendo permisos, número de enlaces, propietario, grupo, tamaño y fecha de última modificación.
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-l`      | Muestra la lista en formato largo, incluyendo permisos, enlaces, propietario, grupo, tamaño en bytes y fecha de última modificación. |
+| `-a`      | (No mostrado) Muestra también los archivos y carpetas ocultos que comienzan con un punto (`.`). |
+| `-h`      | (No mostrado) Muestra el tamaño de forma legible por humanos (*human-readable*, ej. 4K, 2M) cuando se combina con `-l`. |
+
+---
 
 ### Comando cd
 
@@ -135,21 +196,27 @@ usuario@debian:~$ cd /
 usuario@debian:/$
 ```
 
-**Explicación:** El comando `cd /` cambia al directorio raíz `/`, que es el directorio más alto del sistema de archivos.
+**Explicación:** El comando `cd` (*Change Directory*) nos permite navegar por el sistema de ficheros. Ejecutando `cd /` cambia de inmediato al directorio raíz `/`, la parte más alta de la jerarquía.
+
+Para volver rápidamente a nuestra carpeta personal desde cualquier ubicación:
 
 ```bash
 usuario@debian:/$ cd ~
 usuario@debian:~$
 ```
 
-**Explicación:** El comando `cd ~` lleva al directorio home del usuario actual, que es `/home/usuario`.
+**Explicación:** La tilde (`~`) es un atajo universal que representa el directorio *home* del usuario actual (ej. `/home/usuario`).
+
+Una alternativa aún más rápida es simplemente ejecutar el comando sin parámetros:
 
 ```bash
 usuario@debian:~$ cd
 usuario@debian:~$
 ```
 
-**Explicación:** El comando `cd` sin argumentos nuevamente lleva al directorio home del usuario actual, que es `/home/usuario`.
+**Explicación:** El comando `cd` introducido sin argumentos siempre redirige por defecto al directorio personal del usuario.
+
+---
 
 ### Comando mkdir
 
@@ -158,16 +225,25 @@ usuario@debian:/tmp# mkdir uno
 usuario@debian:/tmp# mkdir -p uno/dos/tres/cuatro
 ```
 
-**Explicación:** El comando `mkdir` permite crear directorios de trabajo y con el parámetro `-p` se crea la estructura de directorios indicada.
+**Explicación:** El comando `mkdir` (*Make Directory*) permite crear nuevas carpetas. 
 
-### Comando cat, more, less y tac
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-p`      | (*Parents* o "padres") Si los directorios padre (`uno`, `dos`, `tres`) no existen, los crea automáticamente en la misma instrucción sin devolver error. |
 
-**Explicación:** el comando `cat` muestra el archivo completo.
-**Explicación:** el comando `more` muestra el archivo por páginas, solo hacia adelante.
-**Explicación:** el comando `less` muestra el archivo por páginas, permite moverse hacia adelante y atrás.
-**Explicación:** el comando `tac` muestra el archivo en orden inverso, desde la última línea hasta la primera.
+---
 
-### Comando head y tail
+### Comandos cat, more, less y tac
+
+**Explicación comparativa de herramientas de lectura de texto:**
+- El comando `cat` muestra o concatena el contenido del archivo completo por la salida estándar, ideal para archivos pequeños.
+- El comando `more` actúa como paginador. Muestra el archivo pantalla por pantalla, avanzando con la tecla Espacio, pero solo permite moverse hacia adelante.
+- El comando `less` es un paginador avanzado. Muestra el archivo por páginas y permite moverse de forma interactiva tanto hacia adelante como hacia atrás utilizando las flechas del teclado y buscar palabras internamente. ("*Less is more*").
+- El comando `tac` es el inverso de `cat`. Muestra las líneas del archivo en orden inverso, leyendo desde la última línea hasta la primera (muy útil para leer *logs* cronológicos donde el final es lo más reciente).
+
+---
+
+### Comandos head y tail
 
 ```bash
 usuario@debian:~# head -n 3 /etc/passwd
@@ -177,44 +253,55 @@ bin:x:2:2:bin:/bin:/usr/sbin/nologin
 
 usuario@debian:~# head -3 /etc/passwd
 root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-bin:x:2:2:bin:/bin:/usr/sbin/nologin
+...
+```
 
+Y su equivalente para el final del archivo:
+
+```bash
 usuario@debian:~# tail -n 3 /etc/passwd
 vboxadd:x:999:1::/var/run/vboxadd:/bin/false
 _chrony:x:104:109:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
 usuario:x:1001:1001::/home/usuario:/bin/bash
 
 usuario@debian:~# tail -3 /etc/passwd
-vboxadd:x:999:1::/var/run/vboxadd:/bin/false
-_chrony:x:104:109:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
-usuario:x:1001:1001::/home/usuario:/bin/bash
+...
 ```
 
-**Explicación**: Los comandos `head` y `tail` permiten mostrar por defecto las 10 primeras o últimas lineas de un fichero. Se puede ajustar el número con el parámetro _-n_ o indicandolo con el número de lineas a mostrar.
+**Explicación**: Los comandos `head` y `tail` permiten mostrar rápidamente fragmentos iniciales o finales de un documento. Por defecto muestran las 10 primeras o últimas líneas, respectivamente. 
 
-### Comando man, manpath, --help
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-n [NUM]`| Define la cantidad exacta de líneas a mostrar. También puede indicarse pasando directamente el número precedido de un guion (ej. `-3`). |
+| `-f`      | (Solo `tail`) "Sigue" (*follow*) los cambios en vivo del archivo, mostrando las nuevas líneas según se van escribiendo. Es imprescindible para monitorizar ficheros de *logs*. |
+
+---
+
+### Comandos man, manpath, --help
 
 ```bash
 usuario@debian:~$ manpath
 /usr/local/man:/usr/local/share/man:/usr/share/man
 ```
 
-**Explicación**: El comando `man ls` nos mostraría ayuda sobre el comando ls y la información de las páginas del comando man se encuentra en la ruta `/usr/share/man` y el resto de rutas son enlaces simbólicos a esta ruta.
+**Explicación**: El comando `man` (*Manual*) invoca el manual interno del sistema. Ejecutar `man ls` nos mostraría la documentación completa sobre el comando `ls`. El comando `manpath` desvela los directorios donde se almacenan físicamente las páginas del manual. La ruta principal base suele ser `/usr/share/man`.
+
+Para investigar un comando y sus diferentes secciones en el manual:
 
 ```bash
 manpath          # donde se encuentran las paginas del comando man
-man -f  passwd   # vemos las secciones asociadas
-man -f  passwd
+man -f passwd    # vemos las secciones asociadas disponibles
+man -f passwd
 sslpasswd (1ssl) # - compute password hashes
 passwd (5)       # - password file
 passwd (1)       # - update user's authentication tokens
-man -f  passwd   #  Descripción: Muestra una breve descripción de las secciones del manual donde se menciona el comando passwd
-man -s 5 passwd  # Descripción: Muestra la página del manual para passwd en la sección 5, que trata sobre los archivos de configuración relacionados con el comando, en este caso el archivo
-man -s 1 passwd  # Descripción: Muestra la página del manual para passwd en la sección 1, que trata sobre los comandos de usuario. Aquí se explica cómo usar el comando passwd para cambiar las contraseñas de usuarios.
+man -s 5 passwd  # Muestra la página del manual para passwd en la sección 5 (archivos de configuración, en este caso el archivo /etc/passwd)
+man -s 1 passwd  # Muestra la página del manual para passwd en la sección 1 (comandos de usuario. Explica cómo cambiar contraseñas)
 ```
 
-_*Nota*_: Tambien existen otras opciones como `<comando> --help` o `apropos [palabra_clave]` que aportan información del comando en cuestión.
+> **Nota:** También existen otras opciones de ayuda rápida. Casi todos los comandos aceptan la flag `<comando> --help` para imprimir un resumen de uso en la consola. Asimismo, si no sabes el nombre de un comando pero sabes qué hace, puedes usar `apropos [palabra_clave]` para buscar por descripción en todo el sistema de manuales.
+
+---
 
 ### Comando w
 
@@ -226,7 +313,9 @@ usuario  tty2     tty2             07:05   19:36   0.02s  0.02s /usr/libexec/gno
 usuario  pts/2    10.0.2.2         07:06    0.00s  0.15s  0.01s w
 ```
 
-**Explicación**: El comando `w` me muestra información de los usuarios conectados a mi sistema. Otros comandos como `loginctl` muestran las sesiones iniciadas.
+**Explicación**: El comando `w` condensa información vital del sistema. Muestra el tiempo de actividad (*uptime*), la carga promedio y el estado detallado de todos los usuarios actualmente conectados al sistema, desde qué terminal operan y qué procesos concretos están ejecutando. Existen comandos complementarios como `loginctl` o `who` que también permiten administrar o revisar las sesiones activas.
+
+---
 
 ### Comando tty
 
@@ -235,17 +324,23 @@ usuario@debian:~$ tty
 /dev/pts/2
 ```
 
-**Explicación**: El comando `tty` muestra la terminal o pseudoterminal abierta.
+**Explicación**: El comando `tty` (*Teletype*) imprime en pantalla el archivo de dispositivo especial que representa tu terminal o pseudoterminal actual en la que estás escribiendo. En el ejemplo anterior, estás en una pseudoterminal (`/dev/pts/2`).
 
-_*Nota*_: Podemos enviar mensajes a otras terminales, como por ejemplo enviarlo a la pseudoterminal `/dev/pts/0` de la siguiente manera. Si queremos cambiar entre `tty` hacemos uso de la combinación de teclas (Ctrl + Alt + Fx).
+Dado que cada terminal es un "archivo", podemos enviar o redirigir mensajes directamente hacia otras terminales, como se muestra a continuación enviando un texto hacia `/dev/pts/0`. 
 
 ```bash
 usuario@debian:~$ echo "Envio mensaje" > /dev/pts/0
 ```
 
+Si estuviésemos sentados frente a la consola virtual que corresponde a `/dev/pts/0` recibiríamos el eco de manera espontánea:
+
 ```bash
 usuario@debian:~$ Envio mensaje
 ```
+
+> **Nota:** Si nos encontramos en el entorno de línea de comandos en modo texto (sin servidor gráfico), podemos cambiar dinámicamente entre distintas consolas virtuales (las denominadas TTY nativas) pulsando combinaciones de teclas como `Ctrl + Alt + F1` hasta `F6`.
+
+---
 
 ### Comando cal
 
@@ -261,77 +356,49 @@ do lu ma mi ju vi sá
 28 29 30
 ```
 
-**Explicación**: El comando `cal` muestra el calendario.
+**Explicación**: El comando `cal` (*Calendar*) imprime un pequeño calendario formateado en la terminal. A veces es necesario instalar primero el paquete `ncal`.
 
-Resumen de comandos:
+**Sintaxis y variantes de `cal`:**
 
-- cal: Muestra el calendario del mes actual.
-- cal [año]: Muestra el calendario del año especificado.
-- cal [mes] [año]: Muestra el calendario de un mes y año específicos.
-- cal -y: Muestra el calendario del año actual.
-- cal -3: Muestra el mes actual y los meses anterior y posterior.
-- cal 2024: Calendario todo el año
-- cal 10 2024: Muestra el mes de octure del 2024
+| Comando               | Resultado |
+|-----------------------|-----------|
+| `cal`                 | Muestra el calendario del mes actual. |
+| `cal [año]`           | Muestra el calendario completo del año especificado (ej. `cal 2024`). |
+| `cal [mes] [año]`     | Muestra el calendario de un mes y año concretos (ej. `cal 10 2024` para octubre). |
+| `cal -y`              | Muestra todo el calendario del año en curso. |
+| `cal -3`              | Muestra el mes actual, el mes anterior y el mes posterior al mismo tiempo. |
+
+---
 
 ### Comando date
 
 ```bash
 usuario@debian:~# date
 vie 05 sep 2025 07:37:29 CEST
-...
-date
+```
+
+**Explicación**: El comando `date` sin argumentos despliega la hora y la fecha actual leída de los relojes del sistema. El formato de salida es altamente personalizable concatenando una cadena precedida por un signo de suma `+`.
+
+El comando también sirve para configurar el reloj local, pero esto **solo** lo puede realizar el usuario `root` usando las flags `-s` o `--set`:
+
+```bash
 date --set "2014-11-13 9:30:01"
 date -s "2014-11-13 9:30:01"
 date +%D
 ```
 
-El comando `date` sin argumentos, despliega la fecha en la salida estándar del sistema. El formato de salida se puede especificar precedido por un +. La opción -u es para utilizar la hora universal (Greenwich). El único
-usuario que puede cambiar la fecha del sistema es root.
+A continuación, se muestra una lista de algunos especificadores útiles de formato para extraer fracciones específicas de fecha y hora (`date +%<letra>`):
 
-A continuación, se muestra una lista completa de los especificadores de formato que puedes utilizar con el comando date para personalizar la salida:
+- `%Y`: Año completo con siglo (ej.: 2025).
+- `%m`: Mes numérico (01-12).
+- `%d`: Día del mes numérico (01-31).
+- `%H`: Hora en formato 24 horas (00-23).
+- `%M`: Minutos (00-59).
+- `%S`: Segundos (00-60).
+- `%F`: Fecha estandarizada ISO 8601: `aaaa-mm-dd`.
+- `%T`: Hora estandarizada: `HH:MM:SS`.
 
-- %a: Nombre abreviado del día de la semana (ej.: "lun").
-- %A: Nombre completo del día de la semana (ej.: "lunes").
-- %b: Nombre abreviado del mes (ej.: "ene").
-- %B: Nombre completo del mes (ej.: "enero").
-- %c: Fecha y hora completas según la configuración regional.
-- %C: Siglo (los dos primeros dígitos del año, ej.: "20" para 2025).
-- %d: Día del mes con dos dígitos (01-31).
-- %D: Fecha en formato mm/dd/aa (equivalente a %m/%d/%y).
-- %e: Día del mes sin cero a la izquierda (espacio en lugar de cero).
-- %F: Fecha en formato ISO 8601: aaaa-mm-dd (equivalente a %Y-%m-%d).
-- %g: Últimos dos dígitos del año correspondiente a la semana ISO.
-- %G: Año correspondiente a la semana ISO.
-- %h: Equivalente a %b.
-- %H: Hora en formato 24 horas (00-23).
-- %I: Hora en formato 12 horas (01-12).
-- %j: Día del año (001-366).
-- %k: Hora en formato 24 horas sin cero a la izquierda (espacio en lugar de cero).
-- %l: Hora en formato 12 horas sin cero a la izquierda.
-- %m: Mes (01-12).
-- %M: Minutos (00-59).
-- %n: Salto de línea.
-- %N: Nanosegundos (000000000-999999999).
-- %p: Indicador AM/PM en mayúsculas.
-- %P: Indicador am/pm en minúsculas.
-- %r: Hora en formato de 12 horas (equivalente a %I:%M:%S %p).
-- %R: Hora en formato 24 horas con minutos (equivalente a %H:%M).
-- %s: Segundos transcurridos desde 1970-01-01 00:00:00 UTC (Epoch).
-- %S: Segundos (00-60, incluyendo segundos intercalados).
-- %t: Carácter de tabulación.
-- %T: Hora en formato 24 horas con segundos (equivalente a %H:%M:%S).
-- %u: Día de la semana (1-7), donde 1 es lunes.
-- %U: Número de semana del año (00-53), considerando el domingo como primer día de la semana.
-- %V: Número de semana ISO (01-53).
-- %w: Día de la semana (0-6), donde 0 es domingo.
-- %W: Número de semana del año (00-53), considerando el lunes como primer día de la semana.
-- %x: Fecha en formato local.
-- %X: Hora en formato local.
-- %y: Año sin siglo (00-99).
-- %Y: Año completo con siglo (ej.: 2025).
-- %z: Desplazamiento respecto a UTC en formato +hhmm (ej.: -0500).
-- %Z: Zona horaria (ej.: CET, EST).
-- %%: Carácter de porcentaje literal (%).
+---
 
 ### Comando uname
 
@@ -344,10 +411,11 @@ usuario@debian:~$ uname -r
 6.1.0-34-amd64
 ```
 
-**Explicación**: El comando `uname` muestra información sobre el sistema.
+**Explicación**: El comando `uname` (*Unix Name*) muestra la información del propio núcleo (Kernel) en ejecución y sobre el sistema anfitrión. Con la opción `-a` (*all*) arroja todos los detalles como la arquitectura (`x86_64`), y con `-r` (*release*) devuelve concretamente la versión de compilación del núcleo de forma limpia.
 
-_*Nota*_: En la ruta `/etc/debian_version` o `/etc/redhat-release` puedo ver la versión del sistema operativo.
-_*Nota*_: Con el comando `arch` se puede ver la arquitectura del sistema.
+> **Nota:** La información completa comercial sobre la distribución de Linux que tenemos instalada no suele figurar en `uname`. Para ello podemos inspeccionar ficheros como `cat /etc/debian_version` o `cat /etc/os-release`. Por otro lado, para confirmar rápidamente si el procesador es de 32 o 64 bits, podemos usar el comando de atajo `arch`.
+
+---
 
 ### Comando ln
 
@@ -358,18 +426,27 @@ usuario@debian:/tmp$ ls test
 test
 usuario@debian:/tmp$ cat test
 fichero test
+```
 
+A continuación, crearemos un **enlace duro** y verificaremos su comportamiento:
+
+```bash
 usuario@debian:/tmp$ ln test enlace-duro-test
 usuario@debian:/tmp$ ls test enlace-duro-test
 enlace-duro-test  test
-
 usuario@debian:/tmp$ cat enlace-duro-test
 fichero test
 ```
 
-**Explicación**: El comando `ln` sirve para crear enlaces en Linux. Aquí tenemos que explicar que existen dos tipos de enlaces.
+**Explicación**: El comando `ln` (*Link*) sirve para crear enlaces en Linux. En Linux existen fundamentalmente dos tipos de enlaces con naturalezas muy distintas.
 
-- **Enlaces simbólicos**: La manera más sencilla de comprender que es un enlace simbólico en Linux es compararlo con el “enlace directo” o “shortcut” en Windows. El fichero o directorio se encuentra en un único punto del disco y los enlaces son un puntero contra él. Cada enlace simbólico tiene su propio número de inodo lo que permite hacer enlaces simbólicos entre distintos sistemas de ficheros. Para crear enlaces (tanto simbólicos como duros) usamos el comando ln. En este caso vamos a crear un enlace simbólico (parámetro -s) del fichero test:
+**1. Enlaces simbólicos (Soft links):**
+La manera más sencilla de comprender qué es un enlace simbólico en Linux es compararlo con el "acceso directo" o *shortcut* habitual de Windows. El archivo de datos real se encuentra guardado en un único sector físico, y los enlaces son simplemente pequeños punteros o atajos que apuntan a esa ruta.
+- Tienen su propio número de inodo.
+- Pueden enlazar a directorios o a archivos que residan en otras particiones de disco o discos duros diferentes.
+- Para crearlos, se utiliza el parámetro `-s`.
+
+Creando un enlace simbólico partiendo de nuestro archivo anterior:
 
 ```bash
 usuario@debian:/tmp$ ls -li test enlace-duro-test
@@ -384,7 +461,11 @@ usuario@debian:/tmp$ ls -li test enlace*
 2359336 lrwxrwxrwx 1 usuario usuario  4 sep  5 07:49 enlace-simbolico-test -> test
 ```
 
-_*Nota*_: Es importante entender que si borramos el fichero o directorio origen, el enlace simbólico permanece pero los datos desaparecen para siempre.
+Observa que en la primera columna (*número de inodo*) el enlace simbólico tiene un número diferente, y en el nombre se nos indica visualmente el puntero: `enlace-simbolico-test -> test`.
+
+> **Advertencia:** Es sumamente importante entender que si borramos el fichero origen, el enlace simbólico permanecerá existiendo como archivo, pero se convertirá en un enlace "roto" (quedará ciego y dará error de fichero no encontrado).
+
+Procedemos a borrar el archivo `test` original para comprobarlo:
 
 ```bash
 usuario@debian:/tmp$ rm test
@@ -398,11 +479,13 @@ usuario@debian:/tmp$ cat enlace-simbolico-test
 cat: enlace-simbolico-test: No existe el fichero o el directorio
 ```
 
-- **Enlaces duros**: Los enlaces duros lo que hacen es asociar dos o más ficheros compartiendo el mismo inodo. Esto hace que cada enlace duro es una copia exacta del resto de ficheros asociados, tanto de datos como de permisos, propietario, etc. Esto implica también que cuando se realicen cambios en uno de los enlaces o en el fichero este también se realizará en el resto de enlaces.
+**2. Enlaces duros (Hard links):**
+Los enlaces duros actúan asociando múltiples nombres de archivo al mismo número de inodo en el sistema de archivos físico. Un enlace duro no es un atajo, es una entrada equivalente; actúa como una copia espejo pero que no ocupa el doble de espacio. Esto implica que al alterar el contenido, permisos o metadatos de un enlace duro, los cambios se reflejan inmediatamente en el resto, ya que debajo son el mismo objeto. Borrar uno no borra los datos mientras sobreviva al menos una referencia dura.
+
+Creamos nuevos archivos y enlaces para observarlo:
 
 ```bash
 usuario@debian:/tmp$ rm enlace*
-
 usuario@debian:/tmp$ echo "fichero test" > test.txt
 usuario@debian:/tmp$ ln test.txt enlace-duro-test
 
@@ -411,7 +494,7 @@ usuario@debian:/tmp$ ls -li test.txt enlace-duro-test
 2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:51 test.txt
 ```
 
-En la primera columna verificamos que tienen el mismo número de inodo y en la tercera se especifica cuando enlaces duros tiene el fichero. Si hacéis cambios en uno de ellos veréis que también se hacen en el resto. Si por ejemplo cambiamos los permisos al fichero test.txt:
+En la primera columna de `ls -li` verificamos que ambos comparten exactamente el mismo inodo (`2359319`). La tercera columna marca un número `2`, confirmando cuántos enlaces duros apuntan actualmente a ese archivo de datos subyacente. Si cambiamos los permisos con `chmod`:
 
 ```bash
 usuario@debian:/tmp$ chmod 755 test.txt
@@ -420,21 +503,25 @@ usuario@debian:/tmp$ ls -li test.txt enlace-duro-test
 2359319 -rwxr-xr-x 2 usuario usuario 13 sep  5 07:51 test.txt
 ```
 
-_*Nota 2*_: Es importante entender que los enlaces duros no pueden hacerse contra directorios y tampoco fuera del propio sistema de ficheros.
+> **Nota:** Por seguridad del sistema de archivos, los enlaces duros no pueden realizarse contra directorios y tampoco pueden cruzar fronteras de sistemas de ficheros distintos (no puedes hacer un enlace duro desde un disco duro hacia un *pendrive* USB externo).
 
-| soft link                                              | hard link                                                       |
-| ------------------------------------------------------ | --------------------------------------------------------------- |
-| Se pueden hacer con ficheros y directorios             | Solamente se pueden hacer con ficheros                          |
-| Se pueden hacer entre distintos sistemas de ficheros   | No admiten diferentes sistemas de ficheros                      |
-| Tienen diferente número de inodo                       | Comparten número de inodo                                       |
-| Si borramos la información original perdemos el enlace | Si borramos la información original el enlace sigue funcionando |
-| Son punteros o accesos directos a memoria              | Son copias exactas del fichero de origen                        |
+**Tabla Resumen Comparativa de Enlaces:**
+
+| Soft Link (Simbólico) | Hard Link (Duro) |
+| --------------------- | ---------------- |
+| Se pueden crear contra ficheros y directorios completos. | Solamente se permite enlazarlos contra ficheros. |
+| Se pueden enlazar cruzando particiones o distintos sistemas de ficheros. | Estrictamente limitados a operar dentro del mismo disco o partición. |
+| Poseen un número de inodo propio e independiente. | Comparten exactamente el mismo inodo. |
+| Si borramos la información original, perdemos los datos y el enlace queda "roto". | Si borramos el archivo de origen "original", los datos siguen estando disponibles a través del enlace. |
+| Actúan como simples punteros o accesos directos de ruta. | Actúan como un espejo en sincronización idéntico del fichero de origen. |
+
+---
 
 ### Comando su –
 
-**Explicación**: El comando `su` y `su -` en Linux se utilizan para cambiar de usuario en el sistema, pero tienen comportamientos diferentes en cuanto al entorno del usuario al que se cambia. A continuación, se explica las diferencias clave entre ambos:
+**Explicación**: El comando `su` (*Substitute User* o *Switch User*) se utiliza para saltar temporalmente a la cuenta de otro usuario interactivo (generalmente `root`) aportando su contraseña, pero existen matices cruciales en su comportamiento según se acompañe o no del guion:
 
-- su (sin guion): Cambia de usuario sin cargar completamente el entorno de inicio de sesión del nuevo usuario. Mantiene el entorno actual del usuario que ejecuta el comando (variables de entorno, directorio actual, etc.). El directorio de trabajo permanece siendo el directorio del usuario desde el que ejecutaste su.
+- **`su` (sin guion):** Cambia tus privilegios, pero **no** carga el entorno natural del nuevo usuario. Tu sesión heredará el entorno que tenías (variables como `$PATH`, alias, y lo más notorio: te quedarás en el mismo directorio de trabajo donde estabas posicionado).
 
 ```bash
 usuario@debian:~$ echo $PWD
@@ -445,7 +532,7 @@ root@debian:/home/usuario# echo $PWD
 /home/usuario
 ```
 
-- su - (con guion): Cambia de usuario y carga completamente el entorno de inicio de sesión del nuevo usuario (como si hubieras iniciado sesión directamente como ese usuario). Carga el entorno completo del nuevo usuario, incluyendo las variables de entorno, el directorio de inicio, y archivos de configuración como .bashrc o .profile. El directorio de trabajo cambia al directorio personal (home) del nuevo usuario.
+- **`su -` (con guion):** Simula un inicio de sesión completo y limpio (*login shell*). Carga todos los perfiles (`.bashrc`, `.profile`), renueva el entorno y salta físicamente al directorio `/home` o directorio por defecto del nuevo usuario. Es la forma más predecible y recomendada de cambiar a `root` en administración de sistemas.
 
 ```bash
 usuario@debian:~$ echo $PWD
