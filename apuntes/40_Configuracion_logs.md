@@ -11,10 +11,10 @@
 7. [journalctl y almacenamiento persistente](#7-journalctl-y-almacenamiento-persistente)
 8. [Facilidades en rsyslog](#8-facilidades-en-rsyslog)
 9. [logrotate](#9-logrotate)
-   9.1. [Comandos básicos](#91-comandos-basicos)
-   9.2. [Opciones de configuración](#92-opciones-de-configuracion)
-   9.3. [Parámetros size, minsize y maxsize](#93-parametros-size-minsize-y-maxsize)
-   9.4. [Verificar la configuración](#94-verificar-la-configuracion)
+   1. [Comandos básicos](#91-comandos-basicos)
+   2. [Opciones de configuración](#92-opciones-de-configuracion)
+   3. [Parámetros size, minsize y maxsize](#93-parametros-size-minsize-y-maxsize)
+   4. [Verificar la configuración](#94-verificar-la-configuracion)
 10. [Archivo de marca de tiempo en logrotate](#10-archivo-de-marca-de-tiempo-en-logrotate)
 
 ---

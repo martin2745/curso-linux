@@ -4,9 +4,9 @@
 
 1. [Instalación de tmux](#1-instalacion-de-tmux)
 2. [Principales comandos de tmux](#2-principales-comandos-de-tmux)
-   2.1. [Gestión de sesiones](#21-gestion-de-sesiones)
-   2.2. [Gestión de ventanas](#22-gestion-de-ventanas)
-   2.3. [Gestión de paneles (Splits)](#23-gestion-de-paneles-splits)
+   1. [Gestión de sesiones](#21-gestion-de-sesiones)
+   2. [Gestión de ventanas](#22-gestion-de-ventanas)
+   3. [Gestión de paneles (Splits)](#23-gestion-de-paneles-splits)
 
 ---
 

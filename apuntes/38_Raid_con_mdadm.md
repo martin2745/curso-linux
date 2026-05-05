@@ -4,11 +4,11 @@
 
 1. [Introducción a mdadm](#1-introduccion-a-mdadm)
 2. [Práctica: Creación de un RAID 5](#2-practica-creacion-de-un-raid-5)
-   - 2.1. [Preparación de discos y particiones](#21-preparacion-de-discos-y-particiones)
-   - 2.2. [Instalación de mdadm y creación del RAID](#22-instalacion-de-mdadm-y-creacion-del-raid)
-   - 2.3. [Persistencia del RAID entre reinicios](#23-persistencia-del-raid-entre-reinicios)
-   - 2.4. [Formateo y montaje](#24-formateo-y-montaje)
-   - 2.5. [Persistencia del montaje en fstab](#25-persistencia-del-montaje-en-fstab)
+   1. [Preparación de discos y particiones](#21-preparacion-de-discos-y-particiones)
+   2. [Instalación de mdadm y creación del RAID](#22-instalacion-de-mdadm-y-creacion-del-raid)
+   3. [Persistencia del RAID entre reinicios](#23-persistencia-del-raid-entre-reinicios)
+   4. [Formateo y montaje](#24-formateo-y-montaje)
+   5. [Persistencia del montaje en fstab](#25-persistencia-del-montaje-en-fstab)
 3. [Simulación de fallo y sustitución de disco](#3-simulacion-de-fallo-y-sustitucion-de-disco)
 4. [Disco de repuesto (spare)](#4-disco-de-repuesto-spare)
 

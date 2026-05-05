@@ -3,20 +3,20 @@
 ## Índice
 
 1. [Tipos de particionado](#tipos-de-particionado)
-   1.1. [Tipos de particionado: MBR y GPT](#tipos-de-particionado-mbr-y-gpt)
+   1. [Tipos de particionado: MBR y GPT](#tipos-de-particionado-mbr-y-gpt)
 2. [Estado de partida](#estado-de-partida)
 3. [lsblk](#lsblk)
-   3.1. [Dispositivos `loop`](#dispositivos-loop)
-   3.2. [Disco principal `sda`](#disco-principal-sda)
-   3.3. [Segundo disco `sdb`](#segundo-disco-sdb)
+   1. [Dispositivos `loop`](#dispositivos-loop)
+   2. [Disco principal `sda`](#disco-principal-sda)
+   3. [Segundo disco `sdb`](#segundo-disco-sdb)
 4. [fdisk](#fdisk)
 5. [blkid](#blkid)
 6. [mkfs](#mkfs)
 7. [mount y umount](#mount-y-umount)
 8. [fstab](#fstab)
-   8.1. [Como recuperar el sistema si cometemos un error en el archivo /etc/fstab](#como-recuperar-el-sistema-si-cometemos-un-error-en-el-archivo-etcfstab)
+   1. [Como recuperar el sistema si cometemos un error en el archivo /etc/fstab](#como-recuperar-el-sistema-si-cometemos-un-error-en-el-archivo-etcfstab)
 9. [Particionado con parted](#particionado-con-parted)
-   9.1. [Ejercicio](#ejercicio)
+   1. [Ejercicio](#ejercicio)
 10. [Partición de swap](#particion-de-swap)
 
 ---
