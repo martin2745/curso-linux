@@ -1,26 +1,56 @@
 # Comando awk
 
-`awk` es un lenguaje de programación de patrones y acciones que se utiliza para el procesamiento de texto. Aunque es más poderoso y versátil que `cut`, también puede ser más complejo de usar. Su sintaxis básica es:
+## Índice
+
+1. [Sintaxis y conceptos básicos](#1-sintaxis-y-conceptos-básicos)
+2. [Ejemplos de procesamiento con awk](#2-ejemplos-de-procesamiento-con-awk)
+3. [Diferencias clave entre cut y awk](#3-diferencias-clave-entre-cut-y-awk)
+4. [Variables internas NF y NR](#4-variables-internas-nf-y-nr)
+
+---
+
+`awk` es un lenguaje de programación de patrones y acciones que se utiliza para el procesamiento avanzado de texto. Aunque es más poderoso y versátil que `cut`, también puede ser más complejo de usar. 
+
+---
+
+## 1. Sintaxis y conceptos básicos
+
+Su sintaxis básica es:
 
 ```bash
 awk '{patrón}' archivo
 ```
 
-- `{patrón}`: Especifica el patrón que `awk` buscará en cada línea del archivo y qué acciones tomará cuando encuentre una línea que coincida con el patrón.
+- `{patrón}`: Especifica el patrón que `awk` buscará en cada línea del archivo y qué acciones tomará cuando encuentre una línea que coincida.
 - `archivo`: Es el archivo que se va a procesar.
 
-Por ejemplo, para imprimir el primer campo de cada línea de un archivo, puedes usar:
+Por ejemplo, para imprimir el primer y segundo campo de cada línea de un archivo, puedes usar:
 
 ```bash
 awk -F'addr:' '{print $2 " y " $1}' archivo.txt
 ```
 
-El comando de `awk` anterior realiza:
+El comando de `awk` anterior realiza lo siguiente:
 
-- `awk`: Es el comando `awk` que invoca el intérprete de `awk` para procesar el texto.
-- `-F'addr:'`: La opción `-F` especifica el delimitador de campo utilizado por `awk`. En este caso, se establece como `'addr:'`, lo que significa que `awk` dividirá cada línea de entrada en campos cada vez que encuentre la cadena `'addr:'`.
-- `' {print $2 $1}'`: Esta es la acción que `awk` tomará en cada línea de entrada. En este caso, `$2` hace referencia al segundo campo y `$1` al primer campo después de dividir la línea según el delimitador especificado. La acción `print` imprime los campos especificados. Al imprimir `$2` antes de `$1` y no separarlos con una coma ni espacio, se concatenarán los campos sin ningún espacio adicional entre ellos.
-- `awk` es muy interesante para poder mostrar la última columna si no sabemos en que posicióne está con el valor `$NF`.
+- `awk`: Es el comando que invoca el intérprete para procesar el texto.
+- `-F'addr:'`: La opción `-F` especifica el delimitador de campo. En este caso, se establece como `'addr:'`, lo que significa que dividirá cada línea en campos cada vez que encuentre dicha cadena.
+- `'{print $2 $1}'`: Esta es la acción que se tomará. `$2` hace referencia al segundo campo y `$1` al primero tras dividir por el delimitador. La acción `print` imprime los campos especificados de forma contigua si no se separan.
+
+Si tenemos una línea de entrada como esta:
+
+```text
+addr:192.168.1.1
+```
+
+El comando separará esta línea en dos campos: vacío (o espacio anterior) y `192.168.1.1`. Al imprimir `$2 $1`, producirá la salida invertida.
+
+> **Nota:** Este comando puede ser muy útil para cambiar el orden o el formato de los campos en líneas de texto que siguen un patrón específico, manipulando libremente el orden de impresión de las variables de columna `$N`.
+
+---
+
+## 2. Ejemplos de procesamiento con awk
+
+`awk` es sumamente interesante para poder extraer directamente la última columna de una salida sin importar cuántas columnas haya en total en cada línea, haciendo uso de la variable `$NF`.
 
 ```bash
 usuario@debian:~$ cat /etc/passwd | awk -F ':' '{print $NF}'
@@ -31,23 +61,43 @@ usuario@debian:~$ cat /etc/passwd | awk -F ':' '{print $NF}'
 /bin/sync
 ```
 
-Por ejemplo, si tenemos una línea de entrada como esta:
+Veamos otro ejemplo, esta vez combinando `awk` con el comando `rev` que permite invertir el orden de los caracteres de un texto:
 
+```bash
+usuario@debian:~$ ls -l | awk -F ' ' '{print $NF}'
+40
+Desktop
+Documents
+Downloads
+Music
+Pictures
+prueba
+Public
+snap
+Templates
+Videos
+
+usuario@debian:~$ ls -l | awk -F ' ' '{print $NF}' | rev
+04
+potkseD
+stnemucoD
+sdaolnwoD
+cisuM
+serutciP
+abeurp
+cilbuP
+pans
+setalpmeT
+soediV
 ```
-addr:192.168.1.1
-```
 
-El comando `awk` separará esta línea en dos campos: "addr" y "192.168.1.1". Luego, al imprimir `$2 $1`, producirá la salida:
+---
 
-```
-192.168.1.1addr:
-```
+## 3. Diferencias clave entre cut y awk
 
-Lo que significa que `$2` se colocará antes que `$1`, y no habrá espacio ni otro carácter entre ellos.
+> **Importante:** Es crucial tener en cuenta que, aunque tanto `cut` como `awk` permiten separar un texto por un delimitador, en la salida `cut` **conservará el separador**, a diferencia de `awk` **que eliminará el separador** (a menos que lo incluyas manualmente en el bloque `print`).
 
-Este comando puede ser útil para cambiar el orden o el formato de los campos en líneas de texto que siguen un patrón específico, como en este caso, donde se manipula una dirección IP precedida por la etiqueta "addr:".
-
-_*Nota:*_ Es importante tener en cuenta que `cut` y `awk` permite separar por un campo pero en la salida `cut` **conservará el separador** a diferencia de `awk` **que eliminará el separador**, tal y como podemos ver a continuación.
+A continuación demostramos esta diferencia de comportamiento:
 
 ```bash
 usuario@debian:~/scripts$ cat script.sh
@@ -91,39 +141,15 @@ sshd/run/sshd/usr/sbin/nologin
 mysql/nonexistent/bin/false
 ```
 
-Veamos otro ejemplo, esta vez tambien hacemos uso del comando `rev` que permite invertir el orden del resultado.
+---
 
-```bash
-usuario@debian:~$ ls -l | awk -F ' ' '{print $NF}'
-40
-Desktop
-Documents
-Downloads
-Music
-Pictures
-prueba
-Public
-snap
-Templates
-Videos
+## 4. Variables internas NF y NR
 
-usuario@debian:~$ ls -l | awk -F ' ' '{print $NF}' | rev
-04
-potkseD
-stnemucoD
-sdaolnwoD
-cisuM
-serutciP
-abeurp
-cilbuP
-pans
-setalpmeT
-soediV
-```
+`awk` cuenta con diversas variables reservadas que facilitan el procesamiento del flujo.
 
-_*Nota*_: Diferencia entre `NF` y `NR` en awk.
+> **Recuerda:** Diferencia vital entre `NF` (Number of Fields) y `NR` (Number of Records) en awk:
 
 | Variable | Significado                           | Uso común                                    |
 | -------- | ------------------------------------- | -------------------------------------------- |
-| `NR`     | Número de la línea actual             | Numerar líneas, filtrar líneas específicas   |
-| `NF`     | Número de columnas en la línea actual | Acceder a la última columna, contar columnas |
+| `NR`     | Número de la línea o registro actual  | Numerar líneas, filtrar líneas específicas o procesar por rango de líneas |
+| `NF`     | Número total de columnas en la línea actual | Acceder a la última columna con `$NF`, contar columnas |

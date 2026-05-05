@@ -1,5 +1,70 @@
 # Comando ssh, scp y sftp
 
+## Índice
+
+1. [Funcionamiento de SSH y establecimiento de conexión](#funcionamiento-de-ssh-y-establecimiento-de-conexion)
+   1.1. [Three-way handshake](#three-way-handshake)
+   1.2. [SSH-TRANS](#ssh-trans)
+   1.3. [Intercambio de claves (SSH_MSG_KEXINIT)](#intercambio-de-claves-(ssh_msg_kexinit))
+   1.4. [Fingerprint del servidor](#fingerprint-del-servidor)
+   1.5. [Generación de la clave de sesión](#generacion-de-la-clave-de-sesion)
+2. [Comandos para instalar el servidor SSH en Debian](#comandos-para-instalar-el-servidor-ssh-en-debian)
+3. [ssh](#ssh)
+   3.1. [StrickHostKeyChecking](#strickhostkeychecking)
+   3.2. [Redirección gráfica por SSH](#redireccion-grafica-por-ssh)
+   3.3. [Comando SSH + contraseña](#comando-ssh-+-contrasena)
+   3.4. [Cifrado asimétrico](#cifrado-asimetrico)
+      3.4.1. [Uso de claves con y sin _passphrase_:](#uso-de-claves-con-y-sin-_passphrase_)
+      3.4.2. [Comando `ssh-keygen`:](#comando-`ssh-keygen`)
+      3.4.3. [Ejemplo de uso sin passphrase](#ejemplo-de-uso-sin-passphrase)
+      3.4.4. [Ejemplo de uso con passphrase](#ejemplo-de-uso-con-passphrase)
+      3.4.5. [Uso de ssh-agent](#uso-de-ssh-agent)
+4. [scp](#scp)
+   4.1. [scp de máquina A a B indicado desde máquina C](#scp-de-maquina-a-a-b-indicado-desde-maquina-c)
+   4.2. [Ejemplos de uso curiosos y cuestiones a considerar](#ejemplos-de-uso-curiosos-y-cuestiones-a-considerar)
+5. [A modo de resumen decimos que OpenSSH incluye servicio y clientes para los protocolos SSH, SFTP y SCP.](#a-modo-de-resumen-decimos-que-openssh-incluye-servicio-y-clientes-para-los-protocolos-ssh-sftp-y-scp)
+   5.1. [ssh](#ssh)
+   5.2. [scp](#scp)
+   5.3. [sftp](#sftp)
+   5.4. [Retos de SSH](#retos-de-ssh)
+      5.4.1. [bandit0 a bandit1](#bandit0-a-bandit1)
+      5.4.2. [bandit1 a bandit2](#bandit1-a-bandit2)
+      5.4.3. [bandit2 a bandit3](#bandit2-a-bandit3)
+      5.4.4. [bandit3 a bandit4](#bandit3-a-bandit4)
+      5.4.5. [bandit4 a bandit5](#bandit4-a-bandit5)
+      5.4.6. [bandit5 a bandit6](#bandit5-a-bandit6)
+      5.4.7. [bandit6 a bandit7](#bandit6-a-bandit7)
+      5.4.8. [bandit7 a bandit8](#bandit7-a-bandit8)
+      5.4.9. [bandit8 a bandit9](#bandit8-a-bandit9)
+      5.4.10. [bandit8 a bandit9](#bandit8-a-bandit9)
+      5.4.11. [bandit9 a bandit10](#bandit9-a-bandit10)
+      5.4.12. [bandit10 a bandit11](#bandit10-a-bandit11)
+      5.4.13. [bandit11 a bandit12](#bandit11-a-bandit12)
+      5.4.14. [bandit12 a bandit13](#bandit12-a-bandit13)
+      5.4.15. [bandit13 a bandit14](#bandit13-a-bandit14)
+      5.4.16. [bandit14 a bandit15](#bandit14-a-bandit15)
+      5.4.17. [bandit15 a bandit16](#bandit15-a-bandit16)
+      5.4.18. [bandit16 a bandit17](#bandit16-a-bandit17)
+      5.4.19. [bandit17 a bandit18](#bandit17-a-bandit18)
+      5.4.20. [bandit18 a bandit19](#bandit18-a-bandit19)
+      5.4.21. [bandit19 a bandit20](#bandit19-a-bandit20)
+      5.4.22. [bandit20 a bandit21](#bandit20-a-bandit21)
+      5.4.23. [bandit21 a bandit22](#bandit21-a-bandit22)
+      5.4.24. [bandit22 a bandit23](#bandit22-a-bandit23)
+      5.4.25. [bandit23 a bandit24](#bandit23-a-bandit24)
+      5.4.26. [bandit24 a bandit25](#bandit24-a-bandit25)
+      5.4.27. [bandit25 a bandit26](#bandit25-a-bandit26)
+      5.4.28. [bandit26 a bandit27](#bandit26-a-bandit27)
+      5.4.29. [bandit27 a bandit28](#bandit27-a-bandit28)
+      5.4.30. [bandit28 a bandit29](#bandit28-a-bandit29)
+      5.4.31. [bandit29 a bandit30](#bandit29-a-bandit30)
+      5.4.32. [bandit30 a bandit31](#bandit30-a-bandit31)
+      5.4.33. [bandit31 a bandit32](#bandit31-a-bandit32)
+      5.4.34. [bandit32 a bandit33](#bandit32-a-bandit33)
+
+---
+
+
 ## Funcionamiento de SSH y establecimiento de conexión
 
 Protocolo SSH (Secure Shell) es un protocolo que garantiza la confidencialidad, integridad y autenticación en las comunicaciones. Su uso más común es como **túnel seguro** protegiendo contra ataques como el rastreo de paquetes. Opera sobre el puerto TCP 22 y está disponible en la mayoría de los sistemas operativos. SSH emplea un sistema criptográfico híbrido (simétrico y asimétrico) y se utiliza ampliamente para:
@@ -137,7 +202,7 @@ El cliente (comando ssh) posee una configuración predeterminada que podemos mod
 - Opciones invocadas a través del archivo perteneciente a cada usuario situado en la ruta `~/.ssh/config`
 - Opciones invocadas a través del archivo de configuración global del sistema en `/etc/ssh/ssh_config`
 
-_*Nota*_: por otra parte, existe el archivo `/etc/ssh/sshd_config` donde se establece la configuración del servidor.
+> **Nota:** por otra parte, existe el archivo `/etc/ssh/sshd_config` donde se establece la configuración del servidor.
 
 Una vez que nos hemos conectado por ssh en el cliente se crea la carpeta `.ssh/known_hosts` con las claves públicas de los servidores a los que te has conectado anteriormente a través de SSH. Estas claves públicas se utilizan para verificar la identidad del servidor cuando te conectas nuevamente, asegurando que no haya ningún intento de suplantación de identidad (ataque de tipo "Man-in-the-middle").
 
@@ -333,7 +398,7 @@ Last login: Sun Jun  9 13:47:01 2024 from 10.0.2.2
 kali
 ```
 
-_*Nota*_: En algunas veces podemos hacer el proceso inverso de conectarnos a un servidor haciendo uso de la clave privada para lo que se usa `ssh -i ~/.ssh/id_rsa usuario@servidor_remoto`.
+> **Nota:** En algunas veces podemos hacer el proceso inverso de conectarnos a un servidor haciendo uso de la clave privada para lo que se usa `ssh -i ~/.ssh/id_rsa usuario@servidor_remoto`.
 
 #### Ejemplo de uso con passphrase
 
@@ -480,7 +545,7 @@ Your identification has been saved with the new passphrase.
 
 ## scp
 
-### scp de máquina A -> B indicado desde máquina C
+### scp de máquina A a B indicado desde máquina C
 
 Vamos a hacer uso en este escenario de tres máquinas kaliA, kaliB y kaliC. Desde kaliC vamos a indicar a máquina A que tiene que hacer un scp de una carpeta /prueba que contiene 5 ficheros.
 
@@ -573,12 +638,14 @@ ssh -p 52341 juan@192.168.70.99
 
 Opciones comunes de ssh:
 
-- -i: Especifica un archivo de clave privada para la conexión.
-- -N: No ejecuta ningún comando; solo establece la conexión (útil para túneles).
-- -T: Deshabilita la asignación de pseudo-terminal (para ejecutar comandos simples).
-- -f: Envía la conexión al background después de la autenticación (útil para túneles persistentes).
-- -v: Activa el modo de depuración (verboroso), útil para solucionar problemas de conexión.
-- -p puerto: Indica el número de puerto al que se debe conectar.
+| Parámetro | Definición |
+|-----------|------------|
+| `-i` | Especifica un archivo de clave privada para la conexión. |
+| `-N` | No ejecuta ningún comando; solo establece la conexión (útil para túneles). |
+| `-T` | Deshabilita la asignación de pseudo-terminal (para ejecutar comandos simples). |
+| `-f` | Envía la conexión al background después de la autenticación (útil para túneles persistentes). |
+| `-v` | Activa el modo de depuración (verboroso), útil para solucionar problemas de conexión. |
+| `-p puerto` | Indica el número de puerto al que se debe conectar. |
 
 ### scp
 
@@ -607,12 +674,14 @@ scp -r Ejemplos-scrpts vagrant@192.168.33.10:/tmp
 
 Opciones comunes de scp:
 
-- -r: Copia directorios de manera recursiva.
-- -P: Especifica el puerto SSH a utilizar.
-- -C: Habilita la compresión para acelerar la transferencia (útil para archivos grandes).
-- -i: Especifica un archivo de clave privada diferente para la autenticación.
-- -v: Activa el modo verboroso para obtener información adicional sobre la transferencia (útil para depuración).
-- -p: en scp preserva los permisos, marcas de tiempo y la propiedad del archivo o directorio al copiarlo al destino. Esto es útil cuando deseas mantener la integridad de los atributos del archivo original, como la hora de creación y modificación, permisos y el propietario.
+| Parámetro | Definición |
+|-----------|------------|
+| `-r` | Copia directorios de manera recursiva. |
+| `-P` | Especifica el puerto SSH a utilizar. |
+| `-C` | Habilita la compresión para acelerar la transferencia (útil para archivos grandes). |
+| `-i` | Especifica un archivo de clave privada diferente para la autenticación. |
+| `-v` | Activa el modo verboroso para obtener información adicional sobre la transferencia (útil para depuración). |
+| `-p` | Preserva los permisos, marcas de tiempo y la propiedad del archivo o directorio al copiarlo al destino. Esto es útil cuando deseas mantener la integridad de los atributos del archivo original, como la hora de creación y modificación, permisos y el propietario. |
 
 ### sftp
 
@@ -625,10 +694,12 @@ sftp -o Port=52341 juan@192.168.70.99
 
 Opciones comunes de SFTP:
 
-- -i ruta/a/clave: Usa una clave SSH específica para la autenticación.
-- -b archivo: Ejecuta un conjunto de comandos desde un archivo de texto.
-- -C: Activa la compresión durante la transferencia para archivos grandes
-- -o Port=52341: Especifica el puerto en el que el servidor SSH escucha las conexiones. Esto es útil cuando el servidor SSH no está en el puerto predeterminado (22).
+| Parámetro | Definición |
+|-----------|------------|
+| `-i ruta/a/clave` | Usa una clave SSH específica para la autenticación. |
+| `-b archivo` | Ejecuta un conjunto de comandos desde un archivo de texto. |
+| `-C` | Activa la compresión durante la transferencia para archivos grandes |
+| `-o Port=52341` | Especifica el puerto en el que el servidor SSH escucha las conexiones. Esto es útil cuando el servidor SSH no está en el puerto predeterminado (22). |
 
 ```bash
 usuarioA@debian:~$ sftp usuarioB@192.168.100.3
@@ -672,7 +743,7 @@ PS C:\Users\Carballeira> ssh -p 2220 bandit0@bandit.labs.overthewire.org
 bandit0@bandit.labs.overthewire.org's password: bandit0
 ```
 
-#### bandit0 --> bandit1
+#### bandit0 a bandit1
 
 ```bash
 bandit0@bandit:~$ ls -l
@@ -689,7 +760,7 @@ contribute to the OverTheWire community so we can keep these games free!
 The password you are looking for is: ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If
 ```
 
-#### bandit1 --> bandit2
+#### bandit1 a bandit2
 
 ```bash
 bandit1@bandit:~$ ls -l
@@ -703,7 +774,7 @@ bandit1@bandit:~$ cat $(pwd)/-
 263JGJPfgU6LtdEvgfWU1XP5yac29mFx
 ```
 
-#### bandit2 --> bandit3
+#### bandit2 a bandit3
 
 ```bash
 bandit2@bandit:~$ ls -l
@@ -729,7 +800,7 @@ bandit2@bandit:~$ cat s*
 MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
 ```
 
-#### bandit3 --> bandit4
+#### bandit3 a bandit4
 
 ```bash
 bandit3@bandit:~$ ls -la inhere/
@@ -751,7 +822,7 @@ bandit3@bandit:~$ find . -type f | grep -vE 'bash|profile' | xargs cat
 2WmrDFRmJIq3IPxneAaMGhap0pFhF3NJ
 ```
 
-#### bandit4 --> bandit5
+#### bandit4 a bandit5
 
 ```bash
 bandit4@bandit:~$ find . | grep inhere | xargs file
@@ -771,21 +842,21 @@ bandit4@bandit:~$ find inhere/ | xargs file | grep "07" | awk -F ":" '{print $1}
 4oQYVPkxZOOEOO5pTW81FB8j8lxXGUQw
 ```
 
-#### bandit5 --> bandit6
+#### bandit5 a bandit6
 
 ```bash
 bandit5@bandit:~$ find . -type f -readable ! -executable -size 1033c | xargs cat
 HWasnPhtq9AVKe0dmk45nxy20cvUa6EG
 ```
 
-#### bandit6 --> bandit7
+#### bandit6 a bandit7
 
 ```bash
 bandit6@bandit:~$ find / -type f -user bandit7 -group bandit6 -size 33c 2>/dev/null | xargs cat
 morbNTDkSW6jIlUc0ymOdMaLnOlFVAaj
 ```
 
-#### bandit7 --> bandit8
+#### bandit7 a bandit8
 
 ```bash
 bandit7@bandit:~$ ls -l
@@ -808,28 +879,28 @@ bandit7@bandit:~$ cat data.txt | grep millionth | sed 's/\t/ /g' | cut -d ' ' -f
 dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
 ```
 
-#### bandit8 --> bandit9
+#### bandit8 a bandit9
 
 ```bash
 bandit8@bandit:~$ sort data.txt | uniq -u
 4CKMh1JI91bUIZZPXDqGanal4xvAg0JM
 ```
 
-#### bandit8 --> bandit9
+#### bandit8 a bandit9
 
 ```bash
 bandit8@bandit:~$ sort data.txt | uniq -u
 4CKMh1JI91bUIZZPXDqGanal4xvAg0JM
 ```
 
-#### bandit9 --> bandit10
+#### bandit9 a bandit10
 
 ```bash
 bandit9@bandit:~$ strings data.txt | grep "===" | tail -n1 | awk '{print $NF}'
 FGUW5ilLVJrxX9kMYMmlN4MgbpfMiqey
 ```
 
-#### bandit10 --> bandit11
+#### bandit10 a bandit11
 
 ```bash
 bandit10@bandit:~$ cat data.txt
@@ -845,7 +916,7 @@ bandit10@bandit:~$ cat data.txt | base64 -d | awk '{print $NF}'
 dtR173fZKb0RRsDFSGsg2RWnpNVj3qRr
 ```
 
-#### bandit11 --> bandit12
+#### bandit11 a bandit12
 
 ```bash
 bandit11@bandit:~$ cat data.txt
@@ -858,7 +929,7 @@ bandit11@bandit:~$ cat data.txt | tr '[A-Za-z]' '[N-ZA-Mn-za-m]'
 The password is 7x16WNeHIi5YkIhWsfFIqoognUTyj9Q4
 ```
 
-#### bandit12 --> bandit13
+#### bandit12 a bandit13
 
 ```bash
 ┌──(kali㉿kali)-[/tmp]
@@ -918,7 +989,7 @@ ff02::2 ip6-allrouters
 - **`-ps`**: Muestra el contenido en formato hexadecimal "plain", es decir, solo los valores hexadecimales, sin direcciones ni representación ASCII.
 - **`-r`**: Realiza la operación inversa, es decir, convierte de vuelta un archivo o una cadena en formato hexadecimal a su formato original (en este caso, texto ASCII).
 
-_*Nota*_: Para este ejercicio hago uso de una máquina kali que me permita instalar mis propias herramientas y hacer uso de `7z` para descomprimir. Para podemos utilizar scp para poder tener en nuestra máquina la información.
+> **Nota:** Para este ejercicio hago uso de una máquina kali que me permita instalar mis propias herramientas y hacer uso de `7z` para descomprimir. Para podemos utilizar scp para poder tener en nuestra máquina la información.
 
 - `7z l data`: Muestra el tipo de archivo comprimido y que encierra en su interior.
 - `7z x data`: Permite descomprimir el archivo con independencia de que tipo de comprimido sea.
@@ -1094,7 +1165,7 @@ done
 The password is FO5dwFsc0cbaIiH0h8J2eUks2vdTDwAn
 ```
 
-#### bandit13 --> bandit14
+#### bandit13 a bandit14
 
 ```bash
 bandit13@bandit:~$ ls -l
@@ -1121,7 +1192,7 @@ bandit14@bandit:~$ cat /etc/bandit_pass/bandit14
 MU4VWeTyJk8ROof1qqmcBPaLh7lDCPvS
 ```
 
-#### bandit14 --> bandit15
+#### bandit14 a bandit15
 
 ```bash
 bandit14@bandit:~$ nc localhost 30000
@@ -1130,7 +1201,7 @@ Correct!
 8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo
 ```
 
-#### bandit15 --> bandit16
+#### bandit15 a bandit16
 
 ```bash
 bandit15@bandit:~$ ncat --ssl localhost 30001
@@ -1139,7 +1210,7 @@ Correct!
 kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx
 ```
 
-#### bandit16 --> bandit17
+#### bandit16 a bandit17
 
 ```bash
 #!/bin/bash
@@ -1220,7 +1291,7 @@ bandit17@bandit:~$ cat /etc/bandit_pass/bandit17
 EReVavePLFHtFlFsjn3hyzMlvSuSAcRD
 ```
 
-#### bandit17 --> bandit18
+#### bandit17 a bandit18
 
 ```bash
 bandit17@bandit:~$ diff passwords.old passwords.new
@@ -1230,7 +1301,7 @@ bandit17@bandit:~$ diff passwords.old passwords.new
 > x2gLTTjFwMOhQ8oWNbMN362QKxfRqGlO
 ```
 
-#### bandit18 --> bandit19
+#### bandit18 a bandit19
 
 ```bash
 PS C:\Users\Carballeira> ssh -p 2220 bandit18@bandit.labs.overthewire.org whoami
@@ -1267,7 +1338,7 @@ cat readme
 cGWpMaKXVwDUNgPAVJbWYuGHVn9zl3j8
 ```
 
-#### bandit19 --> bandit20
+#### bandit19 a bandit20
 
 ```bash
 bandit19@bandit:~$ ls -l
@@ -1281,7 +1352,7 @@ bash-5.2$ cat /etc/bandit_pass/bandit20
 0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
 ```
 
-#### bandit20 --> bandit21
+#### bandit20 a bandit21
 
 ```bash
 bandit20@bandit:~$ ./suconnect 4646
@@ -1297,7 +1368,7 @@ Connection received on 127.0.0.1 50026
 EeoULMCra2q0dSkYj561DX7s1CpBuOBt
 ```
 
-#### bandit21 --> bandit22
+#### bandit21 a bandit22
 
 ```bash
 bandit21@bandit:~$ ls /etc/cron.d
@@ -1315,7 +1386,7 @@ bandit21@bandit:~$ cat /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
 tRae0UfB9v0UzbCdn9cY0gQnds9GF58Q
 ```
 
-#### bandit22 --> bandit23
+#### bandit22 a bandit23
 
 ```bash
 bandit22@bandit:/etc/cron.d$ ls
@@ -1342,7 +1413,7 @@ bandit22@bandit:/etc/cron.d$ cat /tmp/8ca319486bfbbc3663ea0fbe81326349
 0Zf11ioIjMVN551jX3CmStKLYqjk54Ga
 ```
 
-#### bandit23 --> bandit24
+#### bandit23 a bandit24
 
 ```bash
 bandit23@bandit:~$ cat /usr/bin/cronjob_bandit24.sh
@@ -1414,7 +1485,7 @@ bandit23@bandit:/tmp/tmp.UlDpaEPKxu$ cat bandit24_password.log
 gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8
 ```
 
-#### bandit24 --> bandit25
+#### bandit24 a bandit25
 
 ```bash
 #!/bin/bash
@@ -1435,7 +1506,7 @@ Correct!
 The password of user bandit25 is iCi86ttT4KSNe1armKiwbQNmB3YJP3q4
 ```
 
-#### bandit25 --> bandit26
+#### bandit25 a bandit26
 
 ```bash
 bandit25@bandit:~$ ls
@@ -1505,7 +1576,7 @@ bandit26@bandit:~$ whoami
 bandit26
 ```
 
-#### bandit26 --> bandit27
+#### bandit26 a bandit27
 
 Sin conectarnos por ssh al usuario bandit26 ya que nos va a pasar lo mismo que antes podemos en la sesión anterior hacer lo siguiente.
 
@@ -1522,7 +1593,7 @@ bandit26@bandit:~$ ./bandit27-do cat /etc/bandit_pass/bandit27
 upsNCc7vzaRDx6oZC6GiR6ERwe1MowGB
 ```
 
-#### bandit27 --> bandit28
+#### bandit27 a bandit28
 
 ```bash
 bandit27@bandit:/tmp/tmp.Ky0vnVoOeu$ git clone ssh://bandit27-git@localhost/home/bandit27-git/repo
@@ -1549,7 +1620,7 @@ bandit27@bandit:/tmp/tmp.Ky0vnVoOeu/repo$ cat README
 The password to the next level is: Yz9IpL0sBcCeuG7m9uQFt8ZNpS4HZRcN
 ```
 
-#### bandit28 --> bandit29
+#### bandit28 a bandit29
 
 ```bash
 bandit28@bandit:/tmp/tmp.VhgYyypi14$ cd $(mktemp -d)
@@ -1671,7 +1742,7 @@ Some notes for level29 of bandit.
 - password: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7
 ```
 
-#### bandit29 --> bandit30
+#### bandit29 a bandit30
 
 ```bash
 bandit29@bandit:~$ cd $(mktemp -d)
@@ -1751,7 +1822,7 @@ Some notes for bandit30 of bandit.
 - password: qp30ex3VLz5MDG1n91YowTv4Q8l7CDZL
 ```
 
-#### bandit30 --> bandit31
+#### bandit30 a bandit31
 
 ```bash
 bandit30@bandit:~$ cd $(mktemp -d)
@@ -1773,7 +1844,7 @@ bandit30@bandit:/tmp/tmp.QSYxCrzTjW/repo$ git show secret
 fb5S2xb7bRyFmAvQYQGEqsbhVyJqhnDy
 ```
 
-#### bandit31 --> bandit32
+#### bandit31 a bandit32
 
 ```bash
 bandit31@bandit:~$ cd $(mktemp -d)
@@ -1877,7 +1948,7 @@ To ssh://localhost:2220/home/bandit31-git/repo
 error: failed to push some refs to 'ssh://localhost:2220/home/bandit31-git/repo'
 ```
 
-#### bandit32 --> bandit33
+#### bandit32 a bandit33
 
 ```bash
 WELCOME TO THE UPPERCASE SHELL

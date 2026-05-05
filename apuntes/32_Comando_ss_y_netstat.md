@@ -1,14 +1,32 @@
-# ss y netstat
+# Comando ss y netstat
 
-Tanto `ss` como `netstat` son comandos utilizados en sistemas Unix y Linux para mostrar información sobre conexiones de red, enrutamiento y estadísticas de red. Opciones comunes para ambas herramientas:
+## Índice
 
-- `-l`: Muestra sólo las conexiones que están escuchando (es decir, los sockets en estado de escucha).
-- `-a`: Muestra todas las conexiones, tanto las que están escuchando como las establecidas.
-- `-t`: Muestra sólo las conexiones TCP.
-- `-u`: Muestra sólo las conexiones UDP.
-- `-n`: Muestra las direcciones IP y los números de puerto en formato numérico (sin resolución de nombres).
+1. [Introducción a ss y netstat](#1-introducción-a-ss-y-netstat)
+2. [Ejemplos de uso](#2-ejemplos-de-uso)
 
-Podemos ver con ambos comandos la interfaz y puerto que ofrece el servicio (0.0.0.0 significa que se oferta en todas las interfaces de mi máquina en el puerto especificado), así como el servicio que lo expone.
+---
+
+## 1. Introducción a ss y netstat
+
+Tanto `ss` como `netstat` son comandos utilizados en sistemas Unix y Linux para mostrar información sobre conexiones de red, enrutamiento y estadísticas de red. 
+
+### Opciones comunes
+
+| Parámetro | Definición |
+|-----------|------------|
+| `-l` | Muestra sólo las conexiones que están en estado de escucha (`LISTEN`). |
+| `-a` | Muestra todas las conexiones, tanto las que están en escucha como las establecidas. |
+| `-t` | Muestra sólo las conexiones TCP. |
+| `-u` | Muestra sólo las conexiones UDP. |
+| `-n` | Muestra las direcciones IP y los números de puerto en formato numérico (sin resolución de nombres DNS). |
+| `-p` | Muestra el PID y el nombre del programa a cargo de la conexión (requiere privilegios). |
+
+---
+
+## 2. Ejemplos de uso
+
+Podemos ver con ambos comandos la interfaz y puerto que ofrece el servicio (por ejemplo, `0.0.0.0` significa que se oferta en todas las interfaces de la máquina en el puerto especificado), así como el programa que lo expone.
 
 ```bash
 vagrant@debian:~$ netstat -putan
@@ -27,7 +45,9 @@ udp        0      0 0.0.0.0:111             0.0.0.0:*                           
 udp        0      0 127.0.0.1:323           0.0.0.0:*                           -
 udp6       0      0 :::111                  :::*                                -
 udp6       0      0 ::1:323                 :::*                                -
+```
 
+```bash
 vagrant@debian:~$ ss -putan
 Netid                   State                    Recv-Q                   Send-Q                                     Local Address:Port                                     Peer Address:Port                   Process
 udp                     UNCONN                   0                        0                                                0.0.0.0:68                                            0.0.0.0:*

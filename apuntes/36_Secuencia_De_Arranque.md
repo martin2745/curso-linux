@@ -1,5 +1,15 @@
 # Secuencia de Arranque
 
+## Índice
+
+1. [Proceso de arranque de Linux](#1-proceso-de-arranque-de-linux)
+2. [Fases detalladas del arranque](#2-fases-detalladas-del-arranque)
+3. [Resumen del proceso](#3-resumen-del-proceso)
+
+---
+
+## 1. Proceso de arranque de Linux
+
 El proceso de arranque de una máquina linux se define a continuación en la siguiente imagen.
 
 - Inicialmente se enciende la computadora (BIOS/UEFI detecta y selecciona dispositivos).
@@ -8,7 +18,9 @@ El proceso de arranque de una máquina linux se define a continuación en la sig
 
 ![secuencia-arranque](../imagenes/recursos/arranque/secuencia-arranque.png)
 
-En mayor nivel de detalle podemos decir:
+---
+
+## 2. Fases detalladas del arranque
 
 El proceso de arranque de un sistema Linux se desarrolla en varias etapas consecutivas, desde el encendido hasta que el usuario puede iniciar sesión:
 
@@ -18,7 +30,7 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
 2. **BIOS/UEFI:**  
    El firmware inicializa el hardware, verifica que los dispositivos esenciales funcionen correctamente (como CPU, RAM y discos) y localiza un dispositivo de arranque. Aquí se realiza la detección básica de los componentes del sistema. Este proceso lo realiza el POST (power-on self-test) y las modificaciones de la BIOS se realizan a través del SETUP de la misma.
 
-   2.1. **BIOS**: Basic Input/Output System. Es un firmware en ROM (o PROM). El BIOS supone que los primeros 446 bytes en el primer dispositivo corresponden a la primera etapa del cargador de arranque (también llamada _código de arranque o bootstrap_). Los primeros 512 bytes de un dispositivo de almacenamiento se denominan MBR (Master Boot Record), en dispositivos de almacenamiento que utilizan el esquema de partición estándar de DOS y, además de la primera etapa del cargador de arranque, tambien contiene la tabla de particiones y la firma de arranque. En pocas palabras, el esquema de los primeros 512 bytes del MBR es:
+   **2.1. BIOS**: Basic Input/Output System. Es un firmware en ROM (o PROM). El BIOS supone que los primeros 446 bytes en el primer dispositivo corresponden a la primera etapa del cargador de arranque (también llamada _código de arranque o bootstrap_). Los primeros 512 bytes de un dispositivo de almacenamiento se denominan MBR (Master Boot Record), en dispositivos de almacenamiento que utilizan el esquema de partición estándar de DOS y, además de la primera etapa del cargador de arranque, tambien contiene la tabla de particiones y la firma de arranque. En pocas palabras, el esquema de los primeros 512 bytes del MBR es:
 
    - **Bytes 0–445 (446 bytes):** Código de arranque (bootstrap).
    - **Bytes 446–509 (64 bytes):** Tabla de particiones (hasta 4 entradas de 16 bytes).
@@ -27,12 +39,12 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
    En Linux decimos que el _cargador de arranque_ (bootloader) es el programa encargado de cargar el núcleo del sistema operativo o kernel en memoria RAM y transferirle el control, para ello interviene el _código de arranque o bootstrap_ que es un pequeño programa inicial que reside en el MBR y solo inicia el proceso de arranque localizando la partición activa donde está la imagen del sistema operativo. Para decidir que sistema operativo cargar en memoria RAM existe el _gestor de arranque_ (boot manager) suele ser la parte del cargador y tambien permite ralizar ciertas configuraciones antes de arrancar, normalmente a través de un menú. En la práctica, programas como GRUB en su segunda versión son los encargados de decidir que sistema operativo cargar. La configuración del _gestor de arranque_ está en la partición `/boot` la cual corresponde con `/dev/sda2`. A continuación tenemos una salida del comando `df -Th`.
 
    ```bash
-      # BIOS
-      /dev/sda1      ext4       50G  1.2G   48G   3% /
-      /dev/sda2      ext4      512M   60M  428M  13% /boot
+   # BIOS
+   /dev/sda1      ext4       50G  1.2G   48G   3% /
+   /dev/sda2      ext4      512M   60M  428M  13% /boot
    ```
 
-   2.2. **EFI/UEFI**: EFI/UEFI. Unified Extensible Firmware Interface.
+   **2.2. EFI/UEFI**: EFI/UEFI. Unified Extensible Firmware Interface.
 
    - Compatibilidad y emulación del BIOS.
    - Soporte para la Tabla de particiones GUID (GPT).
@@ -41,12 +53,12 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
    - Diseño modular.
    - Opción de “arranque seguro” (Secure Boot).
 
-   A diferencia de BIOS, UEFI presenta la partición _ESP_ (EFI System Partition), la cual contiene la información del _gestor de arranque_ o gestores, en este caso la partición ESP es la `/dev/sda2` que es la partición de arranque, es decir, anteriormente toda la información de arranque se almacenaba en el MBR pero debido a la mayor cantidad de información es necesaria una partición especial conocida como partición _ESP_. En caso de estar el \*_Secure boot_ activado, estos gestores tienen que estar firmados digitalmente para no tener problemas con malware. _Secure Boot_ es una función propia de UEFI que verifica la autenticidad del software al iniciar el equipo, asegurando que solo se cargue código confiable y protegiendo contra amenazas.
+   A diferencia de BIOS, UEFI presenta la partición _ESP_ (EFI System Partition), la cual contiene la información del _gestor de arranque_ o gestores, en este caso la partición ESP es la `/dev/sda2` que es la partición de arranque, es decir, anteriormente toda la información de arranque se almacenaba en el MBR pero debido a la mayor cantidad de información es necesaria una partición especial conocida como partición _ESP_. En caso de estar el _Secure boot_ activado, estos gestores tienen que estar firmados digitalmente para no tener problemas con malware. _Secure Boot_ es una función propia de UEFI que verifica la autenticidad del software al iniciar el equipo, asegurando que solo se cargue código confiable y protegiendo contra amenazas.
 
    ```bash
-      # UEFI
-      /dev/sda3      ext4     49G    12G   35G  26% /
-      /dev/sda2      vfat    512M   6,1M  506M   2% /boot/efi
+   # UEFI
+   /dev/sda3      ext4     49G    12G   35G  26% /
+   /dev/sda2      vfat    512M   6,1M  506M   2% /boot/efi
    ```
 
 3. **Detectar dispositivos:**  
@@ -73,13 +85,17 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
    - `multi-user.target`: modo multiusuario sin entorno gráfico.
    - `getty.target`: gestión de terminales de texto.
 
-   _*Nota*_: Estos targets
+   > **Nota:** Estos targets gestionan el nivel de ejecución del sistema.
 
 8. **Ejecución de scripts de inicio:**  
    `systemd` ejecuta scripts que inicializan servicios y preparan el entorno para los usuarios, incluyendo configuraciones como `/systemd-logind`, `/etc/profile` (global), y `~/.bashrc` (específica del usuario).
 
 9. **Inicio de sesión de usuarios:**  
    Tras completar todos los pasos anteriores, el sistema está listo para que los usuarios inicien sesión, ya sea mediante terminales locales o conexiones remotas como SSH.
+
+---
+
+## 3. Resumen del proceso
 
 A modo de resumen:
 

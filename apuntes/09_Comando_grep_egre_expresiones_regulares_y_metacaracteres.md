@@ -1,80 +1,103 @@
 # Comando grep, egrep, expresiones regulares y metacaracteres
 
+## Índice
+
+1. [Expresiones Regulares](#1-expresiones-regulares)
+   - [Caracteres Literales](#caracteres-literales)
+   - [Conjuntos de Caracteres](#conjuntos-de-caracteres)
+   - [Anclas de Línea](#anclas-de-línea)
+   - [Operadores de Cantidad](#operadores-de-cantidad)
+   - [Grupos](#grupos)
+   - [Caracteres de Escape](#caracteres-de-escape)
+   - [Repeticiones](#repeticiones)
+   - [Clases de Caracteres POSIX](#clases-de-caracteres-posix)
+2. [Uso de grep y egrep](#2-uso-de-grep-y-egrep)
+   - [Comando grep](#comando-grep)
+   - [Comando egrep](#comando-egrep)
+3. [Metacaracteres](#3-metacaracteres)
+
+---
+
 Las expresiones regulares (regex o regexp) son patrones utilizados para encontrar una determinada secuencia de caracteres dentro de una cadena de texto. Son ampliamente utilizadas en la búsqueda y manipulación de cadenas de texto en diversos contextos de programación y procesamiento de datos. A continuación, se presenta una guía básica de los elementos fundamentales de las expresiones regulares:
 
-## 1. Caracteres Literales
+---
 
-- **.**: Representa cualquier caracter excepto un salto de línea.
-- **[ ]**: Define un conjunto de caracteres permitidos en esa posición.
+## 1. Expresiones Regulares
 
-## 2. Conjuntos de Caracteres
+### Caracteres Literales
 
-- **[rfc]+**: 1 o más coincidencias de 'r', 'f' o 'c'.
-- **[a-z]+**: 1 o más letras minúsculas.
-- **[A-Z]+**: 1 o más letras mayúsculas.
-- **[a-Z]+**: 1 o más letras, tanto minúsculas como mayúsculas.
-- **[^rfc]+**: 1 o más caracteres que no sean 'r', 'f' o 'c'.
-- **[^a-z]?**: 0 o 1 caracter que no sea una letra minúscula.
-- **[^A-Z]?**: 0 o 1 caracter que no sea una letra mayúscula.
+- `.`: Representa cualquier caracter excepto un salto de línea.
+- `[ ]`: Define un conjunto de caracteres permitidos en esa posición.
 
-## 3. Anclas de Línea
+### Conjuntos de Caracteres
 
-- **^**: Indica el inicio de una línea.
-- **$**: Indica el final de una línea.
+- `[rfc]+`: 1 o más coincidencias de 'r', 'f' o 'c'.
+- `[a-z]+`: 1 o más letras minúsculas.
+- `[A-Z]+`: 1 o más letras mayúsculas.
+- `[a-Z]+`: 1 o más letras, tanto minúsculas como mayúsculas.
+- `[^rfc]+`: 1 o más caracteres que no sean 'r', 'f' o 'c'.
+- `[^a-z]?`: 0 o 1 caracter que no sea una letra minúscula.
+- `[^A-Z]?`: 0 o 1 caracter que no sea una letra mayúscula.
 
-## 4. Operadores de Cantidad
+### Anclas de Línea
 
-- **\***: 0 o más coincidencias del patrón anterior.
+- `^`: Indica el inicio de una línea.
+- `$`: Indica el final de una línea.
 
-## 5. Grupos
+### Operadores de Cantidad
 
-- **\( \)**: Permite agrupar expresiones regulares.
+- `*`: 0 o más coincidencias del patrón anterior.
 
-## 6. Caracteres de Escape
+### Grupos
 
-- **\\**: Escapa un metacarácter para que sea interpretado literalmente.
+- `( )`: Permite agrupar expresiones regulares.
 
-## 7. Repeticiones
+### Caracteres de Escape
 
-- **\{n\}**: Exactamente n coincidencias del patrón anterior.
-- **\{n,\}**: Como mínimo n coincidencias del patrón anterior.
-- **\{n,m\}**: `Entre` n y m coincidencias del patrón anterior.
+- `\`: Escapa un metacarácter para que sea interpretado literalmente.
 
-#### Ejemplos
+### Repeticiones
 
-- **[rfc]\***: Cero o más ocurrencias de 'r', 'f' o 'c'.
-- **\(rfc\)**: Agrupa los caracteres 'rfc'.
-- **\(r.c\)**: Agrupa un conjunto de tres caracteres donde el primero es 'r', el tercero es 'c' y el segundo puede ser cualquier caracter.
-- **\{2\}**: Exactamente 2 caracteres minúsculos.
-- **[a-z]\{2,\}**: Como mínimo 2 caracteres minúsculos.
-- **[a-z]\{2,4\}**: `Entre` 2 y 4 caracteres minúsculos.
+- `{n}`: Exactamente `n` coincidencias del patrón anterior.
+- `{n,}`: Como mínimo `n` coincidencias del patrón anterior.
+- `{n,m}`: Entre `n` y `m` coincidencias del patrón anterior.
 
-#### Clases de Caracteres POSIX
+> **Nota:** Ejemplos comunes de repeticiones y conjuntos:
+> - `[rfc]*`: Cero o más ocurrencias de 'r', 'f' o 'c'.
+> - `(rfc)`: Agrupa los caracteres 'rfc'.
+> - `(r.c)`: Agrupa un conjunto de tres caracteres donde el primero es 'r', el tercero es 'c' y el segundo puede ser cualquier caracter.
+> - `{2}`: Exactamente 2 caracteres minúsculos (requiere el conjunto previo como `[a-z]{2}`).
+> - `[a-z]{2,}`: Como mínimo 2 caracteres minúsculos.
+> - `[a-z]{2,4}`: Entre 2 y 4 caracteres minúsculos.
+
+### Clases de Caracteres POSIX
 
 **POSIX** (_Portable Operating System Interface for Unix_) es un **estándar** que define cómo deben comportarse los sistemas operativos tipo **Unix** (como Linux, macOS y BSD) para garantizar compatibilidad entre ellos.
 
-🔹 **Objetivo:** Permitir que los programas sean **portables** y funcionen en diferentes sistemas sin cambios importantes.  
-🔹 **Incluye:** Comandos, utilidades, programación en shell (`sh`), llamadas al sistema (API).  
-🔹 **Ejemplo:** Un script POSIX-compatible se ejecutará en Bash, Dash y otros shells sin problemas.
+- **Objetivo:** Permitir que los programas sean **portables** y funcionen en diferentes sistemas sin cambios importantes.  
+- **Incluye:** Comandos, utilidades, programación en shell (`sh`), llamadas al sistema (API).  
+- **Ejemplo:** Un script POSIX-compatible se ejecutará en Bash, Dash y otros shells sin problemas.
 
-Podemos concluir que **POSIX** es una norma que unifica el comportamiento de sistemas Unix para mejorar la compatibilidad y portabilidad.
+> **Recuerda:** POSIX es una norma que unifica el comportamiento de sistemas Unix para mejorar la compatibilidad y portabilidad.
 
 Las clases de caracteres POSIX son atajos para definir conjuntos de caracteres comunes:
 
-- **[:lower:]**: [a-z].
-- **[:upper:]**: [A-Z].
-- **[:alpha:]**: [A-Za-z] o [:lower:] + [:upper:].
-- **[:digit:]**: [0-9].
-- **[:xdigit:]**: [0-9A-Fa-f].
-- **[:alnum:]**: [0-9A-Za-z] o [:alpha:] + [:digit:].
-- **[:blank:]**: Caracteres de espacio y tabulado.
-- **[:cntrl:]**: Caracteres de control.
-- **[:punct:]**: Caracteres de puntuación, equivalente a los símbolos de puntuación comunes.
-- **[:graph:]**: [:alnum:] + [:punct:].
-- **[:print:]**: [:alnum:] + [:punct:] + espacio.
-- **[:space:]**: Caracteres de espacio en blanco, como tabuladores, saltos de línea, etc.
+- `[:lower:]`: `[a-z]`.
+- `[:upper:]`: `[A-Z]`.
+- `[:alpha:]`: `[A-Za-z]` o `[:lower:]` + `[:upper:]`.
+- `[:digit:]`: `[0-9]`.
+- `[:xdigit:]`: `[0-9A-Fa-f]`.
+- `[:alnum:]`: `[0-9A-Za-z]` o `[:alpha:]` + `[:digit:]`.
+- `[:blank:]`: Caracteres de espacio y tabulado.
+- `[:cntrl:]`: Caracteres de control.
+- `[:punct:]`: Caracteres de puntuación, equivalente a los símbolos de puntuación comunes.
+- `[:graph:]`: `[:alnum:]` + `[:punct:]`.
+- `[:print:]`: `[:alnum:]` + `[:punct:]` + espacio.
+- `[:space:]`: Caracteres de espacio en blanco, como tabuladores, saltos de línea, etc.
 
-## Uso de `grep` y `egrep`
+---
+
+## 2. Uso de `grep` y `egrep`
 
 `grep` es una herramienta de línea de comandos que busca patrones en archivos o en la salida de otros comandos. `egrep` es una versión extendida de `grep` que admite una sintaxis de expresiones regulares más amplia.
 
@@ -82,21 +105,22 @@ Las clases de caracteres POSIX son atajos para definir conjuntos de caracteres c
 grep [opciones] patrón [archivo...]
 ```
 
-- **Opciones Comunes**:
-  - _-v_: Invierte la búsqueda para mostrar líneas que NO coincidan.
-  - _-l_: Sólo indica el nombre del fichero donde ha encontrado alguna coincidencia.
-  - _-w_: El patrón tiene que ser una palabra independiente.
-  - _-n_: Muestra el número de línea junto con la coincidencia.
-  - _-i_: Ignora mayúsculas y minúsculas.
-  - _-c_: Muestra la contidad de lineas que cumplen con el patrón.
-  - _-r_: Busca en los ficheros de forma recursiva.
-  - _-e_: Permite encadenar varios patrones de busqueda.
-  - _-E_: Interprete el patrón de búsqueda como una expresión regular extendida (ERE), lo que significa que puedes utilizar una sintaxis más avanzada de expresiones regulares (también puede emplearse el comando _egrep_ en este caso).
-  - _-o_: Solo muestre las partes de las líneas que coinciden con el patrón de búsqueda, en lugar de toda la línea. Esto es útil cuando solo estás interesado en ver qué partes de las líneas coinciden con tu patrón.
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-v` | Invierte la búsqueda para mostrar líneas que NO coincidan. |
+| `-l` | Sólo indica el nombre del fichero donde ha encontrado alguna coincidencia. |
+| `-w` | El patrón tiene que ser una palabra independiente. |
+| `-n` | Muestra el número de línea junto con la coincidencia. |
+| `-i` | Ignora mayúsculas y minúsculas. |
+| `-c` | Muestra la cantidad de líneas que cumplen con el patrón. |
+| `-r` | Busca en los ficheros de forma recursiva. |
+| `-e` | Permite encadenar varios patrones de búsqueda. |
+| `-E` | Interpreta el patrón como una expresión regular extendida (equivalente a usar `egrep`). |
+| `-o` | Muestra solo las partes de las líneas que coinciden con el patrón de búsqueda. |
 
 ### Comando `grep`
 
-- Buscar una palabra en un archivo:
+A continuación se muestran ejemplos para buscar palabras en un archivo y la salida de otros comandos:
 
 ```bash
 root@debian:~# netstat -putan | grep tcp
@@ -143,7 +167,11 @@ tcp        0     52 192.168.33.11:22        192.168.33.1:54291      ESTABLISHED 
 udp        0      0 127.0.0.1:323           0.0.0.0:*                           598/chronyd
 udp        0      0 0.0.0.0:68              0.0.0.0:*                           843/dhclient
 udp        0      0 0.0.0.0:111             0.0.0.0:*                           1/init
+```
 
+Ejemplos extrayendo exclusivamente el texto que coincide:
+
+```bash
 root@debian:~# grep -o vagrant /etc/passwd
 vagrant
 vagrant
@@ -158,6 +186,8 @@ root@debian:~# ip a | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[
 127.0.0.1/8 10.0.2.15/24 192.168.33.11/24
 ```
 
+> **Nota:** Al usar `-oE`, se combina `-o` (imprimir solo coincidencias) con `-E` (expresiones regulares extendidas) permitiendo construir filtros potentes para extraer, por ejemplo, direcciones IP.
+
 ### Comando `egrep`
 
 `egrep` es una versión más potente de `grep` que admite una sintaxis extendida de expresiones regulares sin necesidad de escapar ciertos caracteres.
@@ -166,59 +196,73 @@ root@debian:~# ip a | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[
 egrep [opciones] patrón [archivo...]
 ```
 
-#### Ejemplos de `egrep`
-
-- Buscar múltiples palabras en un archivo:
+Para buscar múltiples palabras en un archivo utilizando un OR lógico:
 
 ```bash
 egrep "patrón1|patrón2" archivo.txt
 ```
 
-- Buscar una palabra ignorando mayúsculas y minúsculas:
+Para buscar una palabra ignorando mayúsculas y minúsculas:
 
 ```bash
 egrep -i "patrón" archivo.txt
 ```
 
-## Metacaracteres
+---
 
-Son caracteres con significado especial que representan clases de caracteres o repeticiones.
+## 3. Metacaracteres
 
-- Algunos metacaracteres comunes incluyen:
-  - `.`: coincide con cualquier carácter excepto nueva línea.
-  - `*`: coincide con cero o más repeticiones del elemento anterior.
-  - `+`: coincide con una o más repeticiones del elemento anterior.
-  - `?`: coincide con cero o una repetición del elemento anterior.
-  - `[ ]`: coincide con cualquier carácter dentro del conjunto especificado.
-  - `^`: coincide con el inicio de una línea.
-  - `$`: coincide con el final de una línea.
+Son caracteres con significado especial que representan clases de caracteres o repeticiones. A diferencia de las expresiones regulares de `grep`, los metacaracteres del intérprete de comandos o Shell (Wildcards) se aplican fundamentalmente a los nombres de los ficheros y rutas.
 
-1. Asterisco (\*)
+- `*`: Coincide con cero o más repeticiones de cualquier elemento.
+- `?`: Coincide con cualquier carácter individual.
+- `[ ]`: Coincide con cualquier carácter dentro del conjunto especificado.
+- `|`: La tubería (pipe) pasa la salida estándar del comando izquierdo a la entrada del comando derecho.
+- `;`: El punto y coma permite ejecutar comandos secuencialmente.
+- `&`: Ejecuta un comando en segundo plano.
 
-   - `ls *.txt`: Lista todos los archivos con extensión ".txt" en el directorio actual.
-   - `cp file* directory/`: Copia todos los archivos cuyo nombre comience con "file" al directorio especificado.
+Ejemplos prácticos:
 
-2. Signo de interrogación (?)
+1. **Asterisco** (`*`):
 
-   - `ls file?.txt`: Lista archivos como "file1.txt", "fileA.txt", pero no "file10.txt".
-   - `rm file?.txt`: Elimina archivos como "file1.txt", "fileA.txt", pero no "file10.txt".
+```bash
+ls *.txt
+cp file* directory/
+```
 
-3. Corchetes ([])
+2. **Signo de interrogación** (`?`):
 
-   - `ls [aeiou]*`: Lista archivos cuyos nombres comiencen con una vocal, es decir, puede ser solo un caracter igual a una de las vocales indicadas.
-   - `rm [0-9]*`: Elimina archivos cuyos nombres comiencen con un dígito.
+```bash
+ls file?.txt
+rm file?.txt
+```
 
-4. Barra vertical (|)
+3. **Corchetes** (`[ ]`):
 
-   - `ls -l | grep filename`: Muestra detalles de archivos que contienen "filename".
-   - `cat file.txt | sed 's/old/new/g'`: Reemplaza todas las instancias de "old" con "new" en el contenido del archivo.
+```bash
+ls [aeiou]*
+rm [0-9]*
+```
 
-5. Punto y coma ( ; )
+4. **Barra vertical** (`|`):
 
-   - `mkdir folder1 ; cp file.txt folder1/`: Crea un directorio y copia un archivo en una sola línea.
-   - `rm *.txt ; rm *.csv`: Elimina todos los archivos con extensión ".txt" y ".csv".
+```bash
+ls -l | grep filename
+cat file.txt | sed 's/old/new/g'
+```
 
-6. Ampersand (&)
+5. **Punto y coma** (`;`):
 
-   - `./script.sh &`: Ejecuta un script en segundo plano.
-   - `make &`: Compila un programa en segundo plano mientras se realizan otras tareas en el terminal.
+```bash
+mkdir folder1 ; cp file.txt folder1/
+rm *.txt ; rm *.csv
+```
+
+6. **Ampersand** (`&`):
+
+```bash
+./script.sh &
+make &
+```
+
+> **Advertencia:** El uso descuidado de metacaracteres como `*` junto con comandos destructivos como `rm` puede ocasionar pérdida de datos irremediable (ej: `rm *` borrará todos los archivos en el directorio actual).

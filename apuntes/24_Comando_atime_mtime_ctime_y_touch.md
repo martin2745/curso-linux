@@ -1,35 +1,33 @@
 # Comando atime, mtime, ctime y touch
 
-- **atime (Access Time)**: Indica la última vez que se accedió al contenido del archivo.
-- **mtime (Modified Time)**: Representa la última vez que el contenido del archivo fue modificado.
-- **ctime (Change Time)**: Refleja el tiempo en que se cambiaron los metadatos del archivo, es decir, a nivel de permisos, propietario. Podemos verlo como cambios a nivel de inodo.
+## Índice
 
-_*Nota: El inodo en Linux es una estructura de datos que almacena información importante sobre archivos y directorios en un sistema de archivos. Cada archivo y directorio en un sistema de archivos Linux está asociado con un inodo único. El inodo contiene metadatos sobre el archivo o directorio, como permisos, tamaño, propietario, tipo de archivo, fechas de acceso, modificación y cambio, y punteros a bloques de datos que contienen el contenido real del archivo o la lista de nombres de archivos en un directorio. Los inodos son cruciales para la gestión y organización de los archivos en el sistema de archivos, permitiendo al sistema operativo acceder eficientemente a la información y los datos de los archivos.*_
+1. [Tiempos en archivos (atime, mtime, ctime)](#1-tiempos-en-archivos-atime-mtime-ctime)
+2. [Comando stat](#2-comando-stat)
+3. [Listar según tiempo de modificación (ls)](#3-listar-según-tiempo-de-modificación-ls)
+4. [Comando touch](#4-comando-touch)
+
+---
+
+## 1. Tiempos en archivos (atime, mtime, ctime)
+
+En sistemas de archivos de Linux, todos los archivos o directorios mantienen un registro del tiempo de tres eventos clave:
+
+- **`atime` (Access Time)**: Indica la última vez que se accedió (leyó) al contenido del archivo.
+- **`mtime` (Modified Time)**: Representa la última vez que el contenido interno del archivo fue modificado (edición de texto, por ejemplo).
+- **`ctime` (Change Time)**: Refleja el tiempo en que se cambiaron los **metadatos** del archivo (cambio a nivel de permisos, propietario, enlace, etc.). Podemos verlo como cambios a nivel de inodo.
+
+> **Nota:** El inodo en Linux es una estructura de datos vital. Cada archivo y directorio está asociado con un inodo único que contiene sus metadatos (permisos, propietario, tipo, fechas de acceso/modificación, y punteros a los bloques de datos). Quedarse sin inodos disponibles puede impedir la creación de nuevos archivos aunque haya espacio en el disco duro.
+
+---
+
+## 2. Comando stat
+
+El comando `stat` permite visualizar el estado completo de un archivo, incluyendo detalladamente sus atributos y fechas.
+
+Ejemplo analizando la evolución del tiempo de un fichero tras modificar sus permisos:
 
 ```bash
-usuario@debian:/tmp/temporal$ stat fichero1.txt
-  Fichero: fichero1.txt
-  Tamaño: 5             Bloques: 8          Bloque E/S: 4096   fichero regular
-Device: 8,1     Inode: 1700631     Links: 1
-Acceso: (0644/-rw-r--r--)  Uid: ( 1000/  usuario)   Gid: ( 1000/  usuario)
-      Acceso: 2024-04-13 09:23:48.618999425 +0200
-Modificación: 2024-04-13 08:52:06.000000000 +0200
-      Cambio: 2024-04-13 09:23:48.618999425 +0200
-    Creación: 2024-04-13 09:23:48.618999425 +0200
-
-usuario@debian:/tmp/temporal$ cat fichero1.txt
-Hola
-usuario@debian:/tmp/temporal$ stat fichero1.txt
-  Fichero: fichero1.txt
-  Tamaño: 5             Bloques: 8          Bloque E/S: 4096   fichero regular
-Device: 8,1     Inode: 1700631     Links: 1
-Acceso: (0644/-rw-r--r--)  Uid: ( 1000/  usuario)   Gid: ( 1000/  usuario)
-      Acceso: 2024-04-13 10:12:22.169098495 +0200
-Modificación: 2024-04-13 08:52:06.000000000 +0200
-      Cambio: 2024-04-13 09:23:48.618999425 +0200
-    Creación: 2024-04-13 09:23:48.618999425 +0200
-
-usuario@debian:/tmp/temporal$ echo "Adios" >> fichero1.txt
 usuario@debian:/tmp/temporal$ stat fichero1.txt
   Fichero: fichero1.txt
   Tamaño: 11            Bloques: 8          Bloque E/S: 4096   fichero regular
@@ -42,111 +40,74 @@ Modificación: 2024-04-13 10:12:36.010174997 +0200
 
 usuario@debian:/tmp/temporal$ chmod 777 fichero1.txt
 usuario@debian:/tmp/temporal$ stat fichero1.txt
-  Fichero: fichero1.txt
-  Tamaño: 11            Bloques: 8          Bloque E/S: 4096   fichero regular
-Device: 8,1     Inode: 1700631     Links: 1
-Acceso: (0777/-rwxrwxrwx)  Uid: ( 1000/  usuario)   Gid: ( 1000/  usuario)
-      Acceso: 2024-04-13 10:12:22.169098495 +0200
-Modificación: 2024-04-13 10:12:36.010174997 +0200
-      Cambio: 2024-04-13 10:12:59.494427849 +0200
-    Creación: 2024-04-13 09:23:48.618999425 +0200
+...
+      Cambio: 2024-04-13 10:12:59.494427849 +0200  <-- Se actualiza el ctime al cambiar permisos
+...
 ```
 
-Para ver por separado con stat cada parametro tenemos las opciones:
+Para ver por separado los parámetros de fecha de forma filtrada en `stat`, tenemos las opciones de formateo de salida de cadena (`-c`):
 
-- **x**: atime
-- **y**: mtime
-- **z**: ctime
+| Parámetro | Significado |
+|-----------|-------------|
+| `%x`      | Tiempo de último acceso (`atime`). |
+| `%y`      | Tiempo de última modificación de contenido (`mtime`). |
+| `%z`      | Tiempo de último cambio de metadatos (`ctime`). |
+| `%n`      | Muestra el nombre del archivo. |
 
 ```bash
-usuario@debian:/tmp/temporal$ stat fichero1.txt
-  Fichero: fichero1.txt
-  Tamaño: 11            Bloques: 8          Bloque E/S: 4096   fichero regular
-Device: 8,1     Inode: 1700631     Links: 1
-Acceso: (0777/-rwxrwxrwx)  Uid: ( 1000/  usuario)   Gid: ( 1000/  usuario)
-      Acceso: 2024-04-13 10:12:22.169098495 +0200
-Modificación: 2024-04-13 10:12:36.010174997 +0200
-      Cambio: 2024-04-13 10:12:59.494427849 +0200
-    Creación: 2024-04-13 09:23:48.618999425 +0200
-
-usuario@debian:/tmp/temporal$ stat -c '%x' fichero1.txt
-2024-04-13 10:12:22.169098495 +0200
-
-usuario@debian:/tmp/temporal$ stat -c '%y' fichero1.txt
-2024-04-13 10:12:36.010174997 +0200
-
-usuario@debian:/tmp/temporal$ stat -c '%z' fichero1.txt
-2024-04-13 10:12:59.494427849 +0200
-
 usuario@debian:/tmp/temporal$ stat -c '%z, %n' fichero1.txt
 2024-04-13 10:12:59.494427849 +0200, fichero1.txt
 ```
 
-Tambien se puede ordenar por tiempo con ls. `ls --time=ctime`
+---
 
-```bash
-usuario@debian:/tmp/temporal$ ls --time=atime
-usuario@debian:/tmp/temporal$ ls -u
+## 3. Listar según tiempo de modificación (ls)
 
-usuario@debian:/tmp/temporal$ ls --time=mtime
-usuario@debian:/tmp/temporal$ ls -t
+También se puede ordenar por los diferentes tiempos usando el comando de listado `ls`.
 
-usuario@debian:/tmp/temporal$ ls --time=ctime
-usuario@debian:/tmp/temporal$ ls -c
-```
+| Comando | Equivalente corto | Funcionalidad |
+|---------|-------------------|---------------|
+| `ls --time=atime` | `ls -u` | Ordena archivos por fecha de último **acceso** (`atime`). |
+| `ls --time=mtime` | `ls -t` | Ordena archivos por fecha de **modificación** de datos (`mtime`). |
+| `ls --time=ctime` | `ls -c` | Ordena archivos por fecha de **cambio** de metadatos (`ctime`). |
 
-`touch` en Linux es un comando que se utiliza para crear archivos vacíos o actualizar las marcas de tiempo de archivos existentes. Se usa principalmente para crear archivos nuevos o actualizar las fechas de acceso y modificación de archivos existentes sin cambiar su contenido.
--a Cambia la fecha de acceso del archivo
--m Cambia la fecha de modificación
--r archivo Toma la fecha del archivo como referencia
--t time Valor de la fecha en decimal. Formato: _aaaaMMddHHmm.ss_
+> **Recuerda:** Combinar estos flags de ordenación con `ls -l` mostrará visualmente las fechas y el orden. (Ej: `ls -lt`).
 
+---
+
+## 4. Comando touch
+
+El comando `touch` se utiliza en Linux no solo para crear archivos vacíos si no existen, sino principalmente para actualizar intencionalmente las marcas de tiempo de los archivos existentes (su "atime" y "mtime") sin alterar el contenido del archivo.
+
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-a`      | Cambia únicamente la fecha de acceso (`atime`). |
+| `-m`      | Cambia únicamente la fecha de modificación (`mtime`). |
+| `-r archivo` | Toma la fecha del archivo referenciado y se la copia al objetivo. |
+| `--date=cadena` | Permite introducir una fecha formateada de manera textual (ej: '2023-04-29 17:53'). |
+| `-t time` | Permite dar un valor numérico explícito en formato `aaaaMMddHHmm.ss`. |
+
+**Ejemplo 1: Creación de un archivo vacío**
 ```bash
 usuario@debian:/tmp/temporal$ touch fichero.txt
 usuario@debian:/tmp/temporal$ ls -l fichero.txt
 -rw-r--r-- 1 usuario usuario 0 abr 13 11:01 fichero.txt
-usuario@debian:/tmp/temporal$ stat fichero.txt
-  Fichero: fichero.txt
-  Tamaño: 0             Bloques: 0          Bloque E/S: 4096   fichero regular vacío
-Device: 8,1     Inode: 1700631     Links: 1
-Acceso: (0644/-rw-r--r--)  Uid: ( 1000/  usuario)   Gid: ( 1000/  usuario)
-      Acceso: 2024-04-13 11:01:20.991071163 +0200
-Modificación: 2024-04-13 11:01:20.991071163 +0200
-      Cambio: 2024-04-13 11:01:20.991071163 +0200
-    Creación: 2024-04-13 11:01:20.987073163 +0200
+```
 
+**Ejemplo 2: Modificar todas las fechas al pasado simultáneamente**
+```bash
 usuario@debian:/tmp/temporal$ touch --date='2022-03-29 17:53:03' fichero.txt
 usuario@debian:/tmp/temporal$ ls -l fichero.txt
 -rw-r--r-- 1 usuario usuario 0 mar 29  2022 fichero.txt
-usuario@debian:/tmp/temporal$ stat fichero.txt
-  Fichero: fichero.txt
-  Tamaño: 0             Bloques: 0          Bloque E/S: 4096   fichero regular vacío
-Device: 8,1     Inode: 1700631     Links: 1
-Acceso: (0644/-rw-r--r--)  Uid: ( 1000/  usuario)   Gid: ( 1000/  usuario)
-      Acceso: 2022-03-29 17:53:03.000000000 +0200
-Modificación: 2022-03-29 17:53:03.000000000 +0200
-      Cambio: 2024-04-13 11:01:36.831147160 +0200
-    Creación: 2024-04-13 11:01:20.987073163 +0200
+```
 
+**Ejemplo 3: Modificando únicamente el `atime` al pasado**
+```bash
 usuario@debian:/tmp/temporal$ touch -a --date='2023-04-29 17:53:03' fichero.txt
 usuario@debian:/tmp/temporal$ stat fichero.txt
-  Fichero: fichero.txt
-  Tamaño: 0             Bloques: 0          Bloque E/S: 4096   fichero regular vacío
-Device: 8,1     Inode: 1700631     Links: 1
-Acceso: (0644/-rw-r--r--)  Uid: ( 1000/  usuario)   Gid: ( 1000/  usuario)
+...
       Acceso: 2023-04-29 17:53:03.000000000 +0200
 Modificación: 2022-03-29 17:53:03.000000000 +0200
-      Cambio: 2024-04-13 11:02:06.188461159 +0200
-    Creación: 2024-04-13 11:01:20.987073163 +0200
-
-usuario@debian:/tmp/temporal$ touch -m --date='2023-04-29 17:53:03' fichero.txt
-usuario@debian:/tmp/temporal$ stat fichero.txt
-  Fichero: fichero.txt
-  Tamaño: 0             Bloques: 0          Bloque E/S: 4096   fichero regular vacío
-Device: 8,1     Inode: 1700631     Links: 1
-Acceso: (0644/-rw-r--r--)  Uid: ( 1000/  usuario)   Gid: ( 1000/  usuario)
-      Acceso: 2023-04-29 17:53:03.000000000 +0200
-Modificación: 2023-04-29 17:53:03.000000000 +0200
-      Cambio: 2024-04-13 11:02:33.170963160 +0200
-    Creación: 2024-04-13 11:01:20.987073163 +0200
 ```
+
+> **Importante:** Fíjate que cualquier ejecución de `touch` siempre acabará cambiando internamente la fecha `ctime`, porque alterar el `atime` o `mtime` ya supone de por sí una manipulación de los metadatos.

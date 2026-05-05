@@ -1,5 +1,52 @@
 # Gestion de usuarios y permisos
 
+## Índice
+
+1. [Archivos de configuración](#archivos-de-configuracion)
+2. [su y sudo](#su-y-sudo)
+3. [visudo y sudoers](#visudo-y-sudoers)
+      3.0.1. [id, groups, passwd](#id-groups-passwd)
+4. [useradd, usermod, userdel, groupadd, groupdel](#useradd-usermod-userdel-groupadd-groupdel)
+      4.0.2. [chfn, chsh](#chfn-chsh)
+      4.0.3. [/etc/nologin](#etcnologin)
+      4.0.4. [gpasswd](#gpasswd)
+      4.0.5. [ulimit](#ulimit)
+5. [Campo tipo](#campo-tipo)
+6. [Permisos](#permisos)
+7. [Máscara de permisos en linux](#mascara-de-permisos-en-linux)
+   7.1. [Comando `umask`](#comando-`umask`)
+   7.2. [`umask -S`](#`umask--s`)
+   7.3. [Diferencia en la Asignación de Permisos entre Directorios y Archivos](#diferencia-en-la-asignacion-de-permisos-entre-directorios-y-archivos)
+8. [Permisos especiales: Setuid, Setgid, Sticky Bit](#permisos-especiales-setuid-setgid-sticky-bit)
+   8.1. [Setuid (Set User ID - SUID)](#setuid-(set-user-id---suid))
+   8.2. [Setgid (Set Group ID - SGID)](#setgid-(set-group-id---sgid))
+   8.3. [Sticky bit](#sticky-bit)
+   8.4. [Comando install](#comando-install)
+      8.4.1. [Usos Comunes:](#usos-comunes)
+      8.4.2. [Ejemplo Completo: Despliegue de un Script](#ejemplo-completo-despliegue-de-un-script)
+   8.5. [`chattr` y `lsattr`](#`chattr`-y-`lsattr`)
+9. [ACLs](#acls)
+   9.1. [Soporte de ACL en el sistema de ficheros](#soporte-de-acl-en-el-sistema-de-ficheros)
+   9.2. [Prácticas](#practicas)
+      9.2.1. [Práctica 1: Conflicto de permisos ugo-ACL (Ver Preferencia de permisos (de mayor a menor))](#practica-1-conflicto-de-permisos-ugo-acl-(ver-preferencia-de-permisos-(de-mayor-a-menor)))
+      9.2.2. [Práctica 2: Conflicto permisos ugo-ACL (Ver Preferencia de permisos (de mayor a menor))](#practica-2-conflicto-permisos-ugo-acl-(ver-preferencia-de-permisos-(de-mayor-a-menor)))
+      9.2.3. [Ejemplos de asignación de ACLs](#ejemplos-de-asignacion-de-acls)
+   9.3. [Explicación con ejemplos paso por paso de ACLs](#explicacion-con-ejemplos-paso-por-paso-de-acls)
+      9.3.1. [Escenario de partida](#escenario-de-partida)
+      9.3.2. [Otorgando permisos a usuarios y grupos](#otorgando-permisos-a-usuarios-y-grupos)
+      9.3.3. [Eliminando ACLs](#eliminando-acls)
+      9.3.4. [ACLs por defecto para archivos y directorios](#acls-por-defecto-para-archivos-y-directorios)
+      9.3.5. [Usuarios y grupos](#usuarios-y-grupos)
+      9.3.6. [Mask: ¿Qué es la máscara de permisos en ACLs?](#mask-¿que-es-la-mascara-de-permisos-en-acls?)
+   9.4. [Notas sobre ACLs](#notas-sobre-acls)
+10. [Capabilities](#capabilities)
+   10.1. [Tipos de capabilities](#tipos-de-capabilities)
+11. [Comandos para ver a usuarios conectados en el sistema](#comandos-para-ver-a-usuarios-conectados-en-el-sistema)
+12. [Comando loginctl](#comando-loginctl)
+
+---
+
+
 ## Archivos de configuración
 
 Los archivos de configuración importantes en sistemas Linux referentes a la gestión de usuarios y grupos son:
@@ -137,7 +184,7 @@ root@debian:~# groups
 root
 ```
 
-_*Nota*_: Nótese que el grupo root tiene el id 0.
+> **Nota:** Nótese que el grupo root tiene el id 0.
 
 **passwd**: Permite modificar la contraseña. Los parametros destacables son:
 
@@ -182,11 +229,12 @@ usuario@debian:~$ tail -1 /etc/passwd
 user2:x:1012:1012::/home/user2:/bin/bash
 ```
 
-_*Nota: Si queremos que un usuario tenga un grupo principal con el mismo nombre, no hay que indicarlo con la opción -g, es automático.*_
-_*Nota2: Podemos indicar el algoritmo de cifrado de la contraseña si queremos.*_
-_*Nota3: Con el parametro `-m` estamos indicando que se copie la estructura de `/etc/skel` para el nuevo usuario.*_
-_*Nota4: Con el parametro `-M` estamos indicando que el usuario no ha de tener un `/home` para el. A pesar de ello en el `/etc/passwd` si va a figurar como que existe la ruta.*_ -_Nota5: Con los parametros `-u` podemos dar un uid específico, `-g` un gid específico y con `-l` cambiar el nombre del usuario._\_
-_*Nota5*_: Si quiero crear un usuario cuya cuenta caduque en un día concreto puedo hacerlo de la siguiente forma: _root@debian:~# useradd -m -p $(mkpasswd 'abc123.') -e 2025-05-10 usuario2_.
+> **Nota:** Si queremos que un usuario tenga un grupo principal con el mismo nombre, no hay que indicarlo con la opción -g, es automático.
+> **Nota 2:** Podemos indicar el algoritmo de cifrado de la contraseña si queremos.
+> **Nota 3:** Con el parametro `-m` estamos indicando que se copie la estructura de `/etc/skel` para el nuevo usuario.
+> **Nota 4:** Con el parametro `-M` estamos indicando que el usuario no ha de tener un `/home` para el. A pesar de ello en el `/etc/passwd` si va a figurar como que existe la ruta.
+> **Nota 5:** Con los parametros `-u` podemos dar un uid específico, `-g` un gid específico y con `-l` cambiar el nombre del usuario.
+> **Nota 6:** Si quiero crear un usuario cuya cuenta caduque en un día concreto puedo hacerlo de la siguiente forma: `root@debian:~# useradd -m -p $(mkpasswd 'abc123.') -e 2025-05-10 usuario2`.
 
 ```bash
 usuario@debian:~/Desktop/scripts/ejercicios/ej2$ sudo useradd -m -d /home/alumno -p $(mkpasswd 'abc123.') -s "/bin/bash" alumno
@@ -216,7 +264,7 @@ mysql:x:137:
 alumno:x:1001:
 ```
 
-_*Nota*_: Mótese que hay varios usuarios con el shell como `/bin/false` ya que están pensados para no conectarse al sistema sino ser los propios usuarios de los servicios y no precisan conectarse ni interpretar comandos. Actualmente es más común encontrarse con `/sbin/nologin`.
+> **Nota:** Mótese que hay varios usuarios con el shell como `/bin/false` ya que están pensados para no conectarse al sistema sino ser los propios usuarios de los servicios y no precisan conectarse ni interpretar comandos. Actualmente es más común encontrarse con `/sbin/nologin`.
 
 **usermod**: Permite modificar las propiedades de un usuario existente en el sistema.
 
@@ -230,7 +278,7 @@ usermod -d /home/juan_nuevo -s /bin/zsh juan
 userdel -r juan
 ```
 
-- _*Nota Este comando eliminaría el usuario "juan" del sistema, junto con su directorio de inicio (`-r`), así como cualquier archivo o directorio relacionado con el usuario.*_
+> **Nota:** Este comando eliminaría el usuario "juan" del sistema, junto con su directorio de inicio (`-r`), así como cualquier archivo o directorio relacionado con el usuario.
 
 **groupadd**: Permite crear un nuevo grupo en el sistema.
 
@@ -250,7 +298,7 @@ groupdel dam
 **chfn**: Permite editar los datos personales del usuario.
 **chsh**: Permite editar la shell del usuario.
 
-_*Nota*_: Supongamos que creamos un usuario y queremos que en el próximo inicio de sesión, el usuario modifique su password. Para ello podemos usar los comandos `chage -d 0 usuario` o `passwd -e usuario`.
+> **Nota:** Supongamos que creamos un usuario y queremos que en el próximo inicio de sesión, el usuario modifique su password. Para ello podemos usar los comandos `chage -d 0 usuario` o `passwd -e usuario`.
 
 Como aportación, el comando _passwd_ permite modificar la contraseña a un usuario y parámetros y usos interesantes son los siguientes:
 
@@ -302,7 +350,7 @@ Este comando da control sobre los recursos que dispone el shell y los procesos l
 - _-n_: Cantidad máxima de archivos abiertos.
 - _-u_: Cantidad máxima de procesos por usuario.
 
-_*Nota*_: Se pueden establecer límites blandos y duros, en el caso de los blandos nos saldrá una alerta de advertencia diciendo que excedemos dicho límite.
+> **Nota:** Se pueden establecer límites blandos y duros, en el caso de los blandos nos saldrá una alerta de advertencia diciendo que excedemos dicho límite.
 
 ## Campo tipo
 
@@ -586,7 +634,7 @@ usuario@debian:~$ tree /tmp/sticky/
 0 directories, 0 files
 ```
 
-_*Nota*_: Tambien podríamos hacerlo con `chmod +t`.
+> **Nota:** Tambien podríamos hacerlo con `chmod +t`.
 
 ### Comando install
 
@@ -724,7 +772,7 @@ En caso de conflicto entre el grupo propietario (g de ugo)/otros grupos distinto
 
 La máscara en las ACL (Listas de Control de Acceso) de Linux es un concepto fundamental que a menudo causa confusión, pero es muy útil una vez que se entiende. Puedes imaginarla como un límite de seguridad o un techo.
 
-_Nota_: La máscara NO afecta al propietario del fichero ( user:: ) ni a los 'otros' ( other:: ). Solo afecta a los grupos y usuarios específicos añadidos vía ACL.
+> **Nota:** La máscara NO afecta al propietario del fichero ( user:: ) ni a los 'otros' ( other:: ). Solo afecta a los grupos y usuarios específicos añadidos vía ACL.
 
 ### Soporte de ACL en el sistema de ficheros
 
@@ -830,7 +878,7 @@ ana@debian:/revisar$ touch prueba.txt
 touch: no se puede efectuar `touch' sobre 'prueba.txt': Permiso denegado
 ```
 
-_Nota_: En el momento que aplicamos un ACL y vemos los permisos vemos que tenemos un símbolo + indicando la presencia de ACLs.
+> **Nota:** En el momento que aplicamos un ACL y vemos los permisos vemos que tenemos un símbolo + indicando la presencia de ACLs.
 
 ```bash
 root@debian:~# ls -ld /revisar
@@ -1045,13 +1093,13 @@ Archivo interesante
 Otra linea
 ```
 
-_Nota_: Se pueden también otorgar varios permisos en la misma línea separando los mismos por comas, por ejemplo :
+> **Nota:** Se pueden también otorgar varios permisos en la misma línea separando los mismos por comas, por ejemplo :
 
 ```bash
 setfacl -m u:usuario1:rw-,u:usuario2:r--,g:grupo1:r-- archivo.txt
 ```
 
-_Nota_: En el caso de que el destino sea un directorio y quisiéramos aplicar la ACL a todos los elementos interiores de manera recursiva, podemos utilizar el modificador -R :
+> **Nota:** En el caso de que el destino sea un directorio y quisiéramos aplicar la ACL a todos los elementos interiores de manera recursiva, podemos utilizar el modificador -R :
 
 ```bash
 setfacl -Rm u:usuario1:rw- directorio
@@ -1470,19 +1518,19 @@ juan@debian:/mnt/datos/deClara$ echo "Primera linea" > archivo
 
 ### Notas sobre ACLs
 
-_*Notas: Es importante tener en cuenta que las ACL añaden tal cual los permisos que se especifican, es decir `g:dam:r-x` asigna solo permisos a dam de lectura y ejecución, igual que `g:dam:rx`. En caso de que existiera el permiso de escritura, este habría desaparecido.*_
+> **Nota:** Es importante tener en cuenta que las ACL añaden tal cual los permisos que se especifican, es decir `g:dam:r-x` asigna solo permisos a dam de lectura y ejecución, igual que `g:dam:rx`. En caso de que existiera el permiso de escritura, este habría desaparecido.
 
-_*Notas 2: Cuando añadimos ACLs a un fichero o directorio aparece un signo `+` al final de los permisos UGO.*_
+> **Nota 2:** Cuando añadimos ACLs a un fichero o directorio aparece un signo `+` al final de los permisos UGO.
 
 ```bash
 -rw-rwx---+ 1 root root 8 abr 13 20:29 fichero1.txt
 ```
 
-_*Notas 3: Es incorrecto hacer `setfacl -m u:rw prueba/` o `setfacl -m g:r-w prueba/` pero **si es correcto** hacer `setfacl -m o:rw prueba/` o `setfacl -m m:rw prueba/`.*_
+> **Nota 3:** Es incorrecto hacer `setfacl -m u:rw prueba/` o `setfacl -m g:r-w prueba/` pero **si es correcto** hacer `setfacl -m o:rw prueba/` o `setfacl -m m:rw prueba/`.
 
-_*Nota 4: Se pueden juntar los parametros de una ACL para realzar algo como lo siguiente `setfacl -Rbk prueba/`. La R indica recursividad, la b elimina las ACL y la k las ACL por defecto*_
+> **Nota 4:** Se pueden juntar los parametros de una ACL para realzar algo como lo siguiente `setfacl -Rbk prueba/`. La R indica recursividad, la b elimina las ACL y la k las ACL por defecto
 
-_*Nota 5: Los permisos de otros son acumulativos, como podemos ver en el siguiente ejemplo, si no eliminamos los permisos de otros se van a añadir a los del usuario. Este es el motivo por el cual lucia que pertenece a dam puede en el primer caso listar el contenido de `/tmp/prueba` y una vez eliminamos los permisos de otros ya no puede.*_
+> **Nota 5:** Los permisos de otros son acumulativos, como podemos ver en el siguiente ejemplo, si no eliminamos los permisos de otros se van a añadir a los del usuario. Este es el motivo por el cual lucia que pertenece a dam puede en el primer caso listar el contenido de `/tmp/prueba` y una vez eliminamos los permisos de otros ya no puede.
 
 ```bash
 usuario@debian:/tmp$ id lucia
@@ -1667,7 +1715,7 @@ En el siguiente conjunto de comandos se **elimina las capabilities de Vim**, per
 3. `su - pepe` → Inicia sesión como **pepe**, pero sigue teniendo UID `0`, es decir, aún es **root**.
 4. `vim /etc/passwd` → Abre `/etc/passwd` con Vim, lo que sigue siendo posible porque **pepe sigue siendo root**, aunque ya no tenga capabilities en Vim.
 
-\__*Nota*_: Aunque se eliminaron las capabilities de Vim, el usuario **pepe** aún es root debido a su UID 0.
+> **Nota:** Aunque se eliminaron las capabilities de Vim, el usuario **pepe** aún es root debido a su UID 0.
 
 ```bash
 usuario@debian:~$ sudo setcap -r /usr/bin/vim.basic

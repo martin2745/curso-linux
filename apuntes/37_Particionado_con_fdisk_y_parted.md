@@ -1,4 +1,26 @@
-# Particionado con fdisk
+# Particionado en Linux
+
+## Índice
+
+1. [Tipos de particionado](#tipos-de-particionado)
+   1.1. [Tipos de particionado: MBR y GPT](#tipos-de-particionado-mbr-y-gpt)
+2. [Estado de partida](#estado-de-partida)
+3. [lsblk](#lsblk)
+   3.1. [Dispositivos `loop`](#dispositivos-loop)
+   3.2. [Disco principal `sda`](#disco-principal-sda)
+   3.3. [Segundo disco `sdb`](#segundo-disco-sdb)
+4. [fdisk](#fdisk)
+5. [blkid](#blkid)
+6. [mkfs](#mkfs)
+7. [mount y umount](#mount-y-umount)
+8. [fstab](#fstab)
+   8.1. [Como recuperar el sistema si cometemos un error en el archivo /etc/fstab](#como-recuperar-el-sistema-si-cometemos-un-error-en-el-archivo-etcfstab)
+9. [Particionado con parted](#particionado-con-parted)
+   9.1. [Ejercicio](#ejercicio)
+10. [Partición de swap](#particion-de-swap)
+
+---
+
 
 ## Tipos de particionado
 
@@ -136,7 +158,7 @@ sda      8:0    0    50G  0 disk
 - `sda2` (513 MB) → Montada en `/boot/efi` (para arranque UEFI). Esta partición contiene el **cargador de arranque** y los archivos necesarios para que UEFI inicie Linux.
 - `sda3` (49.5 GB) → Montada en `/` (almacena el sistema operativo).
 
-_*Nota*_: Diferencia entre **gestor de arranque** y **cargador de arranque**
+> **Nota:** Diferencia entre **gestor de arranque** y **cargador de arranque**
 
 - Gestor de arranque (Boot Manager): Decide qué sistema operativo arrancar si hay más de uno. Ejemplo: GRUB.
 - Cargador de arranque (Boot Loader): Carga el núcleo del sistema operativo en la memoria para que el SO se inicie.
@@ -523,7 +545,7 @@ Resumen de lo que pueden contener los campos:
 5. **dump**: 0 o 1 para respaldo con `dump`, es decir, si hay un fallo en disco se almacena en un log dicha información.
 6. **pass**: 0 (sin chequeo), 1 (chequeo para raíz), 2 (chequeo para otras particiones).
 
-_*Nota*_: Este funcionamiento era el empleado en SystemV, actualmente con SystemD esto ha quedado desactualizado y los campos 5 y 6 deben ser 0.
+> **Nota:** Este funcionamiento era el empleado en SystemV, actualmente con SystemD esto ha quedado desactualizado y los campos 5 y 6 deben ser 0.
 
 Si tuvieramos algún error en la configuración del `/etc/fstab` debería notificarmelo por pantalla. Como no exite ningún error reiniciamos la máquina.
 
@@ -562,7 +584,7 @@ Si no arranca el sistema ya que el archivo `/etc/fstab` está incorrectamente fo
 
 ![kernel-parametros-arranque-syslinux](../imagenes/recursos/varios/kernel-parametros-arranque-syslinux.png)
 
-# Particionado con parted
+## Particionado con parted
 
 1. Asignamos el tipo de particionado.
 
@@ -599,7 +621,7 @@ Number  Start   End     Size    Type      File system  Flags
  5      10,0GB  13,0GB  2999MB  logical
 ```
 
-_*Nota*_: A diferencia de MBR, en GPT no hay distinción entre particiones primarias, extendidas o lógicas. Todas las particiones son "primarias".
+> **Nota:** A diferencia de MBR, en GPT no hay distinción entre particiones primarias, extendidas o lógicas. Todas las particiones son "primarias".
 
 3. Tambien puedo eliminar particiones de la siguiente forma.
 
@@ -644,7 +666,7 @@ mkfs.ext4 /dev/sdb2
 mkfs.ext4 /dev/sdb3
 ```
 
-# Partición de swap
+## Partición de swap
 
 La partición o espacio swap en Linux es un área del disco duro que el sistema usa como extensión de la memoria RAM. Cuando la RAM se llena, Linux mueve datos menos usados a la swap para liberar memoria y evitar que el sistema se quede sin recursos, aunque acceder a swap es mucho más lento que a la RAM física.
 

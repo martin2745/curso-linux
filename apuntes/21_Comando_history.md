@@ -1,103 +1,142 @@
 # Comando history
 
-El comando history en Linux muestra el historial de comandos ejecutados en la sesión del shell. Es útil para revisar comandos anteriores, reutilizarlos y gestionar el historial.
+## Índice
 
-1. Ejemplos con el comando history:
+1. [Uso básico e invocación](#1-uso-básico-e-invocación)
+2. [Gestión y persistencia del historial](#2-gestión-y-persistencia-del-historial)
+3. [Variables del sistema](#3-variables-del-sistema)
+4. [Control del historial (HISTCONTROL)](#4-control-del-historial-histcontrol)
+5. [Formato de tiempo (HISTTIMEFORMAT)](#5-formato-de-tiempo-histtimeformat)
+6. [Carga de configuraciones desde archivos (source)](#6-carga-de-configuraciones-desde-archivos-source)
+
+---
+
+El comando `history` en Linux muestra el historial de comandos ejecutados en la sesión del shell. Es útil para revisar comandos anteriores, reutilizarlos y gestionar el historial.
+
+---
+
+## 1. Uso básico e invocación
+
+Ejemplos de invocación con el comando `history`:
 
 ```bash
-history #muestra todo el historial
-history 10 #muestra las últimas 10
-history –c #limpia el historial
+history       # muestra todo el historial de la sesión actual y del archivo ~/.bash_history
+history 10    # muestra solo los últimos 10 comandos
+history -c    # limpia el historial de la sesión actual en memoria
 ```
 
-2. Repetir un comando del historial
+Para repetir un comando específico usando su identificador numérico en el historial:
 
 ```bash
 !775
 ```
 
-3. Apagar o prender el historial
+> **Recuerda:** También puedes repetir el comando más reciente ejecutando simplemente `!!`, o el último que empezaba por ciertas letras con `!letra`.
+
+---
+
+## 2. Gestión y persistencia del historial
+
+Apagar o prender el guardado de historial en la sesión activa:
 
 ```bash
-set +o history #Apaga el historial
-set -o history #Prende el historial
+set +o history # Apaga la grabación en el historial
+set -o history # Prende la grabación en el historial
 ```
 
-4. Desactivar el Historial Permanente
+Desactivar el historial permanentemente para la sesión actual:
 
 ```bash
 export HISTFILESIZE=0
 ```
 
-5. Variables del sistema involucradas con el historial
+---
 
-- $HISTFILE Contiene el nombre del archivo. Normalmente es: ~/.bash_history
-- $HISTFILESIZE Esta variable contiene el tamaño máximo del archivo
-- $HISTSIZE Esta variable contiene el tamaño máximo de comandos
-- $HISTIGNORE=ls*:cd*:history*:exit:passwd*:
+## 3. Variables del sistema
 
-6. HISTCONTROL: Los comandos que comiencen con un espacio en blanco no se guardarán en el historial.
+Variables del sistema involucradas con la gestión del historial de la terminal:
+
+| Variable | Descripción |
+|----------|-------------|
+| `$HISTFILE` | Contiene la ruta del archivo donde se guarda. Normalmente es: `~/.bash_history`. |
+| `$HISTFILESIZE` | Contiene el número máximo de líneas/comandos que se guardarán en el archivo físico. |
+| `$HISTSIZE` | Contiene el número máximo de comandos mantenidos en memoria durante la sesión. |
+| `$HISTIGNORE` | Define patrones de comandos a ignorar (ej: `ls*:cd*:history*:exit:passwd*`). |
+
+---
+
+## 4. Control del historial (HISTCONTROL)
+
+La variable `HISTCONTROL` permite decidir si ciertos comandos se guardan o no. Por ejemplo, los comandos que comiencen con un espacio en blanco no se guardarán en el historial si lo configuramos así:
 
 ```bash
 export HISTCONTROL=ignorespace
 ```
 
-¿Por qué usarlo?
+> **Nota:** ¿Por qué usarlo? Para evitar que comandos sensibles o privados queden registrados (por ejemplo, contraseñas en plano, tokens o configuraciones) y para ejecutar comandos temporales sin llenar el historial innecesariamente.
 
-- Para evitar que comandos sensibles o privados queden registrados (por ejemplo, contraseñas o configuraciones).
-- Para ejecutar comandos temporales sin llenar el historial innecesariamente.
+Otras opciones de `HISTCONTROL`:
 
-Otras opciones de HISTCONTROL:
+| Valor | Descripción |
+|-------|-------------|
+| `ignorespace` | No guarda comandos que comiencen con un espacio en el historial. |
+| `ignoredups` | No guarda comandos duplicados consecutivos en el historial. |
+| `ignoreboth` | Combina `ignorespace` e `ignoredups`, evitando comandos con espacio y duplicados. |
+| `erasedups` | Elimina todas las entradas duplicadas anteriores, manteniendo solo la última ocurrencia. |
+| `none` | No ignora ningún comando (comportamiento por defecto en algunos sistemas). |
 
-| Valor       | Descripción                                                                                |
-| ----------- | ------------------------------------------------------------------------------------------ |
-| ignorespace | No guarda comandos que comiencen con un espacio en el historial.                           |
-| ignoredups  | No guarda comandos duplicados consecutivos en el historial.                                |
-| ignoreboth  | Combina ignorespace e ignoredups, evitando comandos con espacio y duplicados consecutivos. |
-| erasedups   | Elimina todas las entradas duplicadas anteriores, manteniendo solo la última ocurrencia.   |
-| none        | No ignora ningún comando.                                                                  |
+---
 
-7. HISTTIMEFORMAT: Permite mostrar la fecha y hora de cada comando en el historial.
-   Para habilitar el registro de la hora en el historial, puedes configurar HISTTIMEFORMAT de la siguiente manera:
+## 5. Formato de tiempo (HISTTIMEFORMAT)
+
+`HISTTIMEFORMAT` permite registrar y mostrar la fecha y hora en que se ejecutó cada comando en el historial.
+
+Para habilitar el registro temporal en la sesión actual:
 
 ```bash
 export HISTTIMEFORMAT="%F %T "
 ```
 
 Explicación:
+- `%F` - Muestra la fecha en formato YYYY-MM-DD.
+- `%T` - Muestra la hora en formato HH:MM:SS.
+- El espacio al final mejora la legibilidad separando la fecha del comando.
 
-- %F - Muestra la fecha en formato YYYY-MM-DD.
-- %T - Muestra la hora en formato HH:MM:SS.
-- El espacio al final mejora la legibilidad.
-
-Salida:
-
+Salida de ejemplo:
 ```bash
-1 2025-03-27 14:23:45 ls
-2 2025-03-27 14:23:46 pwd
-3 2025-03-27 14:23:47 echo "Hola"
+    1 2025-03-27 14:23:45 ls
+    2 2025-03-27 14:23:46 pwd
+    3 2025-03-27 14:23:47 echo "Hola"
 ```
 
-Hacerlo Permanente
+Para hacerlo permanente en tu entorno de usuario, añádelo a tu archivo de configuración:
 
 ```bash
 echo 'export HISTTIMEFORMAT="%F %T "' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Formatos comunes para HISTTIMEFORMAT:
+Formatos comunes para `HISTTIMEFORMAT`:
 
 | Formato        | Descripción                                  | Ejemplo de Salida        |
 | -------------- | -------------------------------------------- | ------------------------ |
-| %F %T          | Fecha completa y hora                        | 2025-03-27 14:23:45      |
-| %d-%m-%Y %T    | Día-Mes-Año y Hora                           | 27-03-2025 14:23:45      |
-| %Y/%m/%d %H:%M | Año/Mes/Día y Hora:Minuto                    | 2025/03/27 14:23         |
-| %c             | Fecha y hora local en formato completo       | Thu Mar 27 14:23:45 2025 |
-| %x %X          | Fecha y hora según la configuración regional | 03/27/2025 14:23:45      |
+| `%F %T `       | Fecha completa y hora                        | 2025-03-27 14:23:45      |
+| `%d-%m-%Y %T ` | Día-Mes-Año y Hora                           | 27-03-2025 14:23:45      |
+| `%Y/%m/%d %H:%M `| Año/Mes/Día y Hora:Minuto                  | 2025/03/27 14:23         |
+| `%c `          | Fecha y hora local en formato completo       | Thu Mar 27 14:23:45 2025 |
+| `%x %X `       | Fecha y hora según la configuración regional | 03/27/2025 14:23:45      |
 
-8. El símbolo ~ en Linux y otros sistemas tipo Unix es un atajo para el directorio de inicio del usuario actual. Este símbolo simplifica la navegación hacia el directorio principal del usuario sin tener que escribir la ruta completa.
+---
 
-cat /~/.bash_profile
+## 6. Carga de configuraciones desde archivos (source)
+
+El símbolo `~` en Linux y otros sistemas tipo Unix es un atajo para el directorio de inicio (`$HOME`) del usuario actual. Este símbolo simplifica la navegación hacia el directorio principal del usuario sin tener que escribir la ruta completa.
+
+Ejemplo revisando el archivo de perfil:
+
+```bash
+cat ~/.bash_profile
+```
 
 ```bash
 PATH=$PATH:$HOME/bin:/lpic1
@@ -108,10 +147,10 @@ HISTFILE=/root/.historial
 export PATH PS1 HISTIGNORE EDITOR HISTFILE
 ```
 
-Ejecutamos el comando source para aplicar los cambios de nuestro .bash_profile
+Para aplicar los cambios sin cerrar sesión, ejecutamos el comando `source`:
 
 ```bash
-source /root/.bash_profile
+source ~/.bash_profile
 ```
 
-El comando source en Bash (y otros shells similares) se utiliza para ejecutar comandos desde un archivo en el contexto del shell actual. Esto significa que las variables de entorno, funciones y configuraciones definidas en el archivo permanecen accesibles después de su ejecución.
+> **Importante:** El comando `source` en Bash (y otros shells similares, a veces alias de `.`) se utiliza para ejecutar comandos desde un archivo **en el contexto del shell actual**. Esto significa que las variables de entorno, funciones y configuraciones definidas en el archivo se aplican directamente a la sesión activa en lugar de ejecutarse en un subproceso hijo que moriría instantáneamente.

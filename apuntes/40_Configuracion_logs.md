@@ -1,22 +1,43 @@
 # El sistema de logs
 
-Cuando el sistema se inicia se pone en marcha y efectúa cualquier tipo de acción, se registran sus acciones y las de la mayoría de sus servicios en diferentes ficheros. Dos servicios esta especializados en la recepción de los mensajes que tienen como destino estos ficheros.
+## Índice
 
-- _syslogd_: gestiona los logs del sistema. Distribuye los mensajes a archivos, tuberías, destinos remotos, terminales o usuarios, usando las indicaciones especificadas en su archivo de configuración `/etc/syslog.conf`, donde se indica qué se loguea y a dónde se envían estos logs. Por otro lado, es posible configurar el servicio _rsyslog.service_ para que equipos remotos puedan escribir sus mensajes de log en el propio servidor que ejecuta el servicio syslog remoto.
-- _klogd_: se encarga de los logs del kernel. Lo normal es que _klogd_ envíe sus mensajes a syslogd pero no siempre es así, sobre todo en los eventos de alta prioridad, que salen directamente por pantalla.
+1. [rsyslog: Conceptos generales](#1-rsyslog-conceptos-generales)
+2. [Configurar rsyslog como servidor remoto (recepción por UDP)](#2-configurar-rsyslog-como-servidor-remoto-recepcion-por-udp)
+3. [Configuración del cliente Linux para enviar logs (UDP)](#3-configuracion-del-cliente-linux-para-enviar-logs-udp)
+4. [Configuración del cliente Linux para enviar logs por TCP](#4-configuracion-del-cliente-linux-para-enviar-logs-por-tcp)
+5. [Notas sobre el uso de `@` y `@@`](#5-notas-sobre-el-uso-de--y-)
+6. [Probando los logs locales](#6-probando-los-logs-locales)
+7. [journalctl y almacenamiento persistente](#7-journalctl-y-almacenamiento-persistente)
+8. [Facilidades en rsyslog](#8-facilidades-en-rsyslog)
+9. [logrotate](#9-logrotate)
+   9.1. [Comandos básicos](#91-comandos-basicos)
+   9.2. [Opciones de configuración](#92-opciones-de-configuracion)
+   9.3. [Parámetros size, minsize y maxsize](#93-parametros-size-minsize-y-maxsize)
+   9.4. [Verificar la configuración](#94-verificar-la-configuracion)
+10. [Archivo de marca de tiempo en logrotate](#10-archivo-de-marca-de-tiempo-en-logrotate)
 
-Los logs se guardan en archivos ubicados en el directorio `/var/log`, aunque muchos programas manejan sus propios logs y los guardan en `/var/log/<programa>`. Además, es posible especificar múltiples destinos para un mismo mensaje. Algunos de los log más importantes son:
+---
 
-- `/var/log/messages`: aquí encontraremos los logs que llegan con prioridad info (información), notice (notificación) o warn (aviso).
-- `/var/log/kern.log`: aquí se almacenan los logs del kernel, generados por _klogd_.
-- `/var/log/auth.log`: en este log se registran los login en el sistema, las veces que hacemos
-  su, etc. Los intentos fallidos se registran en líneas con información del tipo invalid password o authentication failure.
-- `/var/log/dmesg`: en este archivo se almacena la información que genera el kernel
-  durante el arranque del sistema.
+## 1. rsyslog: Conceptos generales
 
-A continuación, te presento la información solicitada con los fragmentos de código Linux correctamente formateados en bloques de código markdown usando ```bash para facilitar su inclusión en tu documentación.
+Cuando el sistema se inicia o efectúa cualquier tipo de acción, se registran sus acciones y las de la mayoría de sus servicios en diferentes ficheros. Dos servicios están especializados en la recepción de los mensajes que tienen como destino estos ficheros.
 
-## Configurar rsyslog como servidor remoto (recepción por UDP)
+- `syslogd`: gestiona los logs del sistema. Distribuye los mensajes a archivos, tuberías, destinos remotos, terminales o usuarios, usando las indicaciones especificadas en su archivo de configuración `/etc/syslog.conf`, donde se indica qué se loguea y a dónde se envían estos logs. Por otro lado, es posible configurar el servicio `rsyslog.service` para que equipos remotos puedan escribir sus mensajes de log en el propio servidor que ejecuta el servicio syslog remoto.
+- `klogd`: se encarga de los logs del kernel. Lo normal es que `klogd` envíe sus mensajes a syslogd pero no siempre es así, sobre todo en los eventos de alta prioridad, que salen directamente por pantalla.
+
+Los logs se guardan en archivos ubicados en el directorio `/var/log`, aunque muchos programas manejan sus propios logs y los guardan en `/var/log/<programa>`. Algunos de los logs más importantes son:
+
+| Archivo | Descripción |
+|---------|-------------|
+| `/var/log/messages` | Logs con prioridad `info`, `notice` o `warn`. |
+| `/var/log/kern.log` | Logs del kernel, generados por `klogd`. |
+| `/var/log/auth.log` | Registro de logins, intentos fallidos (`invalid password`, `authentication failure`), uso de `su`, etc. |
+| `/var/log/dmesg` | Información generada por el kernel durante el arranque del sistema. |
+
+---
+
+## 2. Configurar rsyslog como servidor remoto (recepción por UDP)
 
 Edita el archivo de configuración:
 
@@ -54,15 +75,11 @@ La salida esperada debe mostrar algo similar a:
 udp        0      0 0.0.0.0:514             0.0.0.0:*                           1220/rsyslogd
 ```
 
-## Configuración del cliente Linux para enviar logs a un servidor syslog (ejemplo: 192.168.33.10)
+---
 
-Edita el archivo de configuración:
+## 3. Configuración del cliente Linux para enviar logs (UDP)
 
-```bash
-vi /etc/rsyslog.conf
-```
-
-Agrega las siguientes líneas para enviar los logs por UDP (un solo `@`):
+Edita `/etc/rsyslog.conf` y agrega las siguientes líneas para enviar los logs por UDP (un solo `@`) al servidor `192.168.33.10`:
 
 ```bash
 # Log anything (except mail) of level info or higher.
@@ -80,7 +97,9 @@ Reinicia el servicio rsyslog:
 systemctl restart rsyslog.service
 ```
 
-## Configuración del cliente Linux para enviar logs por TCP (doble `@@`)
+---
+
+## 4. Configuración del cliente Linux para enviar logs por TCP
 
 Edita el archivo de configuración:
 
@@ -110,22 +129,16 @@ Reinicia el servicio rsyslog:
 systemctl restart rsyslog.service
 ```
 
-## Notas sobre el uso de `@` y `@@` en la configuración de rsyslog
+| Notación | Protocolo | Descripción |
+|----------|-----------|-------------|
+| `@host` | UDP | Envía los mensajes al servidor syslog remoto por UDP. |
+| `@@host` | TCP | Envía los mensajes al servidor syslog remoto por TCP. |
 
-- `@`: Envía los mensajes al servidor syslog remoto usando el protocolo **UDP**.
-- `@@`: Envía los mensajes al servidor syslog remoto usando el protocolo **TCP**.
-
-**Ventajas de usar TCP (`@@`) sobre UDP (`@`):**
-
-- **Fiabilidad:** TCP garantiza la entrega y retransmisión de mensajes en caso de pérdida o congestión de red.
-- **Integridad:** TCP asegura que los mensajes lleguen en el orden correcto.
-- **Manejo de red:** TCP es más adecuado para redes complejas o con posibles pérdidas de paquetes, ya que UDP puede perder mensajes sin retransmitirlos.
-
-Por lo tanto, usar `@@` en la configuración de rsyslog en el cliente permite una comunicación más robusta y confiable, recomendada para entornos donde la integridad y la fiabilidad de los registros son críticas.
+> **Nota:** Se recomienda usar `@@` (TCP) en entornos donde la integridad y la fiabilidad de los registros son críticas. TCP garantiza la entrega, el orden correcto y la retransmisión ante pérdida de paquetes, a diferencia de UDP.
 
 ---
 
-## Probando los logs locales
+## 6. Probando los logs locales
 
 El comando _logger_ en Linux se utiliza para enviar mensajes al sistema de registro de eventos (syslog o rsyslog). Es una forma conveniente de generar mensajes de registro directamente desde la línea de comandos o desde scripts.
 
@@ -174,11 +187,13 @@ echo 'hello2' | systemd-cat -p warning
 echo 'hello3' | systemd-cat -p emerg
 ```
 
-El comando journalctl en sistemas Linux se utiliza para ver y analizar los logs del sistema generados por systemd. Este comando es muy útil para depurar problemas y obtener información detallada sobre los eventos del sistema.
+---
 
-Enabling Persistent Storage journal:
-By default, Journal stores log files only in memory or a small ring-buffer in the  
-/run/log/journal/ directory
+## 7. journalctl y almacenamiento persistente
+
+El comando `journalctl` en sistemas Linux se utiliza para ver y analizar los logs del sistema generados por `systemd`. Es muy útil para depurar problemas y obtener información detallada sobre los eventos del sistema.
+
+> **Nota:** Por defecto, el journal almacena los archivos de log solo en memoria o en un pequeño buffer en `/run/log/journal/`. Para hacerlo persistente entre reinicios, sigue los pasos a continuación.
 
 ```bash
 mkdir -p /var/log/journal/
@@ -237,13 +252,11 @@ usermod -G systemd-journal operador
 
 ---
 
-## Facilidades en rsyslog
+## 8. Facilidades en rsyslog
 
-En rsyslog (y en general en los sistemas de registro de logs de Linux), las facilidades (facilities) son categorías que identifican el origen o tipo de los mensajes de log. Estas facilidades permiten clasificar y gestionar los logs de manera más eficiente.
+En rsyslog, las **facilidades** (*facilities*) son categorías que identifican el origen o tipo de los mensajes de log. Permiten clasificar y gestionar los logs de manera eficiente. Cada facilidad tiene un nombre predefinido y un código numérico asociado.
 
-## Facilidades en rsyslog
-
-Las facilidades se utilizan para identificar el tipo de aplicación o servicio que está generando el mensaje de log. Cada facilidad tiene un nombre predefinido y un código numérico asociado. Las facilidades más comunes son:
+Las facilidades más comunes son:
 
 | Facilidad | Código Numérico | Descripción                                            |
 | --------- | --------------- | ------------------------------------------------------ |
@@ -326,33 +339,28 @@ tail -f /var/log/local7.log
 
 ---
 
-## logrotate en Linux
+## 9. logrotate
 
-_logrotate_ es una herramienta en sistemas Linux utilizada para la gestión y rotación de archivos de registro (logs). Su objetivo principal es archivar, comprimir, eliminar o enviar archivos de registro antiguos para mantener el almacenamiento bajo control y garantizar que los archivos de log no crezcan indefinidamente.
+`logrotate` es una herramienta en sistemas Linux utilizada para la gestión y rotación de archivos de registro (logs). Su objetivo principal es archivar, comprimir, eliminar o enviar archivos de registro antiguos para mantener el almacenamiento bajo control y garantizar que los archivos de log no crezcan indefinidamente.
 
-## ¿Por qué usar logrotate?
+### ¿Por qué usar logrotate?
 
 - **Gestión de espacio en disco:** Evita que los archivos de log ocupen todo el almacenamiento.
 - **Automatización:** Realiza la rotación, compresión y eliminación de logs automáticamente.
 - **Mantenimiento de históricos:** Guarda archivos antiguos comprimidos para referencia futura.
 - **Flexibilidad:** Soporta configuraciones personalizadas para diferentes aplicaciones y servicios.
 
-## Arquitectura de logrotate
+### Arquitectura de logrotate
 
-logrotate utiliza archivos de configuración para definir:
+`logrotate` utiliza archivos de configuración para definir la frecuencia de rotación (diaria, semanal, mensual), la cantidad de archivos a retener, la compresión de logs y las acciones posteriores (como reiniciar servicios).
 
-- Frecuencia de rotación: Diario, semanal, mensual, etc.
-- Cantidad de archivos a retener.
-- Compresión de logs.
-- Acciones posteriores (como reiniciar servicios).
+| Ruta | Descripción |
+|------|-------------|
+| `/var/log` | Directorio principal de logs del sistema. |
+| `/etc/logrotate.conf` | Archivo de configuración global de logrotate. |
+| `/etc/logrotate.d/` | Directorio con configuraciones específicas por servicio. |
 
-Rutas importantes:
-
-- `/var/log`
-- `/etc/logrotate.conf` (Archivo de configuración global)
-- `/etc/logrotate.d/` (Directorio que contiene configuraciones específicas por servicio)
-
-## Comandos básicos
+### 9.1. Comandos básicos
 
 ```bash
 logrotate
@@ -387,7 +395,9 @@ Ejemplo de configuración `/etc/logrotate.d/httpd`:
   - `> /dev/null 2>/dev/null`: Silencia la salida estándar y los errores.
   - `|| true`: Evita que un fallo en el comando detenga logrotate.
 
-## Ejemplo de configuración global `/etc/logrotate.conf`
+### 9.2. Opciones de configuración
+
+Ejemplo de configuración global `/etc/logrotate.conf`:
 
 ```bash
 # Rotación global
@@ -398,7 +408,7 @@ compress             # Comprimir logs rotados con gzip
 include /etc/logrotate.d/ # Incluir configuraciones adicionales
 ```
 
-## Modificar la rotación de syslog por tamaño y frecuencia
+#### Modificar la rotación de syslog por tamaño y frecuencia
 
 ```bash
 cat /etc/logrotate.d/syslog
@@ -421,7 +431,7 @@ Con esto debe generar un archivo compreso en la carpeta `/var/log/` (si es que n
 logrotate -f /etc/logrotate.conf
 ```
 
-## Parámetros size, minsize y maxsize
+### 9.3. Parámetros size, minsize y maxsize
 
 - **size**: Define el tamaño mínimo que un archivo debe alcanzar para rotarse. No se basa en la frecuencia, solo en el tamaño.
 
@@ -459,7 +469,7 @@ logrotate -f /etc/logrotate.conf
   ```
   El log se rotará automáticamente si supera 50MB, incluso antes de cumplirse la semana.
 
-## Tamaño o día, lo que ocurra primero
+#### Tamaño o día, lo que ocurra primero
 
 ```bash
 vi /etc/logrotate.d/tomcat
@@ -489,7 +499,7 @@ vi /etc/logrotate.d/tomcat
 **Funcionamiento en conjunto:**  
 Este bloque de configuración rotará los archivos de log de Tomcat diariamente o cuando el archivo alcance 50MB, lo que ocurra primero. Mantendrá los últimos 7 archivos rotados y comprimidos, eliminando los más antiguos. Además, el uso de `copytruncate` permite que el archivo de log sea truncado sin tener que reiniciar el servicio de Tomcat.
 
-## Verificar la configuración
+### 9.4. Verificar la configuración
 
 ```bash
 logrotate -f /etc/logrotate.d/tomcat
@@ -534,15 +544,11 @@ considering log /var/log/nginx/access.log
   log needs rotating (log has been rotated at Mon Mar 17 00:00:00 2024, rotation count 7)
 ```
 
-## Consejos Útiles
-
-- Siempre probar antes de ejecutar realmente: Utiliza `-d` para verificar configuraciones nuevas o modificadas antes de realizar rotaciones forzadas.
-- Evita ejecuciones en producción sin verificar: El uso de `-d` reduce el riesgo de rotar accidentalmente archivos importantes.
-- Combínalo con `-v` para mayor detalle: La combinación de `-d` y `-v` proporciona el máximo nivel de información para depuración.
+> **Nota:** Siempre prueba la configuración con `-d` antes de ejecutar rotaciones reales. Combínalo con `-v` para obtener el máximo nivel de detalle.
 
 ---
 
-## Archivo de Marca de Tiempo en logrotate
+## 10. Archivo de marca de tiempo en logrotate
 
 En logrotate, el archivo de marca de tiempo es utilizado para registrar la última vez que se rotaron los logs. Este archivo permite que logrotate decida si debe realizar una nueva rotación basándose en la configuración especificada (como diaria, semanal o mensual).
 
