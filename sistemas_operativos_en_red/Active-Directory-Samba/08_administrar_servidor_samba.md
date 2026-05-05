@@ -1,16 +1,23 @@
 # 08 Administrar servidor Samba
 
+## Índice
+
+1. [Comandos principales](#comandos-principales)
+2. [Autenticación local con cuentas de Samba AD](#autenticación-local-con-cuentas-de-samba-ad)
+
+---
+
 ## Comandos principales
 
-A continuación vemos varias formas de realizar tareas de administración del servidor.
+A continuación vemos varias formas de realizar tareas de administración básicas del servidor desde la línea de comandos mediante la utilidad `samba-tool`.
 
-1. Ayuda de Samba.
+1. **Ayuda de Samba.** Nos proporciona un listado de los subcomandos disponibles.
 
 ```bash
 root@dc:~# samba-tool -h
 ```
 
-2. Añadir un usuario nuevo.
+2. **Añadir un usuario nuevo.** Crea una cuenta de dominio interactiva.
 
 ```bash
 root@dc:~# samba-tool user add juan
@@ -19,16 +26,14 @@ Retype Password:
 User 'juan' added successfully
 ```
 
-3. Eliminar un usuario.
+3. **Eliminar un usuario.** Borra la cuenta de Active Directory de forma permanente.
 
 ```bash
 root@dc:~# samba-tool user delete juan
 Deleted user juan
 ```
 
-3. Listar usuarios.
-
-Volvemos a añadir a juan y listamos los usuarios.
+4. **Listar usuarios.** Muestra todos los usuarios presentes en el dominio, incluidos los integrados por defecto (`Administrator`, `krbtgt`, `Guest`).
 
 ```bash
 root@dc:~# samba-tool user list
@@ -40,7 +45,7 @@ Administrator
 krbtgt
 ```
 
-4. Cambar contraseña del usuario.
+5. **Cambiar contraseña del usuario.** Permite al administrador forzar un cambio de contraseña sin conocer la anterior.
 
 ```bash
 root@dc:~# samba-tool user setpassword juan
@@ -49,45 +54,47 @@ Retype Password:
 Changed password OK
 ```
 
-5. Deshabilitar y habilitar un usuario.
+6. **Deshabilitar y habilitar un usuario.** Cambia el estado de la cuenta sin eliminarla. Útil para bajas temporales.
 
+Para deshabilitar:
 ```bash
 root@dc:~# samba-tool user disable juan
 ```
 
+Para volver a habilitar:
 ```bash
 root@dc:~# samba-tool user enable juan
 Enabled user 'juan'
 ```
 
-6. Crear un grupo.
+7. **Crear un grupo de seguridad.** Crea un grupo organizativo para la asignación de permisos.
 
 ```bash
 root@dc:~# samba-tool group add alumnos
 Added group alumnos
 ```
 
-7. Listar grupos.
+8. **Listar grupos.** Muestra todos los grupos del dominio.
 
 ```bash
 root@dc:~# samba-tool group list
 ```
 
-8. Añadir un usuario a un grupo.
+9. **Añadir un usuario a un grupo.** Añade un usuario (ej. `juan`) a un grupo específico (ej. `alumnos`).
 
 ```bash
 root@dc:~# samba-tool group addmembers alumnos juan
 Added members to group alumnos
 ```
 
-9.  Mostrar miembros de un grupo.
+10. **Mostrar miembros de un grupo.** Permite auditar qué usuarios forman parte del grupo.
 
 ```bash
 root@dc:~# samba-tool group listmembers alumnos
 juan
 ```
 
-10. Política de contraseñas.
+11. **Política de contraseñas.** Permite visualizar (y posteriormente modificar) las reglas estrictas impuestas a las contraseñas del dominio (longitud, caducidad, historial y bloqueos).
 
 ```bash
 root@dc:~# samba-tool domain passwordsettings show
@@ -104,9 +111,13 @@ Account lockout threshold (attempts): 0
 Reset account lockout after (mins): 30
 ```
 
+---
+
 ## Autenticación local con cuentas de Samba AD
 
-1. Vamos a permitir la autenticación de usuarios del dominio para lo que tenemos que modificar el apartado global de `/etc/samba/smb.conf`.
+En ocasiones, puede ser útil permitir que los administradores o usuarios del dominio inicien sesión por consola o SSH *directamente en el propio servidor Linux* (`Ubuntu Server`) que actúa como Controlador de Dominio. 
+
+1. Vamos a permitir la autenticación de usuarios del dominio. Para ello, tenemos que modificar el bloque `[global]` en el archivo `/etc/samba/smb.conf`, habilitando la enumeración de usuarios y configurando `winbind`.
 
 ```bash
 root@dc:~# cat /etc/samba/smb.conf
@@ -117,6 +128,8 @@ root@dc:~# cat /etc/samba/smb.conf
         realm = INSTITUTO.LOCAL
         server role = active directory domain controller
         workgroup = INSTITUTO
+        
+        # Parámetros Winbind añadidos para integración local
         template shell = /bin/bash
         winbind use default domain = true
         winbind offline logon = false
@@ -132,7 +145,7 @@ root@dc:~# cat /etc/samba/smb.conf
         read only = No
 ```
 
-2. Comprobamos que la configuración es correcta y reiniciamos samba.
+2. Comprobamos que la sintaxis de la configuración es correcta usando `testparm` y reiniciamos el servicio `samba-ad-dc` para aplicar los parámetros.
 
 ```bash
 root@dc:~# testparm
@@ -144,163 +157,120 @@ Loaded services file OK.
 root@dc:~# systemctl restart samba-ad-dc.service
 ```
 
-3. Configurar PAM y NSSWITCH
+3. **Configurar PAM y NSSWITCH**: 
 
-Actualizamos la configuración PAM (marcamos las opciones necesarias):
+Actualizamos la configuración PAM utilizando la herramienta interactiva.
 
 ```bash
 root@dc:~# pam-auth-update
 ```
 
-Marcamos: _Create home directory on login_.
+*(En la interfaz, marcamos obligatoriamente la opción: **Create home directory on login**).*
 
-Modificamos el fichero `/etc/nsswitch.conf`.
+A continuación, modificamos el fichero `/etc/nsswitch.conf` para indicar al sistema operativo que debe consultar a `winbind` para resolver usuarios y contraseñas.
 
 ```bash
 root@dc:~# cat /etc/nsswitch.conf
-# /etc/nsswitch.conf
-#
-# Example configuration of GNU Name Service Switch functionality.
-# If you have the `glibc-doc-reference' and `info' packages installed, try:
-# `info libc "Name Service Switch"' for information about this file.
-
+...
 passwd:         compat winbind
 group:          compat winbind
 shadow:         compat
 gshadow:        files systemd
 
 hosts:          files dns
-networks:       files
-
-protocols:      db files
-services:       db files
-ethers:         db files
-rpc:            db files
-
-netgroup:       nis
+...
 ```
 
-4. Modificar common-password.
+4. **Modificar `common-password`**:
 
-Este fichero nos permite que cuando accedemos al AD con los usuarios creados en samba podamos modificar su contraseña. Este paso requiere editar con cuidado los cambios a realizar dentro del archivo:
+Este fichero nos permite que cuando accedemos al AD con los usuarios del dominio, podamos modificar su contraseña de Samba utilizando el comando estándar `passwd` de Linux. Este paso requiere editar con extremo cuidado las directivas dentro del archivo `/etc/pam.d/common-password`:
 
-- Comenta (pon un # delante) las líneas que contengan pam_krb5.so y la primera de pam_winbind.so.
-- Busca la línea de pam_unix.so y elimina la opción use_authtok.
-- Añade al final la nueva línea para winbind.
+- Comenta (pon un `#` delante) las líneas que contengan `pam_krb5.so` y la primera declaración de `pam_winbind.so`.
+- Busca la línea de `pam_unix.so` y elimina la directiva `use_authtok`.
+- Añade una nueva línea para invocar a `pam_winbind.so` justo debajo de `pam_unix.so`.
 
 ```bash
 root@dc:~# cat /etc/pam.d/common-password
 #
 # /etc/pam.d/common-password - password-related modules common to all services
 #
-# This file is included from other service-specific PAM config files,
-# and should contain a list of modules that define the services to be
-# used to change user passwords.  The default is pam_unix.
-
-# Explanation of pam_unix options:
-# The "yescrypt" option enables
-#hashed passwords using the yescrypt algorithm, introduced in Debian
-#11.  Without this option, the default is Unix crypt.  Prior releases
-#used the option "sha512"; if a shadow password hash will be shared
-#between Debian 11 and older releases replace "yescrypt" with "sha512"
-#for compatibility .  The "obscure" option replaces the old
-#`OBSCURE_CHECKS_ENAB' option in login.defs.  See the pam_unix manpage
-#for other options.
-
-# As of pam 1.0.1-6, this file is managed by pam-auth-update by default.
-# To take advantage of this, it is recommended that you configure any
-# local modules either before or after the default block, and use
-# pam-auth-update to manage selection of other modules.  See
-# pam-auth-update(8) for details.
-
+...
 # here are the per-package modules (the "Primary" block)
 password        [success=2 default=ignore]      pam_unix.so obscure try_first_pass yescrypt
 password        [success=1 default=ignore]      pam_winbind.so try_first_pass
 # here's the fallback if no module succeeds
 password        requisite                       pam_deny.so
-# prime the stack with a positive return value if there isn't one already;
-# this avoids us returning an error just because nothing sets a success code
-# since the modules above will each just jump around
-password        required                        pam_permit.so
-# and here are more per-package modules (the "Additional" block)
-# end of pam-auth-update config
+...
 ```
 
-5. Deshabilitar servicio winbind
+> **Advertencia:** Errores en la edición de módulos PAM pueden causar bloqueos de acceso totales al servidor. Presta especial atención a la sintaxis.
 
-Como el servicio samba-ad-dc ya gestiona el winbind internamente, debemos parar el servicio independiente para evitar conflictos.
+5. **Deshabilitar el servicio `winbind` independiente**:
+
+Como el superservicio `samba-ad-dc` ya instancía y gestiona internamente su propio demonio de Winbind optimizado para Active Directory, debemos parar y deshabilitar el servicio de Winbind independiente proporcionado por Ubuntu para evitar conflictos de sockets.
 
 ```bash
 root@dc:~# systemctl disable winbind.service
 Synchronizing state of winbind.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
 Executing: /usr/lib/systemd/systemd-sysv-install disable winbind
+
 root@dc:~# systemctl stop winbind.service
 ```
 
-6. Recuperar información de usuarios y grupos de AD.
+6. **Verificar la integración de usuarios y grupos**:
 
-Comandos para comprobar que el sistema ve los usuarios del dominio correctamente.
+Lanzamos los comandos de `wbinfo` para comprobar que el sistema (vía Winbind) se comunica internamente con la base de datos LDAP del dominio.
 
+Para listar todos los grupos de dominio:
 ```bash
 root@dc:~# wbinfo -g
 INSTITUTO\cert publishers
-INSTITUTO\ras and ias servers
-INSTITUTO\allowed rodc password replication group
-INSTITUTO\denied rodc password replication group
-INSTITUTO\dnsadmins
-INSTITUTO\enterprise read-only domain controllers
 INSTITUTO\domain admins
-INSTITUTO\domain users
-INSTITUTO\domain guests
-INSTITUTO\domain computers
-INSTITUTO\domain controllers
-INSTITUTO\schema admins
-INSTITUTO\enterprise admins
-INSTITUTO\group policy creator owners
-INSTITUTO\read-only domain controllers
-INSTITUTO\protected users
-INSTITUTO\dnsupdateproxy
+...
 INSTITUTO\alumnos
 ```
 
+Para listar todos los usuarios del dominio:
 ```bash
 root@dc:~# wbinfo -u
 INSTITUTO\administrator
 INSTITUTO\guest
-INSTITUTO\krbtgt
-INSTITUTO\alumno
-INSTITUTO\prueba
 INSTITUTO\juan
 ```
 
+Para extraer la información de sistema operativo (UID, GID, shell) de un usuario específico de dominio:
 ```bash
 root@dc:~# wbinfo -i juan
 INSTITUTO\juan:*:3000023:100::/home/INSTITUTO/juan:/bin/bash
 ```
 
+Verificamos que la capa superior (NSS) también reconozca correctamente a los usuarios del dominio utilizando `getent`. Esto confirma que el enlace entre Linux y Samba funciona de forma transparente.
+
 ```bash
 root@dc:~# getent passwd | grep juan
 INSTITUTO\juan:*:3000023:100::/home/INSTITUTO/juan:/bin/bash
-```
 
-```bash
 root@dc:~# getent group | grep alumnos
 INSTITUTO\alumnos:x:3000051:
 ```
 
-Podemos intentar acceder como usuario anteriormente creado.
+7. **Prueba final de inicio de sesión local**:
+
+Podemos intentar acceder como el usuario del dominio `juan` directamente desde la terminal de root:
 
 ```bash
 root@dc:~# su - juan
 Creating directory '/home/INSTITUTO/juan'.
 ```
 
+Verificamos su identidad generada por Winbind:
+
 ```bash
 INSTITUTO\juan@dc:~$ id
 uid=3000023(INSTITUTO\juan) gid=100(users) groups=100(users),3000009(BUILTIN\users),3000023(INSTITUTO\juan),3000051(INSTITUTO\alumnos)
 ```
 
-Editamos su contraseña.
+Si intentamos editar su contraseña, comprobaremos que interactúa directamente con la política de contraseñas de Active Directory (como vimos con `samba-tool domain passwordsettings show`), lo que significa que el sistema aplica los bloqueos y validaciones de complejidad de Microsoft:
 
 ```bash
 INSTITUTO\juan@dc:~$ passwd
@@ -312,3 +282,5 @@ Your password must be at least 7 characters; cannot repeat any of your previous 
 passwd: Authentication token manipulation error
 passwd: password unchanged
 ```
+
+> **Nota:** El error "Authentication token manipulation error" ocurre de forma controlada porque la contraseña propuesta no cumple con la estricta política de complejidad o longitud mínima de Active Directory definida en nuestro entorno.

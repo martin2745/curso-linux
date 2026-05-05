@@ -1,78 +1,102 @@
 # 01 Configuración red interna
 
+## Índice
+
+1. [Implementación de Infraestructura de Dominio con Samba 4 en Linux](#implementación-de-infraestructura-de-dominio-con-samba-4-en-linux)
+2. [Introducción al Escenario](#introducción-al-escenario)
+3. [Componentes Técnicos Fundamentales](#componentes-técnicos-fundamentales)
+   - [A. Samba 4 (El Orquestador / Active Directory Emulator)](#a-samba-4-el-orquestador--active-directory-emulator)
+   - [B. LDAP (Lightweight Directory Access Protocol) - RFC 4511](#b-ldap-lightweight-directory-access-protocol---rfc-4511)
+   - [C. Kerberos (Protocolo de Autenticación de Red) - RFC 4120](#c-kerberos-protocolo-de-autenticación-de-red---rfc-4120)
+   - [D. DNS (Domain Name System) - El Servicio Crítico](#d-dns-domain-name-system---el-servicio-crítico)
+4. [Resumen del Flujo de Inicio de Sesión (Login)](#resumen-del-flujo-de-inicio-de-sesión-login)
+5. [Implementación](#implementación)
+   - [Windows 10](#windows-10)
+   - [Ubuntu Desktop](#ubuntu-desktop)
+   - [Ubuntu Server](#ubuntu-server)
+
+---
+
 ## Implementación de Infraestructura de Dominio con Samba 4 en Linux
 
-**Escenario:** Despliegue de un Controlador de Dominio (DC) en Ubuntu Server simulando un entorno Microsoft Active Directory.
+**Escenario:** Despliegue de un Controlador de Dominio (DC) en `Ubuntu Server` simulando un entorno `Microsoft Active Directory`.
+
+---
 
 ## Introducción al Escenario
 
-El objetivo es configurar el servidor Linux para que actúe como un **PDC (Primary Domain Controller)**. Esto permite la gestión centralizada de identidades (usuarios, grupos), políticas de seguridad y recursos compartidos para clientes heterogéneos (Windows y Linux) en una red interna.
+El objetivo es configurar el servidor Linux para que actúe como un **PDC (Primary Domain Controller)**. Esto permite la gestión centralizada de identidades (usuarios, grupos), políticas de seguridad y recursos compartidos para clientes heterogéneos (Windows y Linux) en una red interna. 
 
-Para lograr esto, se utiliza la suite de software **Samba 4**, que integra y orquesta tres protocolos estándar de la industria: **SMB**, **LDAP** y **Kerberos**.
+Para lograr esto, se utiliza la suite de software **Samba 4**, que integra y orquesta tres protocolos estándar de la industria: `SMB`, `LDAP` y `Kerberos`.
 
-En este escenario proponemos el uso de tres máquinas en una red interna de VirtualBox que serán:
+En este escenario proponemos el uso de tres máquinas en una red interna de `VirtualBox` que serán:
 
-- Ubuntu server: 192.168.100.6/24
-  - Adaptador en modo Nat que permite la salida a la red.
+- `Ubuntu Server`: `192.168.100.6/24`
+  - Adaptador en modo NAT que permite la salida a la red.
   - Adaptador en red interna.
-- Ubuntu desktop: 192.168.100.7/24
+- `Ubuntu Desktop`: `192.168.100.7/24`
   - Adaptador en red interna.
-- Windows 10: 192.168.100.8/24
+- `Windows 10`: `192.168.100.8/24`
   - Adaptador en red interna.
+
+---
 
 ## Componentes Técnicos Fundamentales
 
 ### A. Samba 4 (El Orquestador / Active Directory Emulator)
 
-En versiones antiguas (Samba 3), el software se limitaba a servicios de ficheros e impresión (protocolo NT4). Sin embargo, **Samba 4** implementa la lógica necesaria para comportarse como un **Controlador de Dominio de Active Directory (AD DC)**.
+En versiones antiguas (`Samba 3`), el software se limitaba a servicios de ficheros e impresión (protocolo `NT4`). Sin embargo, **Samba 4** implementa la lógica necesaria para comportarse como un **Controlador de Dominio de Active Directory (AD DC)** de manera nativa.
 
-- **Función Técnica:** Provee el servicio SMB (Server Message Block) y CIFS. Expone los recursos compartidos administrativos obligatorios para un dominio, como son `SYSVOL` (para políticas de grupo - GPOs) y `NETLOGON` (para scripts de inicio de sesión).
-- **Rol en el servidor:** Actúa como el _frontend_ que interactúa con los clientes Windows, presentándose como un servidor Microsoft legítimo mediante llamadas RPC (Remote Procedure Call).
+- **Función Técnica:** Provee el servicio `SMB` (Server Message Block) y `CIFS`. Expone los recursos compartidos administrativos obligatorios para un dominio, como son `SYSVOL` (para políticas de grupo - GPOs) y `NETLOGON` (para scripts de inicio de sesión).
+- **Rol en el servidor:** Actúa como el _frontend_ que interactúa con los clientes Windows, presentándose como un servidor Microsoft legítimo mediante llamadas `RPC` (Remote Procedure Call).
 
 ### B. LDAP (Lightweight Directory Access Protocol) - RFC 4511
 
 Es el protocolo utilizado para acceder y modificar la **Base de Datos del Directorio**.
 
-- **Definición:** Es una estructura de datos jerárquica (árbol) optimizada para lectura.
+- **Definición:** Es una estructura de datos jerárquica (árbol) optimizada para operaciones de lectura intensivas.
 - **Función en el escenario:** Almacena los "objetos" del dominio. Cada usuario, computadora, impresora o grupo es un objeto dentro de esta base de datos.
 - Cada objeto tiene un **DN (Distinguished Name)**. Ejemplo: `CN=Juan,OU=Ventas,DC=empresa,DC=local`.
-- **Integración:** Samba 4 incluye su propio servidor LDAP interno (basado en LDB) que ya viene con el esquema de datos de Microsoft pre-cargado, lo que permite que las herramientas de administración de Windows (RSAT) puedan leer y escribir en él.
+- **Integración:** `Samba 4` incluye su propio servidor `LDAP` interno (basado en `LDB`) que ya viene con el esquema de datos de Microsoft pre-cargado, lo que permite que las herramientas de administración de Windows (`RSAT`) puedan leer y escribir en él directamente.
 
 ### C. Kerberos (Protocolo de Autenticación de Red) - RFC 4120
 
-Es el protocolo de seguridad encargado de la **autenticación mutua** entre cliente y servidor mediante el uso de criptografía de clave simétrica y un sistema de confianza basado en tickets.
+Es el protocolo de seguridad encargado de la **autenticación mutua** entre cliente y servidor mediante el uso de criptografía de clave simétrica y un sistema de confianza basado en tickets, lo que evita la transmisión de contraseñas en texto claro.
 
 - **Componentes:**
-- **KDC (Key Distribution Center):** Reside en tu Ubuntu Server.
-- **TGT (Ticket Granting Ticket):** El "documento maestro" de identidad.
+  - **KDC (Key Distribution Center):** Reside en tu `Ubuntu Server`. Es la autoridad de confianza.
+  - **TGT (Ticket Granting Ticket):** El "documento maestro" de identidad que permite solicitar tickets de servicio.
 
 - **Flujo Técnico (Simplificado):**
-
-1. El cliente (Windows 10) envía un _hash_ de su contraseña al KDC (Ubuntu).
-2. Si es válido, el KDC devuelve un **TGT**.
-3. El cliente guarda el TGT en memoria. Cuando el usuario quiere acceder a un recurso compartido, presenta el TGT para obtener un "Ticket de Servicio" específico, sin volver a enviar su contraseña por la red.
+  1. El cliente (`Windows 10`) envía un _hash_ de su contraseña al `KDC` (`Ubuntu Server`).
+  2. Si es válido, el `KDC` devuelve un `TGT`.
+  3. El cliente guarda el `TGT` en memoria. Cuando el usuario quiere acceder a un recurso compartido, presenta el `TGT` para obtener un "Ticket de Servicio" específico, sin volver a enviar su contraseña por la red.
 
 ### D. DNS (Domain Name System) - El Servicio Crítico
 
-- **Función:** Cuando un cliente Windows arranca, hace una consulta DNS preguntando por registros específicos (ej. `_ldap._tcp.dc._msdcs.tudominio.local`) para localizar qué IP tiene el Controlador de Dominio.
-- **Samba:** Generalmente utiliza un servidor DNS interno o se integra con BIND9 para gestionar estas zonas automáticamente.
+- **Función:** Cuando un cliente Windows arranca, hace una consulta `DNS` preguntando por registros específicos (ej. `_ldap._tcp.dc._msdcs.tudominio.local`) para localizar qué IP tiene el Controlador de Dominio de la red.
+- **Samba:** Generalmente utiliza un servidor `DNS` interno o se integra con `BIND9` para gestionar estas zonas automáticamente y registrar dinámicamente a los clientes.
+
+---
 
 ## Resumen del Flujo de Inicio de Sesión (Login)
 
 Cuando el usuario intenta iniciar sesión en el cliente:
 
-1. **Resolución (DNS):** El cliente pregunta al DNS: "¿Quién es el controlador del dominio `instituto.local`?". DNS responde: `192.168.100.6`.
-2. **Autenticación (Kerberos):** El cliente contacta al puerto 88 del servidor. Envía credenciales cifradas. El KDC (Samba) verifica contra la base de datos y emite un TGT.
-3. **Autorización (LDAP):** El servidor verifica en la estructura LDAP si el usuario tiene permiso para loguearse en esa máquina específica o si su cuenta está activa.
-4. **Aplicación de Políticas (SMB):** El cliente descarga desde la carpeta compartida `SYSVOL` (vía puerto 445) las Políticas de Grupo (GPO) para aplicar fondos de pantalla, restricciones, etc.
+1. **Resolución (DNS):** El cliente pregunta al `DNS`: "¿Quién es el controlador del dominio `instituto.local`?". `DNS` responde: `192.168.100.6`.
+2. **Autenticación (Kerberos):** El cliente contacta al puerto `88` del servidor. Envía credenciales cifradas. El `KDC` (`Samba`) verifica contra la base de datos y emite un `TGT`.
+3. **Autorización (LDAP):** El servidor verifica en la estructura `LDAP` si el usuario tiene permiso para loguearse en esa máquina específica o si su cuenta está activa.
+4. **Aplicación de Políticas (SMB):** El cliente descarga desde la carpeta compartida `SYSVOL` (vía puerto `445`) las Políticas de Grupo (GPO) para aplicar fondos de pantalla, restricciones de seguridad, etc.
+
+---
 
 ## Implementación
 
-Vamos a configurar Windows 10, Ubuntu Desktop y Ubuntu Server.
+Vamos a configurar `Windows 10`, `Ubuntu Desktop` y `Ubuntu Server`.
 
 ### Windows 10
 
-En un primero momento desde un cmd podemo ejecutar lo siguiente:
+En un primer momento, desde un `cmd` podemos ejecutar lo siguiente para comprobar la configuración de red actual:
 
 ```bash
 C:\Users\usuario>ipconfig
@@ -89,11 +113,11 @@ Adaptador de Ethernet Ethernet:
    Puerta de enlace predeterminada . . . . . :
 ```
 
-Podemos ver como el sistema asigna una dirección APIPA a la máquina. Lo que vamos a realizar en un primero momento es asignar de forma estática una IPv4 al equipo: 192.168.100.8/24. Para hacer esta configuración podemos proceder del siguiete modo:
+Podemos ver cómo el sistema asigna una dirección APIPA (`169.254.x.x`) a la máquina al no encontrar un servidor DHCP. Lo que vamos a realizar en un primer momento es asignar de forma estática una IPv4 al equipo: `192.168.100.8/24`. Para hacer esta configuración podemos proceder del siguiente modo a través de la interfaz gráfica:
 
 ![01](./imagenes/01/01.png)
 
-Si vemos la IPv4 del equipo comprobamos lo siguiente:
+Una vez aplicados los cambios, verificamos nuevamente la configuración IP:
 
 ```bash
 C:\Users\usuario>ipconfig
@@ -110,7 +134,7 @@ Adaptador de Ethernet Ethernet:
    Puerta de enlace predeterminada . . . . . :
 ```
 
-Además, es importante tener en cuenta que es necesario configurar una regla de acceso de conexiones ping por lo que tendremos que crear una nueva regla de entrada en el firewall de linux. A continuación se indican los pasos:
+Además, es importante tener en cuenta que es necesario configurar una regla de acceso para permitir conexiones `ping` (ICMP), por lo que tendremos que crear una nueva regla de entrada en el Firewall de Windows. A continuación se indican los pasos:
 
 ![02](./imagenes/01/02.png)
 ![03](./imagenes/01/03.png)
@@ -120,9 +144,11 @@ Además, es importante tener en cuenta que es necesario configurar una regla de 
 ![07](./imagenes/01/07.png)
 ![08](./imagenes/01/08.png)
 
+> **Importante:** Permitir peticiones `echo request` (Ping) en el Firewall es fundamental para realizar diagnósticos de red básicos entre el cliente y el servidor durante la fase de despliegue.
+
 ### Ubuntu Desktop
 
-Realizamos una configuración estática del equipo desde una terminal por lo que hacemos uso de netplan para configurar de forma persistente la IPv4: 192.168.100.7/24.
+Realizamos una configuración estática del equipo desde una terminal, por lo que hacemos uso de `netplan` para configurar de forma persistente la IPv4: `192.168.100.7/24`. Editamos el archivo de configuración de red y aplicamos los cambios:
 
 ```bash
 root@ubuntu:/etc/netplan# cat 01-network-manager-all.yaml
@@ -154,7 +180,7 @@ root@ubuntu:/etc/netplan# ip -c a
        valid_lft forever preferred_lft forever
 ```
 
-Llegados a este punto podemos comprobar si podemos hacer ping entre las máquinas.
+Llegados a este punto, comprobamos la conectividad hacia la máquina Windows (`192.168.100.8`):
 
 ```bash
 root@ubuntu:~# ping -c 4 192.168.100.8
@@ -168,9 +194,13 @@ PING 192.168.100.8 (192.168.100.8) 56(84) bytes of data.
 4 packets transmitted, 4 received, 0% packet loss, time 3008ms
 ```
 
+| Parámetro | Descripción |
+|-----------|-------------|
+| `-c 4`    | Limita la ejecución del comando ping a 4 paquetes enviados. |
+
 ### Ubuntu Server
 
-Configuramos del mismo modo que en Ubuntu Desktop la Ipv4 para la interfaz correspondiente:
+Configuramos del mismo modo que en `Ubuntu Desktop` la IPv4 para la interfaz correspondiente. En este caso es importante notar que el servidor cuenta con dos interfaces, una gestionada por `dhcp` (para salida a internet) y otra estática (`192.168.100.6/24`) para la red interna:
 
 ```bash
 root@ubuntuserver:~# cat /etc/netplan/50-cloud-init.yaml
@@ -205,4 +235,4 @@ root@ubuntuserver:~# ip -c a
        valid_lft forever preferred_lft forever
 ```
 
-Llegados a este punto todas las máquinas pueden hacer ping entre si.
+Llegados a este punto todas las máquinas pueden hacer ping entre sí, habiendo verificado una conectividad base en la capa de red que es imprescindible antes de promocionar el dominio.

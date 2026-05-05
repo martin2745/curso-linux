@@ -1,8 +1,20 @@
 # 04 Unir Ubuntu Desktop al dominio
 
+## Índice
+
+1. [Configuraciones necesarias para unirse al dominio](#configuraciones-necesarias-para-unirse-al-dominio)
+2. [Instalación de paquetes requeridos](#instalación-de-paquetes-requeridos)
+3. [Configuración de Samba y Winbind](#configuración-de-samba-y-winbind)
+4. [Unión del equipo al dominio](#unión-del-equipo-al-dominio)
+5. [Configuración de autenticación de cuentas de AD](#configuración-de-autenticación-de-cuentas-de-ad)
+
+---
+
 ## Configuraciones necesarias para unirse al dominio
 
-Editamos el nombre de la máquina.
+Al igual que hicimos con el cliente Windows, primero debemos preparar nuestro equipo `Ubuntu Desktop` para integrarse correctamente en el dominio de Active Directory gestionado por Samba.
+
+Editamos el nombre de la máquina para que sea identificable en el dominio, por ejemplo `ud101`.
 
 ```bash
 root@ubuntu:~# hostnamectl set-hostname ud101
@@ -10,7 +22,7 @@ root@ubuntu:~# hostname -f
 ud101
 ```
 
-Configuramos el fichero `/etc/hosts` con los datos del dominio.
+Configuramos el fichero local `/etc/hosts` con los datos de resolución estática del dominio para facilitar el descubrimiento inicial.
 
 ```bash
 root@ubuntu:~# cat /etc/hosts
@@ -20,10 +32,10 @@ root@ubuntu:~# cat /etc/hosts
 ...
 ```
 
-Comprobamos la conexión a **instituto.local**.
+Comprobamos que tenemos conectividad hacia el dominio `instituto.local`.
 
 ```bash
-root@ubuntu:~# ping -c3 instituto.local
+root@ubuntu:~# ping -c 3 instituto.local
 PING instituto.local (192.168.100.6) 56(84) bytes of data.
 64 bytes from instituto.local (192.168.100.6): icmp_seq=1 ttl=64 time=1.42 ms
 64 bytes from instituto.local (192.168.100.6): icmp_seq=2 ttl=64 time=0.791 ms
@@ -32,14 +44,17 @@ PING instituto.local (192.168.100.6) 56(84) bytes of data.
 --- instituto.local ping statistics ---
 3 packets transmitted, 3 received, 0% packet loss, time 2012ms
 rtt min/avg/max/mdev = 0.741/0.983/1.418/0.308 ms
-
 ```
 
-Instalamos el paquete _ntpdate_ para poder sincronizar mi equipo con el servidor kerberos utilizando NTP.
+> **Recuerda:** El protocolo Kerberos es extremadamente sensible a las diferencias de tiempo entre el cliente y el servidor (tolerancia máxima típica de 5 minutos). 
+
+Por lo tanto, instalamos el paquete `ntpdate` para poder sincronizar el reloj de nuestro equipo cliente con el servidor de dominio antes de solicitar tickets.
 
 ```bash
 root@ud101:~# apt install ntpdate -y
 ```
+
+Ejecutamos la sincronización de tiempo apuntando a nuestro Controlador de Dominio.
 
 ```bash
 root@ud101:~# ntpdate -q instituto.local
@@ -48,13 +63,21 @@ root@ud101:~# ntpdate instituto.local
 2026-01-10 00:45:22.889470 (+0100) +0.190513 +/- 0.000861 instituto.local 192.168.100.6 s3 no-leap
 ```
 
-A continuación vamos a instalar todos los paquetes necesarios:
+---
+
+## Instalación de paquetes requeridos
+
+A continuación vamos a instalar todos los paquetes necesarios para la integración de un cliente Linux en Active Directory.
 
 ```bash
 root@ud101:~# apt install -y samba krb5-config krb5-user winbind libpam-winbind libnss-winbind
 ```
 
-A las preguntas contestamos lo siguiente:
+Durante la instalación interactiva de `krb5-config`, el sistema nos realizará preguntas sobre nuestro entorno de Kerberos. Contestamos lo siguiente:
+
+- **Reino (Realm) por defecto:** `INSTITUTO.LOCAL` (siempre en mayúsculas).
+- **Servidor Kerberos de tu reino:** `dc.instituto.local`.
+- **Servidor Administrativo de tu reino:** `dc.instituto.local`.
 
 ```bash
 INSTITUTO.LOCAL
@@ -62,13 +85,15 @@ dc.instituto.local
 dc.instituto.local
 ```
 
-Comprobamos la autenticación en el servidor de Kerberos mediante el administrador de usuarios creando un ticket:
+Comprobamos la autenticación en el servidor de Kerberos solicitando un ticket TGT para el administrador del dominio:
 
 ```bash
 root@ud101:~# kinit administrator@INSTITUTO.LOCAL
 Password for administrator@INSTITUTO.LOCAL:
 Warning: Your password will expire in 40 days on vie 20 feb 2026 11:08:27
 ```
+
+Verificamos que el ticket ha sido otorgado y almacenado correctamente en la caché local:
 
 ```bash
 root@ud101:~# klist
@@ -80,13 +105,19 @@ Valid starting     Expires            Service principal
         renew until 12/01/26 10:38:01
 ```
 
-Movemos el archivo smb.conf y crear copia de seguridad
+---
+
+## Configuración de Samba y Winbind
+
+El cliente Ubuntu debe actuar como miembro del dominio (`member server`) y no como Controlador de Dominio.
+
+Movemos el archivo `smb.conf` por defecto para crear una copia de seguridad.
 
 ```bash
 root@ud101:~# mv /etc/samba/smb.conf /etc/samba/smb.conf.initial
 ```
 
-Creamos el archivo smb.conf vacio.
+Creamos un archivo `smb.conf` nuevo y vacío, e introducimos la siguiente configuración optimizada para un cliente de Active Directory.
 
 ```bash
 root@ud101:~# cat /etc/samba/smb.conf
@@ -97,7 +128,7 @@ root@ud101:~# cat /etc/samba/smb.conf
     security = ADS
     dns forwarder = 192.168.100.6
 
-    # Configuración de idmap (Mapeo de identidades)
+    # Configuración de idmap (Mapeo de identidades de SID a UID/GID)
     idmap config * : backend = tdb
     idmap config * : range = 50000-1000000
 
@@ -116,19 +147,19 @@ root@ud101:~# cat /etc/samba/smb.conf
     store dos attributes = Yes
 ```
 
-Reiniciamos todos los daemons de samba:
+Reiniciamos todos los demonios de Samba asociados a los roles de compartición y resolución NetBIOS para aplicar la configuración.
 
 ```bash
 root@ud101:~# systemctl restart smbd nmbd
 ```
 
-Detener los servicios innecesarios:
+Detenemos y deshabilitamos el servicio `samba-ad-dc`, que es innecesario y contraproducente en un cliente (solo debe correr en el Controlador de Dominio):
 
 ```bash
 root@ud101:~# systemctl stop samba-ad-dc
 ```
 
-Habilitar los servicios de samba necesarios:
+Habilitamos explícitamente los servicios de cliente/servidor de ficheros para que inicien con el sistema:
 
 ```bash
 root@ud101:~# systemctl enable smbd nmbd
@@ -138,7 +169,13 @@ Synchronizing state of nmbd.service with SysV service script with /usr/lib/syste
 Executing: /usr/lib/systemd/systemd-sysv-install enable nmbd
 ```
 
-Unimos Ubuntu Desktop a SAMBA AD DC. Tenemos errores de DNS ya que de momento no tenemos un DNS configurado.
+---
+
+## Unión del equipo al dominio
+
+Con la configuración de red y Samba listas, procedemos a unir el `Ubuntu Desktop` al dominio de Active Directory. Ejecutamos el comando `net ads join` empleando un usuario con privilegios administrativos en el dominio.
+
+> **Nota:** Es normal recibir advertencias de actualización de DNS ("No DNS domain configured") si el cliente no está utilizando un servicio DNS dinámico que pueda registrarse automáticamente en el servidor. La unión lógica a LDAP/Kerberos, sin embargo, se realiza con éxito.
 
 ```bash
 root@ud101:~# net ads join -U administrator
@@ -150,7 +187,7 @@ No DNS domain configured for ud101. Unable to perform DNS Update.
 DNS update failed: NT_STATUS_INVALID_PARAMETER
 ```
 
-Listamos los equipos SAMBA AD y vemos que nuestro equipo de linux se ha unido al dominio.
+Desde el Controlador de Dominio (`dc`), listamos los equipos y verificamos que nuestro equipo Linux se ha registrado exitosamente.
 
 ```bash
 root@dc:~# samba-tool computer list
@@ -159,15 +196,17 @@ UD101$
 DC$
 ```
 
+---
+
 ## Configuración de autenticación de cuentas de AD
 
-Editamos el archivo de configuración del conmutador de servicio de nombres (NSS). De este modo conseguimos que al realizar la autenticación se busquen los usuarios en el servidor a través del protocolo winbind.
+Editamos el archivo de configuración del conmutador de servicio de nombres (NSS, Name Service Switch). De este modo conseguimos que, al realizar validaciones de usuarios o grupos, el sistema operativo consulte a `winbind` y por ende a Active Directory, en lugar de limitarse solo a los usuarios locales.
 
-Lo qué ocurre cuando buscas un usuario una vez realizada las siguientes modificaciones es la siguiente (por ejemplo, con getent passwd administrator):
-
-- _passwd_: El sistema necesita información de un usuario.
-- _compat_: Primero mira en los archivos locales (tu ordenador). Si el usuario "administrator" existe en `/etc/passwd`, usa ese y se detiene.
-- _winbind_: Si no lo encuentra en local, le pregunta a Samba (Winbind). Aquí es donde Winbind consulta al Controlador de Dominio (Active Directory). Si lo encuentra allí, te devuelve la información.
+> **Funcionamiento del flujo NSS (por ejemplo, con `getent passwd administrator`):**
+> 
+> - **passwd:** El sistema necesita información de un usuario.
+> - **compat:** Primero mira en los archivos locales. Si el usuario "administrator" existe en `/etc/passwd`, usa ese y se detiene.
+> - **winbind:** Si no lo encuentra en local, el sistema le pregunta a Samba (`Winbind`). `Winbind` consulta al Controlador de Dominio. Si el usuario se encuentra allí, devuelve la información mapeada a Linux.
 
 ```bash
 root@ud101:~# cat /etc/nsswitch.conf
@@ -194,13 +233,13 @@ netgroup:       nis sss
 automount:  sss
 ```
 
-Reiniciamos el servicio winbind.
+Reiniciamos el servicio `winbind` para que registre los cambios y cargue los módulos correspondientes del NSS.
 
 ```bash
 root@ud101:~# systemctl restart winbind
 ```
 
-Comprobamos si Ubuntu Destkop se integró al dominio listando los usuarios y grupos del servidor samba.
+Comprobamos si el cliente Ubuntu se ha integrado correctamente al dominio listando los usuarios y grupos extraídos desde el servidor Samba Active Directory a través de `wbinfo`.
 
 ```bash
 root@ud101:~# wbinfo -u
@@ -229,11 +268,12 @@ domain computers
 dnsadmins
 ```
 
-Verificar el módulo winbind nsswitch con el comando getent. La diferencia clave entre getent y otros comando es la siguiente:
+Verificamos el funcionamiento integrado del módulo winbind con el NSS utilizando el comando `getent`.
 
-- cat /etc/passwd: Solo muestra usuarios locales.
-- wbinfo -u: Solo muestra usuarios del dominio.
-- getent passwd: Muestra TODOS (Locales + Dominio) listos para usarse.
+> **Recuerda: Diferencias clave entre comandos de consulta:**
+> - `cat /etc/passwd`: Solo muestra usuarios locales del sistema.
+> - `wbinfo -u`: Solo muestra usuarios del dominio consultando directamente a Winbind.
+> - `getent passwd`: Muestra TODOS (Locales + Dominio) al pasar a través del NSS, indicando que el sistema operativo ya los reconoce nativamente.
 
 ```bash
 root@ud101:~# getent passwd | grep administrator
@@ -244,21 +284,24 @@ root@ud101:~# id administrator
 uid=50002(administrator) gid=50000(domain users) grupos=50000(domain users),50010(domain admins),50012(denied rodc password replication group),50005(schema admins),50011(enterprise admins),50013(group policy creator owners)
 ```
 
-Configurar pam-auth-update para autenticarnos con cuentas de dominio y que se creen automáticamente los directorios. Seleccionamos la opción de "Create home directory on login".
+Por último, debemos configurar `pam-auth-update` para poder iniciar sesión con cuentas de dominio y permitir que el sistema cree automáticamente los directorios personales (`/home`) en el primer inicio de sesión. 
 
-PAM significa Pluggable Authentication Modules (Módulos de Autenticación Conectables). PAM es imprescindible porque actúa como el puente de seguridad que permite a Linux enviar la contraseña al iniciar sesión directamente al Controlador de Dominio para que este la verifique; sin PAM, el sistema operativo solo sabría que el usuario existe (gracias a getent), pero no tendría forma de comprobar si la clave es correcta ni capacidad para crear automáticamente la carpeta personal (/home) del usuario la primera vez que entra.
+> **¿Por qué es necesario PAM?**
+> PAM significa Pluggable Authentication Modules (Módulos de Autenticación Conectables). Es imprescindible porque actúa como el puente de seguridad que permite a Linux enviar la contraseña ingresada en el inicio de sesión directamente al Controlador de Dominio para que este la verifique. Sin PAM, el sistema operativo solo sabría que el usuario existe (gracias a `getent`), pero no tendría forma de validar contraseñas ni de crear carpetas.
 
 ```bash
 root@ud101:~# pam-auth-update
 ```
 
-Editamos el archivo `/etc/pam.d/common-account` para crear automáticamente directorios y añadimos al final del archivo el contenido "session required pam_mkhomedir.so skel=/etc/skel/ umask=0022".
+*(En la interfaz que aparece, asegúrate de seleccionar la opción "Create home directory on login" y las de Winbind).*
+
+Alternativamente o como complemento de lo anterior, podemos asegurar la creación automática de directorios añadiendo un módulo PAM específico (`pam_mkhomedir.so`) al final del archivo `/etc/pam.d/common-account`.
 
 ```bash
 root@ud101:~# echo "session required pam_mkhomedir.so skel=/etc/skel/ umask=0022" >> /etc/pam.d/common-account
 ```
 
-Autenticarse con cuenta Samba4 AD
+Probamos a autenticarnos directamente desde la terminal con una cuenta del dominio Samba AD, en este caso el `administrator`.
 
 ```bash
 root@ud101:~# su - administrator
@@ -266,16 +309,15 @@ Creando directorio «/home/INSTITUTO/administrator».
 administrator@ud101:~$
 ```
 
-Añadir cuenta de dominio con privilegios root
+Para dotar a este usuario de dominio de privilegios de administración (sudo) en la máquina local, lo añadimos al grupo local `sudo`.
 
 ```bash
 root@ud101:~# usermod -aG sudo administrator
 ```
 
-Autenticarse con GUI
-administrator@instituto.local
+A partir de este momento, ya podemos autenticarnos desde la Interfaz Gráfica de Usuario (GUI) utilizando credenciales como `administrator@instituto.local` o `INSTITUTO\administrator`.
 
-Si vemos los directorios existentes comprobamos que existen los siguietes:
+Si verificamos los directorios existentes en `/home`, comprobaremos que se ha creado correctamente la estructura jerárquica para los usuarios del dominio bajo el nombre del grupo de trabajo.
 
 ```bash
 root@ud101:~# ls /home
