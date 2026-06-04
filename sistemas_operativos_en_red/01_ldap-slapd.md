@@ -1290,35 +1290,35 @@ tcp   LISTEN    0      511                *:80               *:*     users:(("ap
 
 En este momento podremos visualizar la interfaz de administración del servicio. En nuestro caso la dirección será: `http://[IP_ADDRESS]/lam/` (podemos usar un port forward para acceder desde el navegador del anfitrión `http://localhost:8000/lam` o desde un equipo de la red NAT `http://192.168.1.10/lam`).
 
-![Inicio](./recursos/ldap/imagenes/1.png)
+![Inicio](./recursos/LDAP/imagenes/1.png)
 
 Una vez en este punto, tendremos que ir a **LAM Configuration** y luego a **Edit server profiles**.
 
-![Editar perfil del servidor](./recursos/ldap/imagenes/2.png)
+![Editar perfil del servidor](./recursos/LDAP/imagenes/2.png)
 
 En la siguiente vista introduciremos los datos por defecto que deben de modificarse lo antes posible (lam:lam).
 
-![Acceso de edición](./recursos/ldap/imagenes/3.png)
+![Acceso de edición](./recursos/LDAP/imagenes/3.png)
 
 Realizamos la siguiente configuración básica.
 
-![Configuración](./recursos/ldap/imagenes/4.png)
+![Configuración](./recursos/LDAP/imagenes/4.png)
 
 Indicamos los tipos de cuentas existentes en nuestro LDAP.
 
-![Tipos de cuentas](./recursos/ldap/imagenes/5.png)
+![Tipos de cuentas](./recursos/LDAP/imagenes/5.png)
 
 Establecemos los módulos de cada objeto.
 
-![Módulos](./recursos/ldap/imagenes/6.png)
+![Módulos](./recursos/LDAP/imagenes/6.png)
 
 Así como las preferencias del própio módulo
 
-![Preferencias](./recursos/ldap/imagenes/7.png)
+![Preferencias](./recursos/LDAP/imagenes/7.png)
 
 Podemos ver el árbol del LDAP actual con las OUs de curso:
 
-![Arbol](./recursos/ldap/imagenes/8.png)
+![Arbol](./recursos/LDAP/imagenes/8.png)
 
 En este momento a través de la interfaz podemos crear elementos, eliminarlos, modificarlos, etc.
 
