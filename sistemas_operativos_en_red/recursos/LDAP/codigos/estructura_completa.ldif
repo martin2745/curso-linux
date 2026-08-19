@@ -57,8 +57,9 @@ ou: FPB2
 description: Alumnos de 2o de Formacion Profesional Basica
 
 # =============================================================================
-# BLOQUE 4 — GRUPOS DE CURSO
-# Esquema de GIDs: SMR1(10000), SMR2(11000), FPB1(12000), FPB2(13000)
+# BLOQUE 4 — GRUPOS
+# Esquema de GIDs: SMR1(10000), SMR2(11000), FPB1(12000), FPB2(13000),
+#                  profesores(30000)
 # =============================================================================
 
 dn: cn=SMR1,ou=grupos,dc=ies,dc=local
@@ -89,6 +90,14 @@ cn: FPB2
 gidNumber: 13000
 description: Formacion Profesional Basica 2 curso
 memberUid: j.martin
+
+dn: cn=profesores,ou=grupos,dc=ies,dc=local
+objectClass: posixGroup
+cn: profesores
+gidNumber: 30000
+description: Profesores del departamento de informatica
+memberUid: p.rodriguez
+memberUid: l.sanchez
 
 # =============================================================================
 # BLOQUE 5 — ALUMNOS (Ubicados en sus respectivas OUs de curso)
@@ -198,7 +207,7 @@ mail: p.rodriguez@ies.local
 departmentNumber: Informatica
 telephoneNumber: 600100001
 uidNumber: 20001
-gidNumber: 30001
+gidNumber: 30000
 homeDirectory: /home/profesores/p.rodriguez
 loginShell: /bin/bash
 userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
@@ -215,7 +224,7 @@ mail: l.sanchez@ies.local
 departmentNumber: Informatica
 telephoneNumber: 600100002
 uidNumber: 20002
-gidNumber: 30001
+gidNumber: 30000
 homeDirectory: /home/profesores/l.sanchez
 loginShell: /bin/bash
 userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
