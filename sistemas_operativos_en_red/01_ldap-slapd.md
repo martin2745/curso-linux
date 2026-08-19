@@ -1396,35 +1396,35 @@ tcp   LISTEN    0      511                *:80               *:*     users:(("ap
 
 En este momento podremos visualizar la interfaz de administración del servicio. En nuestro caso la dirección será: `http://[IP_ADDRESS]/lam/` (podemos usar un port forward para acceder desde el navegador del anfitrión `http://localhost:8000/lam` o desde un equipo de la red NAT `http://192.168.10.4/lam`).
 
-![Inicio](./img-ldap/1.png)
+![Inicio](./recursos/LDAP/imagenes/1.png)
 
 Una vez en este punto, tendremos que ir a **LAM Configuration** y luego a **Edit server profiles**.
 
-![Editar perfil del servidor](./img-ldap/2.png)
+![Editar perfil del servidor](./recursos/LDAP/imagenes/2.png)
 
 En la siguiente vista introduciremos los datos por defecto que deben de modificarse lo antes posible (lam:lam).
 
-![Acceso de edición](./img-ldap/3.png)
+![Acceso de edición](./recursos/LDAP/imagenes/3.png)
 
 Realizamos la siguiente configuración básica.
 
-![Configuración](./img-ldap/4.png)
+![Configuración](./recursos/LDAP/imagenes/4.png)
 
 Indicamos los tipos de cuentas existentes en nuestro LDAP.
 
-![Tipos de cuentas](./img-ldap/5.png)
+![Tipos de cuentas](./recursos/LDAP/imagenes/5.png)
 
 Establecemos los módulos de cada objeto.
 
-![Módulos](./img-ldap/6.png)
+![Módulos](./recursos/LDAP/imagenes/6.png)
 
 Así como las preferencias del propio módulo
 
-![Preferencias](./img-ldap/7.png)
+![Preferencias](./recursos/LDAP/imagenes/7.png)
 
 Podemos ver el árbol del LDAP actual con las OUs de curso:
 
-![Arbol](./img-ldap/8.png)
+![Arbol](./recursos/LDAP/imagenes/8.png)
 
 En este momento a través de la interfaz podemos crear elementos, eliminarlos, modificarlos, etc.
 
@@ -1702,7 +1702,7 @@ userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
 
 Como resultado de la importación tenemos lo siguiente:
 
-![Importación realizada](./img-ldap/9.png)
+![Importación realizada](./recursos/LDAP/imagenes/9.png)
 
 > **Recuerda:** La carga total recrea exactamente los mismos usuarios, con los mismos UID y GID, por lo que los homes provisionados en la sección 5.6 siguen siendo válidos sin cambios. Si se añaden usuarios nuevos (por LDIF o desde LAM), hay que provisionar su home en el servidor como se explicó en dicha sección.
 
@@ -2059,4 +2059,4 @@ uid=10001(a.garcia) gid=10000(SMR1) groups=10000(SMR1)
 
 Como prueba definitiva probamos un usuario desde la interfaz del cliente.
 
-![Acceso desde interfaz](./img-ldap/10.png)
+![Acceso desde interfaz](./recursos/LDAP/imagenes/10.png)
