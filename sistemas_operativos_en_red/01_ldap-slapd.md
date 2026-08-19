@@ -1,4 +1,4 @@
-# LDAP con OpenLDAP (slapd) en Ubuntu Server 24.04.3 LTS
+# LDAP con OpenLDAP (slapd) en Ubuntu Server 26.04 LTS
 ### Escenario práctico: Centro Educativo IES Ejemplo
 
 ## Índice
@@ -18,16 +18,17 @@
    - 4.3 [Crear las subunidades dentro de usuarios](#crear-las-subunidades-dentro-de-usuarios)
    - 4.4 [Listar OUs existentes](#listar-ous-existentes)
    - 4.5 [Eliminar una OU](#eliminar-una-ou)
-   - 4.6 [Modificar una OU](#modificar-una-ou)
+   - 4.6 [Modificar objetos en una OU](#modificar-objetos-en-una-ou)
 5. [Gestión de Usuarios](#gestión-de-usuarios)
    - 5.1 [Sobre los identificadores numéricos UID y GID en LDAP](#sobre-los-identificadores-numéricos-uid-y-gid-en-ldap)
    - 5.2 [Generar una contraseña cifrada](#generar-una-contraseña-cifrada)
    - 5.3 [Crear un alumno de FP](#crear-un-alumno-de-fp)
    - 5.4 [Crear varios alumnos en un solo fichero LDIF](#crear-varios-alumnos-en-un-solo-fichero-ldif)
    - 5.5 [Crear un profesor del departamento de informática](#crear-un-profesor-del-departamento-de-informática)
-   - 5.6 [Modificar atributos de un usuario](#modificar-atributos-de-un-usuario)
-   - 5.7 [Cambiar la contraseña de un usuario](#cambiar-la-contraseña-de-un-usuario)
-   - 5.8 [Eliminar un usuario](#eliminar-un-usuario)
+   - 5.6 [Provisionar los directorios home en el servidor](#provisionar-los-directorios-home-en-el-servidor)
+   - 5.7 [Modificar atributos de un usuario](#modificar-atributos-de-un-usuario)
+   - 5.8 [Cambiar la contraseña de un usuario](#cambiar-la-contraseña-de-un-usuario)
+   - 5.9 [Eliminar un usuario](#eliminar-un-usuario)
 6. [Gestión de Grupos](#gestión-de-grupos)
    - 6.1 [OUs de curso vs. posixGroup — diferencia y complementariedad](#ous-de-curso-vs-posixgroup--diferencia-y-complementariedad)
    - 6.2 [Crear los grupos de curso](#crear-los-grupos-de-curso)
@@ -56,9 +57,9 @@
 
 > **Convención de etiquetas usada en estos apuntes:**
 >
-> **SERVIDOR** — El paso se realiza en la máquina Ubuntu Server 24.04.3 LTS con `slapd` instalado (`192.168.1.10`).
+> **SERVIDOR** — El paso se realiza en la máquina Ubuntu Server 26.04 LTS con `slapd` instalado (`192.168.10.4`).
 >
-> **CLIENTE** — El paso se realiza en la máquina cliente del alumno o profesor (`192.168.1.20`). El cliente puede ser Debian 12 o Ubuntu Desktop.
+> **CLIENTE** — El paso se realiza en la máquina cliente del alumno o profesor (`192.168.10.5`). El cliente es Debian 13.
 
 ---
 
@@ -72,7 +73,7 @@ A diferencia de una base de datos relacional tradicional (como MySQL), el direct
 
 En el contexto de un **centro educativo**, LDAP permite que todos los ordenadores del aula consulten al mismo servidor para autenticar a alumnos y profesores. Cuando un alumno se sienta ante cualquier PC del centro e introduce su usuario y contraseña, ese equipo pregunta al servidor LDAP si las credenciales son correctas. Si lo son, el alumno entra. No hay que crear su cuenta en cada máquina individualmente.
 
-**OpenLDAP** es la implementación de código abierto más extendida en Linux. El paquete principal es `slapd` (*Stand-alone LDAP Daemon*), que actúa como servidor del directorio y escucha las consultas de los clientes. En Ubuntu Server 24.04.3 LTS, OpenLDAP se instala desde los repositorios oficiales de Ubuntu y funciona con systemd de la misma forma que en otras distribuciones modernas.
+**OpenLDAP** es la implementación de código abierto más extendida en Linux. El paquete principal es `slapd` (*Stand-alone LDAP Daemon*), que actúa como servidor del directorio y escucha las consultas de los clientes. En Ubuntu Server 26.04 LTS, OpenLDAP se instala desde los repositorios oficiales de Ubuntu y funciona con systemd de la misma forma que en otras distribuciones modernas.
 
 > **Nota:** LDAP usa por defecto el puerto **389** (TCP) para conexiones no cifradas, y el puerto **636** para LDAPS (LDAP sobre TLS/SSL). En redes internas de prácticas se suele usar el 389; en producción se recomienda siempre cifrar con LDAPS o StartTLS.
 
@@ -124,7 +125,8 @@ dc=ies,dc=local
     ├── cn=SMR1   ← posixGroup, gidNumber: 10000
     ├── cn=SMR2   ← posixGroup, gidNumber: 11000
     ├── cn=FPB1   ← posixGroup, gidNumber: 12000
-    └── cn=FPB2   ← posixGroup, gidNumber: 13000
+    ├── cn=FPB2   ← posixGroup, gidNumber: 13000
+    └── cn=profesores   ← posixGroup, gidNumber: 30000
 ```
 
 Esta estructura combina dos mecanismos complementarios. Las **OUs de curso** (`ou=SMR1`, `ou=FPB1`…) organizan visualmente el árbol: permiten ver de un vistazo qué alumnos pertenecen a cada curso sin necesidad de filtrar. Los **grupos posixGroup** (`cn=SMR1`, `cn=FPB1`…) son los que el sistema operativo utiliza para la autenticación Unix: el `gidNumber` del grupo se asigna al alumno y el sistema lo usa para gestionar permisos de ficheros y acceso a recursos.
@@ -141,7 +143,7 @@ Esta estructura combina dos mecanismos complementarios. Las **OUs de curso** (`o
 
 Antes de instalar el servicio, es fundamental preparar correctamente el nombre de host del servidor. OpenLDAP utiliza el FQDN (*Fully Qualified Domain Name*) del servidor para construir internamente algunas referencias, y un hostname incorrecto puede causar errores en el arranque del servicio o en la conexión de los clientes.
 
-En Ubuntu Server 24.04, el nombre de host se gestiona con `hostnamectl`, igual que en otras distribuciones modernas basadas en systemd. En nuestro escenario, el servidor tendrá la IP `192.168.1.10` y el nombre `ldap.ies.local`. Establecer el hostname:
+En Ubuntu Server 26.04, el nombre de host se gestiona con `hostnamectl`, igual que en otras distribuciones modernas basadas en systemd. En nuestro escenario, el servidor tendrá la IP `192.168.10.4` y el nombre `ldap.ies.local`. Establecer el hostname:
 
 ```bash
 root@ubuntu-server:~# hostnamectl set-hostname ldap.ies.local
@@ -166,10 +168,10 @@ El fichero debe contener al menos las siguientes líneas:
 ```
 127.0.0.1       localhost
 127.0.1.1       ldap.ies.local ldap
-192.168.1.10    ldap.ies.local ldap
+192.168.10.4    ldap.ies.local ldap
 ```
 
-> **Nota:** En Ubuntu, la línea `127.0.1.1` es añadida automáticamente por el instalador y sirve para que el hostname resuelva incluso sin interfaz de red activa. Mantenerla y añadir también la línea con la IP real del servidor (`192.168.1.10`) para que los clientes de la red puedan resolver el nombre correctamente.
+> **Nota:** En Ubuntu, la línea `127.0.1.1` es añadida automáticamente por el instalador y sirve para que el hostname resuelva incluso sin interfaz de red activa. Mantenerla y añadir también la línea con la IP real del servidor (`192.168.10.4`) para que los clientes de la red puedan resolver el nombre correctamente.
 
 Guardar el fichero con `Ctrl+O`, confirmar con `Enter` y salir con `Ctrl+X`.
 
@@ -181,7 +183,7 @@ root@ubuntu-server:~# hostname -f
 
 La salida debe ser exactamente `ldap.ies.local`. Si devuelve solo `ldap` o algo diferente, revisar el fichero `/etc/hosts`.
 
-> **Importante:** En Ubuntu Server 24.04, la configuración de red se gestiona con **Netplan** (ficheros en `/etc/netplan/`). Asegurarse de que la interfaz de red tiene una IP estática configurada antes de continuar, ya que un servidor LDAP con IP dinámica puede perder conectividad con los clientes si la IP cambia. Si es necesario configurar una IP estática, editar el fichero de Netplan correspondiente y aplicarlo con `netplan apply`. En nuestro caso se edita de la siguiente forma.
+> **Importante:** En Ubuntu Server 26.04, la configuración de red se gestiona con **Netplan** (ficheros en `/etc/netplan/`). Asegurarse de que la interfaz de red tiene una IP estática configurada antes de continuar, ya que un servidor LDAP con IP dinámica puede perder conectividad con los clientes si la IP cambia. Si es necesario configurar una IP estática, editar el fichero de Netplan correspondiente y aplicarlo con `netplan apply`. En nuestro caso se edita de la siguiente forma.
 
 ```bash
 root@ubuntu-server:~# cat /etc/netplan/50-cloud-init.yaml
@@ -191,15 +193,17 @@ network:
     enp0s3:
       dhcp4: false
       addresses:
-        - 192.168.1.10/24
+        - 192.168.10.4/24
       routes:
         - to: default
-          via: 192.168.1.1
+          via: 192.168.10.1
       nameservers:
         addresses:
           - 8.8.8.8
           - 1.1.1.1
 ```
+
+> **Snapshot:** Con el hostname y la red ya configurados, y antes de instalar ningún paquete, crear una instantánea de la máquina virtual del servidor (por ejemplo, `pre-slapd`). Si la configuración del directorio saliera mal, bastará con restaurarla en lugar de intentar deshacer los cambios a mano.
 
 ---
 
@@ -207,7 +211,7 @@ network:
 
 **SERVIDOR**
 
-Actualizar la lista de paquetes disponibles y el sistema operativo antes de instalar cualquier servicio. Esto garantiza que se instalan las versiones más recientes disponibles en los repositorios de Ubuntu 24.04:
+Actualizar la lista de paquetes disponibles y el sistema operativo antes de instalar cualquier servicio. Esto garantiza que se instalan las versiones más recientes disponibles en los repositorios de Ubuntu 26.04:
 
 ```bash
 root@ubuntu-server:~# apt update && apt upgrade -y
@@ -224,7 +228,7 @@ root@ubuntu-server:~# apt install slapd ldap-utils -y
 | `slapd` | El servidor OpenLDAP principal. Proporciona el demonio `slapd` que gestiona el directorio y escucha en el puerto 389 |
 | `ldap-utils` | Conjunto de herramientas de línea de comandos: `ldapsearch` (consultas), `ldapadd` (añadir entradas), `ldapmodify` (modificar), `ldapdelete` (eliminar), `ldappasswd` (cambiar contraseñas) |
 
-> **Importante — comportamiento en Ubuntu 24.04:** A diferencia de versiones anteriores de Ubuntu o de Debian, en **Ubuntu 24.04 la instalación de `slapd` no lanza automáticamente ningún asistente de configuración** en pantalla. El paquete se instala de forma silenciosa con una configuración por defecto usando el dominio del sistema como base. Esto significa que, tras la instalación, el directorio estará configurado con un DN base incorrecto o genérico. Es **obligatorio** ejecutar `dpkg-reconfigure slapd` en el siguiente paso para establecer el dominio del centro correctamente.
+> **Importante — comportamiento en Ubuntu 26.04:** A diferencia de versiones anteriores de Ubuntu o de Debian, en **Ubuntu 26.04 la instalación de `slapd` no lanza automáticamente ningún asistente de configuración** en pantalla. El paquete se instala de forma silenciosa con una configuración por defecto usando el dominio del sistema como base. Esto significa que, tras la instalación, el directorio estará configurado con un DN base incorrecto o genérico. Es **obligatorio** ejecutar `dpkg-reconfigure slapd` en el siguiente paso para establecer el dominio del centro correctamente.
 
 ---
 
@@ -232,7 +236,7 @@ root@ubuntu-server:~# apt install slapd ldap-utils -y
 
 **SERVIDOR**
 
-Dado que Ubuntu 24.04 no lanza el asistente durante la instalación, hay que ejecutarlo manualmente. El comando `dpkg-reconfigure` permite reconfigurar un paquete ya instalado lanzando de nuevo su asistente interactivo:
+Dado que Ubuntu 26.04 no lanza el asistente durante la instalación, hay que ejecutarlo manualmente. El comando `dpkg-reconfigure` permite reconfigurar un paquete ya instalado lanzando de nuevo su asistente interactivo:
 
 ```bash
 root@ldap:~# dpkg-reconfigure slapd
@@ -258,7 +262,7 @@ IES
 Este nombre se usa como descripción de la raíz del árbol y puede contener espacios y caracteres especiales.
 
 **Pantalla 4 — "Administrator password:"**
-Introducir la contraseña deseada para la cuenta `cn=admin,dc=ies,dc=local`. Esta es la cuenta con privilegios máximos sobre el directorio.
+Introducir la contraseña deseada para la cuenta `cn=admin,dc=ies,dc=local`. Esta es la cuenta con privilegios máximos sobre el directorio. En este caso usaremos la contraseña `administrador`.
 
 **Pantalla 5 — "Confirm password:"**
 Repetir exactamente la misma contraseña para confirmar.
@@ -279,7 +283,7 @@ Al terminar el asistente, `slapd` se reinicia automáticamente con la nueva conf
 
 **SERVIDOR**
 
-Una vez configurado, verificar que el servicio `slapd` está activo y funcionando correctamente. En Ubuntu 24.04, `slapd` se gestiona como un servicio de systemd:
+Una vez configurado, verificar que el servicio `slapd` está activo y funcionando correctamente. En Ubuntu 26.04, `slapd` se gestiona como un servicio de systemd:
 
 ```bash
 root@ldap:~# systemctl status slapd
@@ -295,7 +299,7 @@ root@ldap:~# systemctl enable slapd
 
 Con `systemctl enable` se crea un enlace simbólico en los targets de arranque de systemd, garantizando que `slapd` se inicie automáticamente cada vez que el servidor arranque.
 
-Verificar que el servidor está escuchando conexiones en el puerto 389 (TCP). En Ubuntu 24.04, el comando `ss` muestra los sockets de red activos:
+Verificar que el servidor está escuchando conexiones en el puerto 389 (TCP). En Ubuntu 26.04, el comando `ss` muestra los sockets de red activos:
 
 ```bash
 root@ldap:~# ss -putan | grep 389
@@ -308,7 +312,7 @@ tcp   LISTEN 0      2048         0.0.0.0:389       0.0.0.0:*     users:(("slapd"
 tcp   LISTEN 0      2048            [::]:389          [::]:*     users:(("slapd",pid=882,fd=9))
 ```
 
-> **Nota:** La segunda línea con `[::]:389` indica que `slapd` también escucha en IPv6. Esto es normal en Ubuntu 24.04, que tiene IPv6 habilitado por defecto.
+> **Nota:** La segunda línea con `[::]:389` indica que `slapd` también escucha en IPv6. Esto es normal en Ubuntu 26.04, que tiene IPv6 habilitado por defecto.
 
 Realizar una búsqueda de prueba anónima (sin autenticarse) para confirmar que el directorio responde correctamente a consultas:
 
@@ -341,12 +345,12 @@ result: 0 Success
 | Parámetro | Descripción |
 |-----------|-------------|
 | `-x` | Usa autenticación simple en lugar de SASL. Es el modo estándar para la mayoría de operaciones |
-| `-H ldap://localhost` | Especifica la URI del servidor LDAP al que conectarse. También se puede usar `ldap://192.168.1.10` |
+| `-H ldap://localhost` | Especifica la URI del servidor LDAP al que conectarse. También se puede usar `ldap://192.168.10.4` |
 | `-b "dc=ies,dc=local"` | Define el punto de partida (*base*) de la búsqueda en el árbol. La búsqueda incluirá este nodo y todos sus descendientes |
 
 La respuesta mostrará la entrada raíz del directorio y finalizará con `result: 0 Success`, lo que confirma que el servidor está operativo.
 
-Verificar también que el firewall de Ubuntu (`ufw`) no está bloqueando el puerto 389. En Ubuntu 24.04, `ufw` viene instalado por defecto aunque puede estar desactivado:
+Verificar también que el firewall de Ubuntu (`ufw`) no está bloqueando el puerto 389. En Ubuntu 26.04, `ufw` viene instalado por defecto aunque puede estar desactivado:
 
 ```bash
 root@ldap:~# ufw status
@@ -361,6 +365,8 @@ root@ldap:~# ufw allow 636/tcp
 ```
 
 > **Nota:** Si `ufw` está `inactive`, no es necesario hacer nada con el firewall en este momento. En entornos de producción se recomienda activarlo y configurarlo adecuadamente, pero para la práctica de aula con una red interna es suficiente con tenerlo desactivado.
+
+> **Snapshot:** El servidor LDAP está instalado, configurado con el dominio correcto y respondiendo a consultas. Es un buen momento para crear una segunda instantánea (por ejemplo, `slapd-operativo`): si al crear la estructura del directorio se comete algún error difícil de deshacer, se podrá volver a este punto sin repetir la instalación.
 
 ---
 
@@ -587,7 +593,7 @@ root@ldap:~# ldapdelete -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W 
 
 Si la eliminación es correcta, se verá una línea `delete successful`. En caso de hacer esto es necesario volver a crearla para seguir con el ejercicio. En esta situación se hace fundamental el parámetro `-c` del comando `ldapadd` ya que sin él, LDAP detectaría que parte de los elementos del archivo LDIF ya existen en el directorio y detendría la importación. Con el parámetro `-c` se le indica a LDAP que ignore los errores y continúe con la importación.
 
-> **Advertencia:** Si es necesario eliminar una OU que contiene objetos, primero hay que eliminar todos los objetos que contiene, de dentro hacia afuera, empezando por los más profundos del árbol. LDAP no dispone de ninguna opción de borrado recursivo por defecto.
+> **Advertencia:** Si es necesario eliminar una OU que contiene objetos, primero hay que eliminar todos los objetos que contiene, de dentro hacia afuera, empezando por los más profundos del árbol. El protocolo LDAP no contempla el borrado recursivo; no obstante, la herramienta `ldapdelete` ofrece la opción `-r`, que realiza esa recursión desde el lado del cliente borrando primero los descendientes (se utilizará en la sección de carga total de datos). Debe usarse con muchísimo cuidado: elimina ramas completas sin pedir confirmación.
 
 ---
 
@@ -666,11 +672,11 @@ La solución adoptada en estos apuntes es asignar **un rango exclusivo de UIDs a
 | Alumnos SMR2 | `11001 – 11999` | `11000` | `11001`, `11002`… |
 | Alumnos FPB1 | `12001 – 12999` | `12000` | `12001`, `12002`… |
 | Alumnos FPB2 | `13001 – 13999` | `13000` | `13001`, `13002`… |
-| Profesores   | `20001 – 20999` | `30001` | `20001`, `20002`… |
+| Profesores   | `20001 – 20999` | `30000` | `20001`, `20002`… |
 
 Obsérvese que los GIDs de los grupos (`10000`, `11000`…) son distintos de los UIDs de los usuarios (`10001`, `11001`…). Esto es intencional: un UID y un GID son espacios de nombres independientes en Unix, y separar el GID del grupo del rango de UIDs de sus miembros evita cualquier ambigüedad.
 
-> **Nota práctica:** Cuando se use el script de importación masiva por CSV (sección 9), el propio fichero CSV controla el siguiente UID disponible de cada rango, eliminando el riesgo de duplicados. Para altas individuales puntuales, basta con hacer una búsqueda rápida del UID más alto usado en ese rango antes de asignar el siguiente: `ldapsearch -x -H ldap://localhost -b "ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local" "(objectClass=posixAccount)" uidNumber | grep uidNumber`
+> **Nota práctica:** Cuando se use el fichero LDIF de carga total (sección 9), los UID ya van asignados en el propio fichero siguiendo los rangos, eliminando el riesgo de duplicados. Para altas individuales puntuales, basta con hacer una búsqueda rápida del UID más alto usado en ese rango antes de asignar el siguiente: `ldapsearch -x -H ldap://localhost -b "ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local" "(objectClass=posixAccount)" uidNumber | grep uidNumber`
 
 ---
 
@@ -885,7 +891,7 @@ departmentNumber: Informática
 telephoneNumber: 600100001
 # Rango de UIDs para profesores: 20001–20999
 uidNumber: 20001
-gidNumber: 30001
+gidNumber: 30000
 homeDirectory: /home/profesores/p.rodriguez
 loginShell: /bin/bash
 userPassword: {SSHA}E5fG6hI7jK8lM9nO0pQ1rS2tU3vW4xY5
@@ -904,7 +910,7 @@ mail: l.sanchez@ies.local
 departmentNumber: Informática
 telephoneNumber: 600100002
 uidNumber: 20002
-gidNumber: 30001
+gidNumber: 30000
 homeDirectory: /home/profesores/l.sanchez
 loginShell: /bin/bash
 userPassword: {SSHA}F6gH7iJ8kL9mN0oP1qR2sT3uV4wX5yZ6
@@ -915,6 +921,67 @@ Importar los profesores:
 ```bash
 root@ldap:~# ldapadd -c -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W -f /root/ldif_ies/profesores-informatica.ldif
 ```
+
+---
+
+### Provisionar los directorios home en el servidor
+
+**SERVIDOR**
+
+LDAP almacena el atributo `homeDirectory` de cada usuario, pero **no crea el directorio**: eso es responsabilidad del administrador. Por tanto, el alta completa de un usuario consta de dos pasos: crear su entrada en el directorio (LDIF) y **provisionar su home en el servidor**. Estos directorios serán los que en la UD4 se exporten por NFS para los perfiles móviles, de modo que el alumno encuentre siempre sus ficheros inicie sesión donde inicie sesión.
+
+Crear primero la estructura base:
+
+```bash
+root@ldap:~# mkdir -p /home/alumnos /home/profesores
+```
+
+Provisionar el home de `a.garcia`: se crea el directorio, se copia la plantilla de `/etc/skel` (ficheros de configuración iniciales como `.bashrc` o `.profile`) y se asigna propietario y permisos. Obsérvese que el `chown` usa directamente los **números** UID:GID de la alumna:
+
+```bash
+root@ldap:~# mkdir /home/alumnos/a.garcia
+root@ldap:~# cp -r /etc/skel/. /home/alumnos/a.garcia/
+root@ldap:~# chown -R 10001:10000 /home/alumnos/a.garcia
+root@ldap:~# chmod 700 /home/alumnos/a.garcia
+```
+
+> **Nota:** El `chown` se hace con los números en crudo (`10001:10000`) porque el servidor no es cliente de su propio LDAP: no sabe resolver el nombre `a.garcia`. No es ningún problema: en los permisos de Linux lo único que existe realmente son los números, como se vio al estudiar los UID. Por el mismo motivo, `ls -l` en el servidor mostrará los propietarios como números y no como nombres.
+
+Para el resto de usuarios puede repetirse el proceso uno a uno o utilizar un pequeño bucle que lea `nombre:uid:gid` de cada usuario:
+
+```bash
+root@ldap:~# for u in c.lopez:10002:10000 l.moreno:11001:11000 m.fernandez:12001:12000 j.martin:13001:13000; do
+  IFS=: read nombre uid gid <<< "$u"
+  mkdir -p /home/alumnos/$nombre
+  cp -r /etc/skel/. /home/alumnos/$nombre/
+  chown -R $uid:$gid /home/alumnos/$nombre
+  chmod 700 /home/alumnos/$nombre
+done
+```
+
+```bash
+root@ldap:~# for u in p.rodriguez:20001:30000 l.sanchez:20002:30000; do
+  IFS=: read nombre uid gid <<< "$u"
+  mkdir -p /home/profesores/$nombre
+  cp -r /etc/skel/. /home/profesores/$nombre/
+  chown -R $uid:$gid /home/profesores/$nombre
+  chmod 700 /home/profesores/$nombre
+done
+```
+
+Verificar el resultado; los propietarios aparecen como UID/GID numéricos, tal y como se explicó en la nota anterior:
+
+```bash
+root@ldap:~# ls -ln /home/alumnos/
+total 20
+drwx------ 2 10001 10000 4096 ago 19 18:02 a.garcia
+drwx------ 2 10002 10000 4096 ago 19 18:04 c.lopez
+drwx------ 2 13001 13000 4096 ago 19 18:04 j.martin
+drwx------ 2 11001 11000 4096 ago 19 18:04 l.moreno
+drwx------ 2 12001 12000 4096 ago 19 18:04 m.fernandez
+```
+
+> **Importante:** A partir de ahora, cada vez que se dé de alta un usuario nuevo en LDAP debe provisionarse también su home siguiendo estos pasos. Un usuario sin home provisionado podrá autenticarse, pero no tendrá dónde guardar sus ficheros cuando los homes se sirvan por NFS.
 
 ---
 
@@ -989,10 +1056,39 @@ root@ldap:~# ldappasswd -x -H ldap://localhost -D "uid=a.garcia,ou=SMR1,ou=alumn
 
 ### Eliminar un usuario
 
-El comando `ldapdelete` elimina una entrada del directorio indicando su DN completo. La operación es instantánea e irreversible:
+El comando `ldapdelete` elimina una entrada del directorio indicando su DN completo. La operación es instantánea e irreversible. Para no perder a ninguno de los usuarios del centro, crearemos primero un usuario desechable de prueba, `b.temporal`, y lo eliminaremos a continuación:
 
 ```bash
-root@ldap:~# ldapdelete -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W "uid=a.garcia,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local"
+root@ldap:~# nano /root/ldif_ies/alumno-b.temporal.ldif
+```
+
+Contenido del fichero `/root/ldif_ies/alumno-b.temporal.ldif`:
+
+```ldif
+# Usuario desechable para practicar la eliminación
+dn: uid=b.temporal,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: b.temporal
+cn: Usuario Temporal
+sn: Temporal
+givenName: Usuario
+uidNumber: 10999
+gidNumber: 10000
+homeDirectory: /home/alumnos/b.temporal
+loginShell: /bin/bash
+```
+
+```bash
+root@ldap:~# ldapadd -c -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W -f /root/ldif_ies/alumno-b.temporal.ldif
+adding new entry "uid=b.temporal,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local"
+```
+
+Una vez creado, lo eliminamos indicando su DN completo:
+
+```bash
+root@ldap:~# ldapdelete -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W "uid=b.temporal,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local"
 ```
 
 > **Advertencia:** LDAP no tiene papelera de reciclaje ni pide confirmación. Antes de ejecutar `ldapdelete`, verificar el DN exacto realizando primero una búsqueda con `ldapsearch` para visualizar la entrada que se va a eliminar.
@@ -1010,6 +1106,7 @@ dn: ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local
 dn: ou=SMR2,ou=alumnos,ou=usuarios,dc=ies,dc=local
 dn: ou=FPB1,ou=alumnos,ou=usuarios,dc=ies,dc=local
 dn: ou=FPB2,ou=alumnos,ou=usuarios,dc=ies,dc=local
+dn: uid=a.garcia,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local
 dn: uid=c.lopez,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local
 dn: uid=l.moreno,ou=SMR2,ou=alumnos,ou=usuarios,dc=ies,dc=local
 dn: uid=m.fernandez,ou=FPB1,ou=alumnos,ou=usuarios,dc=ies,dc=local
@@ -1040,12 +1137,13 @@ En resumen: las **OUs de curso** hacen el árbol navegable y organizado visualme
 
 Esquema de GIDs para los grupos posixGroup. El GID de cada grupo se corresponde con el `gidNumber` asignado a los alumnos de ese curso:
 
-| Grupo | GID | uidNumber de sus alumnos | Descripción |
+| Grupo | GID | uidNumber de sus miembros | Descripción |
 |-------|-----|--------------------------|-------------|
 | `SMR1` | `10000` | `10001–10999` | Sistemas Microinformáticos y Redes 1º |
 | `SMR2` | `11000` | `11001–11999` | Sistemas Microinformáticos y Redes 2º |
 | `FPB1` | `12000` | `12001–12999` | Formación Profesional Básica 1º |
 | `FPB2` | `13000` | `13001–13999` | Formación Profesional Básica 2º |
+| `profesores` | `30000` | `20001–20999` | Profesores del departamento de informática |
 
 > **Nota:** Los GIDs de los grupos (`10000`, `11000`…) son distintos de los UIDs de los usuarios (`10001`, `11001`…) pero pertenecen al mismo rango numérico de forma deliberada. Esto hace que la relación sea inmediatamente legible: si ves que un usuario tiene `gidNumber: 12000`, sabes al instante que es alumno de FPB1 sin necesidad de consultar el directorio.
 
@@ -1088,6 +1186,14 @@ objectClass: posixGroup
 cn: FPB2
 gidNumber: 13000
 memberUid: j.martin
+
+# Grupo posixGroup: profesores — grupo primario de todos los profesores
+dn: cn=profesores,ou=grupos,dc=ies,dc=local
+objectClass: posixGroup
+cn: profesores
+gidNumber: 30000
+memberUid: p.rodriguez
+memberUid: l.sanchez
 ```
 
 Importar todos los grupos:
@@ -1162,7 +1268,7 @@ root@ldap:~# ldapdelete -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W 
 
 ## Búsquedas con ldapsearch
 
-**SERVIDOR** (también ejecutable desde **CLIENTE** una vez configurado, sustituyendo `localhost` por `192.168.1.10`)
+**SERVIDOR** (también ejecutable desde **CLIENTE** una vez configurado, sustituyendo `localhost` por `192.168.10.4`)
 
 `ldapsearch` es la herramienta principal para consultar el directorio LDAP. La sintaxis general es:
 
@@ -1288,37 +1394,37 @@ root@ldap:~# ss -putan | grep apache2
 tcp   LISTEN    0      511                *:80               *:*     users:(("apache2",pid=29550,fd=4),("apache2",pid=29549,fd=4),("apache2",pid=29548,fd=4),("apache2",pid=29547,fd=4),("apache2",pid=29546,fd=4),("apache2",pid=29532,fd=4))
 ```
 
-En este momento podremos visualizar la interfaz de administración del servicio. En nuestro caso la dirección será: `http://[IP_ADDRESS]/lam/` (podemos usar un port forward para acceder desde el navegador del anfitrión `http://localhost:8000/lam` o desde un equipo de la red NAT `http://192.168.1.10/lam`).
+En este momento podremos visualizar la interfaz de administración del servicio. En nuestro caso la dirección será: `http://[IP_ADDRESS]/lam/` (podemos usar un port forward para acceder desde el navegador del anfitrión `http://localhost:8000/lam` o desde un equipo de la red NAT `http://192.168.10.4/lam`).
 
-![Inicio](./recursos/LDAP/imagenes/1.png)
+![Inicio](./img-ldap/1.png)
 
 Una vez en este punto, tendremos que ir a **LAM Configuration** y luego a **Edit server profiles**.
 
-![Editar perfil del servidor](./recursos/LDAP/imagenes/2.png)
+![Editar perfil del servidor](./img-ldap/2.png)
 
 En la siguiente vista introduciremos los datos por defecto que deben de modificarse lo antes posible (lam:lam).
 
-![Acceso de edición](./recursos/LDAP/imagenes/3.png)
+![Acceso de edición](./img-ldap/3.png)
 
 Realizamos la siguiente configuración básica.
 
-![Configuración](./recursos/LDAP/imagenes/4.png)
+![Configuración](./img-ldap/4.png)
 
 Indicamos los tipos de cuentas existentes en nuestro LDAP.
 
-![Tipos de cuentas](./recursos/LDAP/imagenes/5.png)
+![Tipos de cuentas](./img-ldap/5.png)
 
 Establecemos los módulos de cada objeto.
 
-![Módulos](./recursos/LDAP/imagenes/6.png)
+![Módulos](./img-ldap/6.png)
 
-Así como las preferencias del própio módulo
+Así como las preferencias del propio módulo
 
-![Preferencias](./recursos/LDAP/imagenes/7.png)
+![Preferencias](./img-ldap/7.png)
 
 Podemos ver el árbol del LDAP actual con las OUs de curso:
 
-![Arbol](./recursos/LDAP/imagenes/8.png)
+![Arbol](./img-ldap/8.png)
 
 En este momento a través de la interfaz podemos crear elementos, eliminarlos, modificarlos, etc.
 
@@ -1329,9 +1435,16 @@ En este momento a través de la interfaz podemos crear elementos, eliminarlos, m
 Primero de todo eliminamos toda la estructura LDAP creada anteriormente.
 
 ```bash
+ldapdelete -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W -r "ou=usuarios,dc=ies,dc=local" "ou=grupos,dc=ies,dc=local"
+```
+
+Como alternativa a lo anterior.
+
+```bash
 ldapdelete -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W \
 "uid=m.fernandez,ou=FPB1,ou=alumnos,ou=usuarios,dc=ies,dc=local" \
 "uid=j.martin,ou=FPB2,ou=alumnos,ou=usuarios,dc=ies,dc=local" \
+"uid=a.garcia,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local" \
 "uid=c.lopez,ou=SMR1,ou=alumnos,ou=usuarios,dc=ies,dc=local" \
 "uid=l.moreno,ou=SMR2,ou=alumnos,ou=usuarios,dc=ies,dc=local" \
 "uid=l.sanchez,ou=profesores,ou=usuarios,dc=ies,dc=local" \
@@ -1345,14 +1458,9 @@ ldapdelete -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W \
 "cn=FPB1,ou=grupos,dc=ies,dc=local" \
 "cn=SMR1,ou=grupos,dc=ies,dc=local" \
 "cn=SMR2,ou=grupos,dc=ies,dc=local" \
+"cn=profesores,ou=grupos,dc=ies,dc=local" \
 "ou=usuarios,dc=ies,dc=local" \
 "ou=grupos,dc=ies,dc=local"
-```
-
-Como alternativa a lo anterior.
-
-```bash
-ldapdelete -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W -r "ou=usuarios,dc=ies,dc=local" "ou=grupos,dc=ies,dc=local"
 ```
 
 A continuación, crearemos un fichero LDIF con los datos que queremos insertar por completo. Tenemos una opción que permite en LAM añadir toda la estructura LDAP importando el fichero.
@@ -1417,8 +1525,9 @@ ou: FPB2
 description: Alumnos de 2o de Formacion Profesional Basica
 
 # =============================================================================
-# BLOQUE 4 — GRUPOS DE CURSO
-# Esquema de GIDs: SMR1(10000), SMR2(11000), FPB1(12000), FPB2(13000)
+# BLOQUE 4 — GRUPOS
+# Esquema de GIDs: SMR1(10000), SMR2(11000), FPB1(12000), FPB2(13000),
+#                  profesores(30000)
 # =============================================================================
 
 dn: cn=SMR1,ou=grupos,dc=ies,dc=local
@@ -1449,6 +1558,14 @@ cn: FPB2
 gidNumber: 13000
 description: Formacion Profesional Basica 2 curso
 memberUid: j.martin
+
+dn: cn=profesores,ou=grupos,dc=ies,dc=local
+objectClass: posixGroup
+cn: profesores
+gidNumber: 30000
+description: Profesores del departamento de informatica
+memberUid: p.rodriguez
+memberUid: l.sanchez
 
 # =============================================================================
 # BLOQUE 5 — ALUMNOS (Ubicados en sus respectivas OUs de curso)
@@ -1558,7 +1675,7 @@ mail: p.rodriguez@ies.local
 departmentNumber: Informatica
 telephoneNumber: 600100001
 uidNumber: 20001
-gidNumber: 30001
+gidNumber: 30000
 homeDirectory: /home/profesores/p.rodriguez
 loginShell: /bin/bash
 userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
@@ -1575,15 +1692,19 @@ mail: l.sanchez@ies.local
 departmentNumber: Informatica
 telephoneNumber: 600100002
 uidNumber: 20002
-gidNumber: 30001
+gidNumber: 30000
 homeDirectory: /home/profesores/l.sanchez
 loginShell: /bin/bash
 userPassword: {SSHA}Tihu2vGOlJH8D/ktAMo5GI6xT5I9L1KY
 ```
 
+> **Advertencia — contraseñas:** Los valores `userPassword` de este fichero son hashes de ejemplo cuya contraseña en claro se desconoce. Antes de importar, **generar un hash propio** con `slappasswd` (puede usarse la misma contraseña de prácticas para todos los usuarios) y sustituir con él todos los `userPassword` del fichero. Si no se hace, los usuarios existirán pero será imposible iniciar sesión con ellos en la verificación del cliente. Como alternativa, tras la importación pueden restablecerse las contraseñas una a una con `ldappasswd -S`.
+
 Como resultado de la importación tenemos lo siguiente:
 
-![Importación realizada](./recursos/LDAP/imagenes/9.png)
+![Importación realizada](./img-ldap/9.png)
+
+> **Recuerda:** La carga total recrea exactamente los mismos usuarios, con los mismos UID y GID, por lo que los homes provisionados en la sección 5.6 siguen siendo válidos sin cambios. Si se añaden usuarios nuevos (por LDIF o desde LAM), hay que provisionar su home en el servidor como se explicó en dicha sección.
 
 ---
 
@@ -1595,7 +1716,7 @@ Como resultado de la importación tenemos lo siguiente:
 
 En versiones antiguas de Ubuntu y Debian se usaba la combinación `libnss-ldap` + `libpam-ldap` para conectar el cliente al directorio LDAP. Este enfoque, aunque funcional, tiene varios inconvenientes: no tiene caché propia (dependía del demonio `nscd`), la configuración está fragmentada en múltiples ficheros y no soporta bien escenarios avanzados.
 
-**SSSD** (*System Security Services Daemon*) es el método **recomendado actualmente en Ubuntu 24.04** para integrar clientes Linux con directorios LDAP (y también con Active Directory, Kerberos, etc.). Sus ventajas frente al enfoque clásico son:
+**SSSD** (*System Security Services Daemon*) es el método **recomendado actualmente en Debian 13 y Ubuntu 26.04** para integrar clientes Linux con directorios LDAP (y también con Active Directory, Kerberos, etc.). Sus ventajas frente al enfoque clásico son:
 
 | Característica | libnss-ldap + libpam-ldap | SSSD |
 |----------------|--------------------------|------|
@@ -1605,7 +1726,7 @@ En versiones antiguas de Ubuntu y Debian se usaba la combinación `libnss-ldap` 
 | Rendimiento | Bajo en redes lentas | Alto gracias a la caché |
 | Mantenimiento activo | Abandonado | Activamente mantenido |
 
-> **Nota:** En Ubuntu 24.04.3 LTS, los paquetes `libnss-ldap` y `libpam-ldap` están disponibles en los repositorios pero su uso ya no se recomienda. SSSD es la solución oficial y moderna para esta tarea.
+> **Nota:** En Debian 13 y Ubuntu 26.04 LTS, los paquetes `libnss-ldap` y `libpam-ldap` están disponibles en los repositorios pero su uso ya no se recomienda. SSSD es la solución oficial y moderna para esta tarea.
 
 ---
 
@@ -1651,7 +1772,7 @@ config_file_version = 2
 [domain/ies.local]
 id_provider = ldap
 auth_provider = ldap
-ldap_uri = ldap://192.168.1.10
+ldap_uri = ldap://192.168.10.4
 ldap_search_base = dc=ies,dc=local
 ldap_schema = rfc2307
 ldap_user_search_base = ou=usuarios,dc=ies,dc=local
@@ -1661,7 +1782,7 @@ cache_credentials = true
 entry_cache_timeout = 300
 enumerate = true
 chpass_provider = ldap
-ldap_chpass_uri = ldap://192.168.1.10
+ldap_chpass_uri = ldap://192.168.10.4
 ldap_tls_reqcert = never
 ldap_chpass_update_last_change = true
 ldap_id_use_start_tls = false
@@ -1727,7 +1848,9 @@ El orden `files sss` es importante: el sistema consulta primero los ficheros loc
 
 **CLIENTE**
 
-En Ubuntu 24.04, la instalación de `libpam-sss` modifica automáticamente los ficheros PAM para incluir el módulo de SSSD. Sin embargo, es recomendable verificar que la configuración es correcta.
+> **Snapshot:** Antes de tocar ningún fichero de PAM, crear una instantánea de la máquina cliente (por ejemplo, `pre-pam`). Un error en la configuración de PAM puede impedir por completo el inicio de sesión en el equipo, incluido `root`, y la instantánea es la única vuelta atrás sencilla.
+
+En Debian 13, la instalación de `libpam-sss` modifica automáticamente los ficheros PAM para incluir el módulo de SSSD. Sin embargo, es recomendable verificar que la configuración es correcta.
 
 Revisar el fichero de autenticación principal:
 
@@ -1809,7 +1932,7 @@ Si alguno de estos módulos no está presente, añadirlo manualmente **antes** d
 
 > **Recuerda:** Los ficheros de `/etc/pam.d/` son extremadamente delicados. Un error en la configuración de PAM puede impedir completamente el acceso al sistema, incluyendo a `root`. Antes de modificarlos, abrir una segunda sesión de terminal activa como respaldo.
 
-> **Nota:** En Ubuntu 24.04, existe el comando `pam-auth-update` que gestiona la configuración de PAM de forma automatizada a través de perfiles. Si se prefiere, ejecutar `pam-auth-update` y activar el perfil de SSSD desde el menú interactivo en lugar de editar los ficheros manualmente.
+> **Nota:** En Debian 13, existe el comando `pam-auth-update` que gestiona la configuración de PAM de forma automatizada a través de perfiles. Si se prefiere, ejecutar `pam-auth-update` y activar el perfil de SSSD desde el menú interactivo en lugar de editar los ficheros manualmente.
 
 ---
 
@@ -1818,13 +1941,14 @@ Si alguno de estos módulos no está presente, añadirlo manualmente **antes** d
 Antes de nada procedemos a reiniciar el servicio si no lo hemos realizado anteriormente.
 
 ```bash
+root@cliente:~# apt install sssd-tools -y
 root@cliente:~# sss_cache -E
 root@cliente:~# systemctl restart sssd
 ```
 
 **CLIENTE**
 
-Cuando un alumno LDAP inicia sesión por primera vez en un PC del aula, su directorio home (`/home/alumnos/a.garcia`) no existe físicamente en ese equipo. El módulo PAM `pam_mkhomedir.so` crea automáticamente ese directorio la primera vez que el usuario inicia sesión, copiando la plantilla de `/etc/skel`.
+Los homes definitivos de los usuarios están provisionados en el **servidor** (sección 5.6) y en la UD4 se servirán por NFS. Sin embargo, mientras no exista ese montaje NFS, cuando un alumno LDAP inicia sesión en un PC del aula su directorio home (`/home/alumnos/a.garcia`) no existe físicamente en ese equipo. Para que la práctica funcione de forma autónoma en esta unidad, se configura el módulo PAM `pam_mkhomedir.so`, que crea automáticamente el directorio la primera vez que el usuario inicia sesión, copiando la plantilla de `/etc/skel`.
 
 Editar el fichero de sesión de PAM:
 
@@ -1852,6 +1976,8 @@ root@cliente:~# mkdir -p /home/profesores
 
 > **Importante:** El directorio padre del home debe existir físicamente en el cliente. Si el `homeDirectory` del usuario LDAP es `/home/alumnos/a.garcia`, el directorio `/home/alumnos/` debe existir en el disco del cliente antes de que el usuario intente iniciar sesión. `pam_mkhomedir` crea el directorio del usuario, pero no los directorios padre intermedios.
 
+> **Nota — de cara a los perfiles móviles:** Con esta configuración provisional, cada cliente crea el home localmente en su propio disco: el alumno tiene un home distinto en cada equipo. En la UD4, el servidor exportará `/home/alumnos` y `/home/profesores` por NFS y los clientes los montarán en esas mismas rutas: los homes reales pasarán a ser los provisionados en el servidor (sección 5.6), y los homes locales creados por `pam_mkhomedir` quedarán ocultos bajo el montaje. Esta es la razón por la que los homes se provisionan en el servidor: `pam_mkhomedir` se ejecuta como root en el cliente y, con la opción por defecto `root_squash` de NFS, no podría crear directorios dentro del montaje. Al existir ya los homes (el módulo solo actúa cuando el directorio no existe), la exportación NFS puede mantener `root_squash` sin renunciar a la seguridad.
+
 ---
 
 ### Verificación desde el cliente
@@ -1875,7 +2001,7 @@ root@cliente:~# getent passwd a.garcia
 Salida esperada:
 
 ```
-a.garcia:x:10001:10000:Ana García López:/home/alumnos/a.garcia:/bin/bash
+a.garcia:x:10001:10000:Ana Garcia Lopez:/home/alumnos/a.garcia:/bin/bash
 ```
 
 **Prueba 2 — Verificar que NSS resuelve grupos LDAP:**
@@ -1896,7 +2022,9 @@ Intentar cambiar al usuario `a.garcia` con `sudo su -`. El sistema consultará S
 
 ```bash
 root@cliente:~$ sudo su - a.garcia
-Creando directorio «/home/a.garcia».```
+Creando directorio «/home/alumnos/a.garcia».
+a.garcia@debian:~$ pwd
+/home/alumnos/a.garcia
 ```
 
 Si la autenticación funciona, se iniciará la sesión como `a.garcia`, se creará automáticamente `/home/alumnos/a.garcia/` y el prompt cambiará a `a.garcia@cliente:~$`.
@@ -1905,6 +2033,11 @@ Si la autenticación funciona, se iniciará la sesión como `a.garcia`, se crear
 
 ```bash
 root@cliente:~# ssh a.garcia@localhost
+...
+a.garcia@debian:~$ exit
+cerrar sesión
+Connection to localhost closed.
+root@debian:~#
 ```
 
 **Prueba 5 — Ver el contenido de la caché de SSSD** (herramienta de diagnóstico):
@@ -1920,4 +2053,10 @@ El comando `id` devuelve el UID, GID y grupos del usuario resolviendo a través 
 uid=10001(a.garcia) gid=10000(SMR1) groups=10000(SMR1)
 ```
 
-> **Nota de diagnóstico:** Si `getent` no devuelve nada, el problema puede estar en la configuración de SSSD (`/etc/sssd/sssd.conf`), en la conectividad de red con el servidor LDAP o en los permisos del fichero de configuración. Verificar con `ping 192.168.1.10` y revisar los logs de SSSD con `journalctl -u sssd -f`. Si `getent` funciona pero el login falla, el problema está en PAM (revisar `/etc/pam.d/common-auth`).
+> **Nota de diagnóstico:** Si `getent` no devuelve nada, el problema puede estar en la configuración de SSSD (`/etc/sssd/sssd.conf`), en la conectividad de red con el servidor LDAP o en los permisos del fichero de configuración. Verificar con `ping 192.168.10.4` y revisar los logs de SSSD con `journalctl -u sssd -f`. Si `getent` funciona pero el login falla, el problema está en PAM (revisar `/etc/pam.d/common-auth`).
+
+**Prueba 6 — Acceso desde GUI (GNOME)**
+
+Como prueba definitiva probamos un usuario desde la interfaz del cliente.
+
+![Acceso desde interfaz](./img-ldap/10.png)
