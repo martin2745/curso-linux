@@ -393,6 +393,7 @@ Tras modificar `/etc/fstab` con opciones de `systemd` es necesario recargar la c
 ```bash
 root@cliente:~# systemctl daemon-reload
 root@cliente:~# mount -a
+root@cliente:~# reboot
 ```
 
 Comprobar que no se ha producido ningún error y que las unidades `automount` están activas:
@@ -407,11 +408,7 @@ home-profesores.automount     loaded active running Automount /home/profesores
 
 > **Importante:** Sin `x-systemd.automount`, un cliente que arranque mientras el servidor está apagado puede quedarse esperando en el proceso de arranque hasta agotar el tiempo de espera. En un aula con veinte equipos que se encienden a la vez cada mañana, esta opción marca la diferencia entre un arranque normal y veinte equipos bloqueados.
 
-Reiniciar el cliente y comprobar que todo sigue funcionando tras el arranque:
-
-```bash
-root@cliente:~# reboot
-```
+Comprobar que todo sigue funcionando tras el arranque:
 
 ```bash
 root@cliente:~# ls /home/alumnos/
@@ -486,7 +483,7 @@ Trabajo de SORE realizado en el cliente
 
 La verificación anterior demuestra que el home está centralizado, pero no que sea **móvil**. Para comprobarlo de verdad hace falta un segundo equipo del aula:
 
-1. Apagar el cliente y **clonar la máquina virtual** en VirtualBox, marcando la opción de reinicializar la dirección MAC de las tarjetas de red.
+1. Apagar el cliente y **clonar la máquina virtual** en VirtualBox, marcando la opción de: **Generar nuevas direcciones MAC para todos los adaptadores de red**.
 2. Arrancar el clon y cambiarle el nombre de host y la dirección IP para que no colisionen con los del original:
 
 ```bash
