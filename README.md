@@ -139,9 +139,10 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [01 - LDAP con OpenLDAP (slapd)](./sistemas_operativos_en_red/01_ldap-slapd.md)
 - [02 - NFS](./sistemas_operativos_en_red/02_NFS.md)
 - [03 - Perfiles móviles en Linux con LDAP y NFS](./sistemas_operativos_en_red/03_perfiles_moviles.md)
-- [04 - Samba](./sistemas_operativos_en_red/04_samba.md)
+- [04 - Seguridad del escenario y kerberos](./sistemas_operativos_en_red/04_seguridad_del%20escenario_y_kerberos.md)
+- [05 - Samba](./sistemas_operativos_en_red/05_samba.md)
 
-#### Active Directory con Samba
+#### Active Directory con Samba promocionado a controlador de dominio
 
 - [00 - Consideraciones iniciales y preparación del entorno](./sistemas_operativos_en_red/Active-Directory-Samba/00_consideraciones.md)
 - [01 - Configuración de red estática y Netplan](./sistemas_operativos_en_red/Active-Directory-Samba/01_configuracion_red_interna.md)
