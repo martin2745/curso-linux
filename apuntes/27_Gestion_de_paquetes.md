@@ -2,20 +2,20 @@
 
 ## Índice
 
-1. [Concepto de Paquete y Repositorio](#1-concepto-de-paquete-y-repositorio)
+1. [Concepto de paquete y repositorio](#1-concepto-de-paquete-y-repositorio)
 2. [Sistemas basados en Debian (.deb)](#2-sistemas-basados-en-debian-deb)
-   1. [Herramienta dpkg](#herramienta-dpkg)
-   2. [Herramienta apt](#herramienta-apt)
-   3. [Búsqueda e instalación de paquetes con apt](#búsqueda-e-instalación-de-paquetes-con-apt)
-   4. [Actualización de la distribución](#actualización-de-la-distribución)
-   5. [Diferencias entre clean, remove, purge y autoremove](#diferencias-entre-clean-remove-purge-y-autoremove)
+   1. [Herramienta dpkg](#21-herramienta-dpkg)
+   2. [Herramienta apt](#22-herramienta-apt)
+   3. [Búsqueda e instalación de paquetes con apt](#23-búsqueda-e-instalación-de-paquetes-con-apt)
+   4. [Actualización de la distribución](#24-actualización-de-la-distribución)
+   5. [Diferencias entre clean, remove, purge y autoremove](#25-diferencias-entre-clean-remove-purge-y-autoremove)
 3. [Sistemas basados en Red Hat (.rpm)](#3-sistemas-basados-en-red-hat-rpm)
-   1. [Herramienta rpm](#herramienta-rpm)
-   2. [Herramienta yum / dnf](#herramienta-yum--dnf)
+   1. [Herramienta rpm](#31-herramienta-rpm)
+   2. [Herramienta yum / dnf](#32-herramienta-yum--dnf)
 
 ---
 
-## 1. Concepto de Paquete y Repositorio
+## 1. Concepto de paquete y repositorio
 
 A diferencia de Windows, en los sistemas Linux y Unix no es común contar con programas que incluyan un instalador interactivo (como el típico `install.exe`). En ocasiones, algunos desarrolladores ofrecen scripts de instalación que, en la mayoría de los casos, simplemente descomprimen los archivos y los colocan en los directorios correspondientes.
 
@@ -34,7 +34,7 @@ Cada distribución de Linux utiliza diferentes formatos de paquetes, siendo dos 
 
 ## 2. Sistemas basados en Debian (.deb)
 
-### Herramienta dpkg
+### 2.1 Herramienta dpkg
 
 Gestiona paquetes **`.deb`** a bajo nivel, es decir, **sin gestión automática de dependencias**. La base de datos de `dpkg` donde figura todo lo instalado está en `/var/lib/dpkg`.
 
@@ -65,12 +65,74 @@ Configurando debian-refcard (12.0) ...
 ```
 
 > **Recuerda:** Cuando ejecutamos `dpkg -l`, un paquete instalado correctamente aparecerá marcado como `ii`, mientras que uno eliminado (pero no purgado) aparecerá como `rc`. Para volver a configurar un paquete interactivo, usa el comando `dpkg-reconfigure nombre_paquete`.
+>
+> Las dos letras del estado responden a dos preguntas distintas: la primera indica lo que el administrador **desea** y la segunda lo que **hay**.
+>
+> | Código | Significado |
+> |---|---|
+> | `ii` | Se quiere instalado y está instalado correctamente. |
+> | `rc` | Se pidió su eliminación y solo quedan sus ficheros de configuración. |
+> | `iU` | Se quiere instalado pero está desempaquetado y sin configurar. |
+> | `iF` | Se quiere instalado pero su configuración quedó a medias. |
+
+> **Nota:** Dos comandos de diagnóstico que conviene conocer:
+>
+> - `dpkg --audit` enumera los paquetes que quedaron a medio instalar o sin configurar, algo típico tras un corte de corriente o un `apt` interrumpido. La reparación habitual es `dpkg --configure -a` o `apt --fix-broken install`.
+> - `dpkg -V paquete` verifica la integridad de los ficheros instalados comparando sus sumas de comprobación con las registradas. Una salida vacía significa que todo está intacto.
+
+> **Recuerda:** `dpkg -S` solo localiza ficheros de paquetes **ya instalados**. Para averiguar qué paquete habría que instalar para disponer de un fichero que aún no se tiene, la herramienta es `apt-file`:
+>
+> ```bash
+> root@debian:~# apt install apt-file && apt-file update
+> root@debian:~# apt-file search bin/htpasswd
+> apache2-utils: /usr/bin/htpasswd
+> ```
 
 ---
 
-### Herramienta apt
+### 2.2 Herramienta apt
 
 Facilita la instalación de paquetes **`.deb`**, descargándolos de los repositorios y **gestionando automáticamente sus dependencias**. Los repositorios que utiliza `apt` se definen en `/etc/apt/sources.list` y dentro del directorio `/etc/apt/sources.list.d/`.
+
+#### El fichero de repositorios
+
+Cada línea del formato clásico de `sources.list` sigue esta estructura:
+
+```bash
+deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security trixie-security main
+```
+
+| Campo | Significado |
+|---|---|
+| `deb` / `deb-src` | Paquetes binarios ya compilados, o código fuente. Las líneas `deb-src` solo hacen falta si se va a recompilar software. |
+| URI | Dirección del servidor espejo. `deb.debian.org` es el servicio oficial de redirección descrito en el documento 00. |
+| Distribución | Nombre en clave de la versión (`trixie`, `bookworm`) o su alias de ciclo de vida (`stable`, `testing`, `unstable`). |
+| Componentes | Secciones del archivo, según la licencia del software. |
+
+Los componentes de Debian responden a criterios de licencia y no de calidad:
+
+| Componente | Contenido |
+|---|---|
+| `main` | Software totalmente libre y que no depende de nada fuera de `main`. Es lo único que forma parte oficialmente de Debian. |
+| `contrib` | Software libre, pero que necesita algún componente no libre para funcionar. |
+| `non-free` | Software con restricciones de licencia, como el compresor `rar` mencionado en el documento 23. |
+| `non-free-firmware` | Componente introducido en Debian 12 para separar el firmware privativo de dispositivos del resto de `non-free`. |
+
+> **Advertencia:** Elegir el nombre en clave (`trixie`) o el alias (`stable`) no es indiferente. Con `stable`, la máquina saltará sola a la siguiente versión mayor de Debian en cuanto esta se publique, en medio de un `apt upgrade` rutinario y sin previo aviso. En un servidor conviene fijar siempre el nombre en clave y decidir la actualización de forma consciente.
+
+> **Nota:** A partir de Debian 12, la distribución emplea por defecto el formato **deb822**, con ficheros `.sources` en lugar de `.list`. Una instalación nueva de Debian 13 trae su configuración en `/etc/apt/sources.list.d/debian.sources` con este aspecto:
+>
+> ```bash
+> Types: deb
+> URIs: http://deb.debian.org/debian
+> Suites: trixie trixie-updates
+> Components: main
+> Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+> ```
+>
+> Ambos formatos conviven y `apt` los lee indistintamente, pero conviene saber cuál usa la máquina antes de editar nada. Se comprueba con `apt policy` o mirando el contenido de `/etc/apt/sources.list.d/`.
 
 | Comando `apt` | Funcionalidad |
 |---------------|---------------|
@@ -85,10 +147,38 @@ Facilita la instalación de paquetes **`.deb`**, descargándolos de los reposito
 | `list --installed` | Muestra una lista de todos los paquetes instalados por APT. |
 | `clean` | Elimina **todos** los instaladores `.deb` de la caché (`/var/cache/apt/archives/`). |
 | `autoclean` | Elimina **solo** los `.deb` antiguos u obsoletos de la caché. |
+| `show` | Muestra la descripción completa, la versión, el tamaño y las dependencias de un paquete. |
+| `policy` | Indica qué versión hay instalada, cuál es la candidata y de qué repositorio procede cada una. |
+| `depends` / `rdepends` | Lista las dependencias de un paquete, o los paquetes que dependen de él. |
+| `list --upgradable` | Muestra qué paquetes tienen actualización pendiente. |
+
+> **Importante:** `apt` y `apt-get` no son intercambiables sin más. `apt` nació como interfaz **para uso interactivo**: agrupa las funciones más usadas de `apt-get` y `apt-cache`, muestra barras de progreso y colorea la salida. Precisamente por eso, sus mensajes y su comportamiento pueden cambiar entre versiones, y al ejecutarlo dentro de un script avisa:
+>
+> ```bash
+> WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+> ```
+>
+> Dentro de un script hay que usar `apt-get` y `apt-cache`, cuya interfaz sí está garantizada.
+
+> **Recuerda:** Existe una diferencia importante entre `apt upgrade` y `apt full-upgrade`. El primero nunca elimina paquetes ni instala otros nuevos: si una actualización exigiera cualquiera de las dos cosas, la deja retenida y avisa con `Los siguientes paquetes se han retenido`. El segundo sí está autorizado a añadir y quitar paquetes para resolver el conflicto. Por eso el primero es seguro para el mantenimiento diario y el segundo es el que se necesita al saltar de versión.
+
+#### Fijar la versión de un paquete
+
+Cuando interesa que un paquete concreto no se actualice, por ejemplo el núcleo de un servidor en producción o una versión de base de datos con la que una aplicación es compatible, se marca como retenido:
+
+```bash
+root@debian:~# apt-mark hold nginx
+nginx puesto en retenido
+root@debian:~# apt-mark showhold
+nginx
+root@debian:~# apt-mark unhold nginx
+```
+
+> **Nota:** `apt-mark` sirve además para corregir la clasificación de un paquete. `apt-mark manual paquete` lo marca como instalado expresamente por el administrador, de modo que `apt autoremove` no lo retire; `apt-mark auto paquete` hace lo contrario y permite que se elimine cuando deje de ser necesario.
 
 ---
 
-### Búsqueda e instalación de paquetes con apt
+### 2.3 Búsqueda e instalación de paquetes con apt
 
 El comando `apt search` (o el tradicional `apt-cache search`) permite localizar paquetes:
 
@@ -121,22 +211,34 @@ neovim/oldstable,now 0.7.2-7 amd64 [instalado]
 
 ---
 
-### Actualización de la distribución
+### 2.4 Actualización de la distribución
 
 Para realizar saltos de versión (por ejemplo, de Debian 12 "Bookworm" a Debian 13 "Trixie"), el proceso es el siguiente:
 
 ```bash
+root@debian:~# cp -a /etc/apt/sources.list /etc/apt/sources.list.bak
 root@debian:~# sed -i 's/bookworm/trixie/g' /etc/apt/sources.list
 root@debian:~# sed -i 's/bookworm/trixie/g' /etc/apt/sources.list.d/*.list
 root@debian:~# apt update
-root@debian:~# apt upgrade -y
-root@debian:~# apt dist-upgrade -y
+root@debian:~# apt upgrade --without-new-pkgs
+root@debian:~# apt full-upgrade
+root@debian:~# apt --purge autoremove
 root@debian:~# reboot
 ```
 
+> **Advertencia:** Los dos comandos `sed` solo actúan sobre ficheros con extensión `.list`. Si la máquina emplea el formato **deb822** descrito más arriba, su configuración vive en ficheros `.sources` y el patrón no encontrará nada, con lo que `apt update` seguirá apuntando a la versión antigua y el salto no se producirá. En ese caso hay que incluir también:
+>
+> ```bash
+> root@debian:~# sed -i 's/bookworm/trixie/g' /etc/apt/sources.list.d/*.sources
+> ```
+
+> **Importante:** El orden `upgrade --without-new-pkgs` antes de `full-upgrade` es el que recomiendan las notas de publicación de Debian, y no es caprichoso. La primera pasada actualiza lo que puede sin eliminar nada, de modo que el sistema queda en un estado coherente; la segunda resuelve ya los cambios que exigen añadir o retirar paquetes. Hacer directamente `full-upgrade` sobre un sistema a medio actualizar multiplica las posibilidades de quedarse con dependencias rotas a mitad de proceso.
+
+> **Recuerda:** Antes de un salto de versión conviene siempre comprobar que no queda nada a medias (`dpkg --audit`), que no hay paquetes retenidos que puedan bloquear el proceso (`apt-mark showhold`), leer las notas de publicación de la versión de destino y, sobre todo, disponer de una copia de seguridad. En una máquina virtual, una instantánea previa resuelve el problema por completo.
+
 ---
 
-### Diferencias entre clean, remove, purge y autoremove
+### 2.5 Diferencias entre clean, remove, purge y autoremove
 
 Cuando se instalan paquetes, `apt` descarga temporalmente los instaladores en `/var/cache/apt/archives/`. Para no saturar el disco, debemos saber diferenciarlos:
 
@@ -152,7 +254,7 @@ Cuando se instalan paquetes, `apt` descarga temporalmente los instaladores en `/
 
 ## 3. Sistemas basados en Red Hat (.rpm)
 
-### Herramienta rpm
+### 3.1 Herramienta rpm
 
 Gestiona paquetes `.rpm` a bajo nivel sin resolver automáticamente dependencias. La base de datos de los paquetes instalados reside en `/var/lib/rpm`. 
 
@@ -178,7 +280,7 @@ Gestiona paquetes `.rpm` a bajo nivel sin resolver automáticamente dependencias
 
 ---
 
-### Herramienta yum / dnf
+### 3.2 Herramienta yum / dnf
 
 Es el equivalente a `apt` en distribuciones Red Hat (CentOS, Fedora, Rocky, AlmaLinux). Resuelve dependencias automáticamente. Modernamente, `dnf` reemplaza a `yum`, manteniendo la misma sintaxis de comandos.
 
@@ -186,7 +288,7 @@ Es el equivalente a `apt` en distribuciones Red Hat (CentOS, Fedora, Rocky, Alma
 |---------------|---------------|
 | `install` | Instala paquetes y resuelve dependencias. |
 | `update` | Actualiza todos los paquetes instalados. |
-| `check-update` | Comprueba si existen actualizaciones (equivalente a `apt update`). |
+| `check-update` | Lista los paquetes que tienen actualización disponible. Se parece más a `apt list --upgradable` que a `apt update`, ya que `yum` y `dnf` refrescan sus metadatos automáticamente cuando caducan. El equivalente exacto de `apt update` sería `dnf makecache`. |
 | `remove` | Elimina paquetes. |
 | `search` | Busca paquetes en los repositorios (`.repo` en `/etc/yum.repos.d/`). |
 | `info` | Muestra información detallada de un paquete. |

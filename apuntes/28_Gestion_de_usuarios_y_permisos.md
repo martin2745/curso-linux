@@ -1,53 +1,43 @@
-# Gestion de usuarios y permisos
+# Gestión de usuarios y permisos
 
 ## Índice
 
-1. [Archivos de configuración](#archivos-de-configuracion)
-2. [su y sudo](#su-y-sudo)
-3. [visudo y sudoers](#visudo-y-sudoers)
-   1. [id, groups, passwd](#id-groups-passwd)
-4. [useradd, usermod, userdel, groupadd, groupdel](#useradd-usermod-userdel-groupadd-groupdel)
-   1. [chfn, chsh](#chfn-chsh)
-   2. [/etc/nologin](#etcnologin)
-   3. [gpasswd](#gpasswd)
-   4. [ulimit](#ulimit)
-5. [Campo tipo](#campo-tipo)
-6. [Permisos](#permisos)
-7. [Máscara de permisos en linux](#mascara-de-permisos-en-linux)
-   1. [Comando `umask`](#comando-`umask`)
-   2. [`umask -S`](#`umask--s`)
-   3. [Diferencia en la Asignación de Permisos entre Directorios y Archivos](#diferencia-en-la-asignacion-de-permisos-entre-directorios-y-archivos)
-8. [Permisos especiales: Setuid, Setgid, Sticky Bit](#permisos-especiales-setuid-setgid-sticky-bit)
-   1. [Setuid (Set User ID - SUID)](#setuid-(set-user-id---suid))
-   2. [Setgid (Set Group ID - SGID)](#setgid-(set-group-id---sgid))
-   3. [Sticky bit](#sticky-bit)
-   4. [Comando install](#comando-install)
-      1. [Usos Comunes:](#usos-comunes)
-      2. [Ejemplo Completo: Despliegue de un Script](#ejemplo-completo-despliegue-de-un-script)
-   5. [`chattr` y `lsattr`](#`chattr`-y-`lsattr`)
-9. [ACLs](#acls)
-   1. [Soporte de ACL en el sistema de ficheros](#soporte-de-acl-en-el-sistema-de-ficheros)
-   2. [Prácticas](#practicas)
-      1. [Práctica 1: Conflicto de permisos ugo-ACL (Ver Preferencia de permisos (de mayor a menor))](#practica-1-conflicto-de-permisos-ugo-acl-(ver-preferencia-de-permisos-(de-mayor-a-menor)))
-      2. [Práctica 2: Conflicto permisos ugo-ACL (Ver Preferencia de permisos (de mayor a menor))](#practica-2-conflicto-permisos-ugo-acl-(ver-preferencia-de-permisos-(de-mayor-a-menor)))
-      3. [Ejemplos de asignación de ACLs](#ejemplos-de-asignacion-de-acls)
-   3. [Explicación con ejemplos paso por paso de ACLs](#explicacion-con-ejemplos-paso-por-paso-de-acls)
-      1. [Escenario de partida](#escenario-de-partida)
-      2. [Otorgando permisos a usuarios y grupos](#otorgando-permisos-a-usuarios-y-grupos)
-      3. [Eliminando ACLs](#eliminando-acls)
-      4. [ACLs por defecto para archivos y directorios](#acls-por-defecto-para-archivos-y-directorios)
-      5. [Usuarios y grupos](#usuarios-y-grupos)
-      6. [Mask: ¿Qué es la máscara de permisos en ACLs?](#mask-¿que-es-la-mascara-de-permisos-en-acls?)
-   4. [Notas sobre ACLs](#notas-sobre-acls)
-10. [Capabilities](#capabilities)
-   1. [Tipos de capabilities](#tipos-de-capabilities)
-11. [Comandos para ver a usuarios conectados en el sistema](#comandos-para-ver-a-usuarios-conectados-en-el-sistema)
-12. [Comando loginctl](#comando-loginctl)
+1. [Archivos de configuración](#1-archivos-de-configuración)
+2. [su y sudo](#2-su-y-sudo)
+3. [visudo y sudoers](#3-visudo-y-sudoers)
+   1. [id, groups, passwd](#31-id-groups-passwd)
+4. [useradd, usermod, userdel, groupadd, groupdel](#4-useradd-usermod-userdel-groupadd-groupdel)
+   1. [chfn, chsh](#41-chfn-chsh)
+   2. [/etc/nologin](#42-etcnologin)
+   3. [gpasswd](#43-gpasswd)
+   4. [ulimit](#44-ulimit)
+5. [Campo tipo](#5-campo-tipo)
+6. [Permisos](#6-permisos)
+7. [Máscara de permisos en Linux](#7-máscara-de-permisos-en-linux)
+   1. [Comando `umask`](#71-comando-umask)
+   2. [`umask -S`](#72-umask--s)
+   3. [Diferencia en la asignación de permisos entre directorios y archivos](#73-diferencia-en-la-asignación-de-permisos-entre-directorios-y-archivos)
+8. [Permisos especiales: Setuid, Setgid, Sticky Bit](#8-permisos-especiales-setuid-setgid-sticky-bit)
+   1. [Setuid (Set User ID - SUID)](#81-setuid-set-user-id---suid)
+   2. [Setgid (Set Group ID - SGID)](#82-setgid-set-group-id---sgid)
+   3. [Sticky bit](#83-sticky-bit)
+9. [Comando install](#9-comando-install)
+   1. [Usos comunes](#91-usos-comunes)
+   2. [Ejemplo completo: despliegue de un script](#92-ejemplo-completo-despliegue-de-un-script)
+10. [Atributos extendidos: `chattr` y `lsattr`](#10-atributos-extendidos-chattr-y-lsattr)
+11. [ACLs](#11-acls)
+    1. [Soporte de ACL en el sistema de ficheros](#111-soporte-de-acl-en-el-sistema-de-ficheros)
+    2. [Prácticas](#112-prácticas)
+    3. [Explicación con ejemplos paso por paso de ACLs](#113-explicación-con-ejemplos-paso-por-paso-de-acls)
+    4. [Notas sobre ACLs](#114-notas-sobre-acls)
+12. [Capabilities](#12-capabilities)
+    1. [Tipos de capabilities](#121-tipos-de-capabilities)
+13. [Comandos para ver a usuarios conectados en el sistema](#13-comandos-para-ver-a-usuarios-conectados-en-el-sistema)
+14. [Comando loginctl](#14-comando-loginctl)
 
 ---
 
-
-## Archivos de configuración
+## 1. Archivos de configuración
 
 Los archivos de configuración importantes en sistemas Linux referentes a la gestión de usuarios y grupos son:
 
@@ -103,7 +93,9 @@ dam:RsdRTGHtdrs:moncho:lipido,rivelora
 3. `moncho`: Administrador del grupo.
 4. `lipido,rivelora`: Usuarios que no se quiere que se conozca su pertenencia al grupo.
 
-## su y sudo
+---
+
+## 2. su y sudo
 
 ```bash
 martin@debian:/etc/sudoers.d$ sudo su -
@@ -125,7 +117,9 @@ martin@debian:/etc/sudoers.d$ su --c "pwd"
 7. `su -l juan`: Cambia al usuario "juan" iniciando un nuevo shell y cargando su entorno de inicio de sesión (equivalente a `su - juan`).
 8. `su --c "pwd"`: Intenta ejecutar el comando "pwd" en el shell actual, pero probablemente generaría un error ya que la opción "--c" no es válida para el comando `su`.
 
-## visudo y sudoers
+---
+
+## 3. visudo y sudoers
 
 `visudo` es el editor que permite modificar el archivo sudoers.
 
@@ -165,7 +159,7 @@ martin 192.168.1.14,192.168.1.15=(juan:dam) /bin/pwd
 
 Significa que el usuario "martin" puede ejecutar el comando `/bin/pwd` **en el host 192.168.1.14** en nombre de juan o del grupo dam. Esto no significa que el usuario "martin" pueda ejecutar el comando `pwd` en su propio sistema local desde cualquier host.
 
-#### id, groups, passwd
+### 3.1 id, groups, passwd
 
 **id**: Permite ver uid, gid y grupos secundarios a los que pertenece el usuario.
 
@@ -200,7 +194,9 @@ passwd: contraseña cambiada.
 martin:$y$j9T$D1YstIGhwPXktsEmolZg./$I7fKcY0m9yE2LYgGBEn8yolExy5PLvBTIlZf5keudM3:19770:0:99999:7:::
 ```
 
-## useradd, usermod, userdel, groupadd, groupdel
+---
+
+## 4. useradd, usermod, userdel, groupadd, groupdel
 
 **useradd**: Permite añadir nuevos usuarios al sistema.
 
@@ -292,7 +288,7 @@ groupadd dam
 groupdel dam
 ```
 
-#### chfn, chsh
+### 4.1 chfn, chsh
 
 **chage**: Permite modificar todos los datos del usuario.
 **chfn**: Permite editar los datos personales del usuario.
@@ -308,7 +304,7 @@ Como aportación, el comando _passwd_ permite modificar la contraseña a un usua
 - _passwd -e usuario_: Fuerza a que el usuario deba cambiar su contraseña en el próximo inicio de sesión, expirando la contraseña actual de inmediato.
 - _echo 000000 |passwd --stdin user1_: Asigna la contraseña “000000” al usuario user1 de forma automática, sin interacción manual.
 
-#### /etc/nologin
+### 4.2 /etc/nologin
 
 El archivo `/etc/nologin` en sistemas Linux y Unix es utilizado para bloquear el acceso de usuarios regulares al sistema, especialmente durante tareas de mantenimiento o actualización. Cuando este archivo está presente, el sistema impide el inicio de sesión de los usuarios no privilegiados y muestra un mensaje que especifica que el acceso está restringido.
 
@@ -330,7 +326,7 @@ _sudo rm /etc/nologin_.
 
 `/etc/nologin` es una forma sencilla y efectiva de gestionar el acceso al sistema durante tiempos de inactividad.
 
-#### gpasswd
+### 4.3 gpasswd
 
 Este comando establece la contraseña del grupo y lo administra pudiendo agregar o eliminar un usuario de un grupo. Los usuarios y grupos deben existir.
 
@@ -341,7 +337,7 @@ Este comando establece la contraseña del grupo y lo administra pudiendo agregar
 
 La contraseña de grupo le permite a los usuarios añadirse al mismo y poder usar los permisos de este, para ello pueden hacer uso del comando _newgrp_.
 
-#### ulimit
+### 4.4 ulimit
 
 Este comando da control sobre los recursos que dispone el shell y los procesos lanzando por ella. Se puede inicializar en `/etc/profile` o en `~/.bashrc` de cada usuario.
 
@@ -352,30 +348,48 @@ Este comando da control sobre los recursos que dispone el shell y los procesos l
 
 > **Nota:** Se pueden establecer límites blandos y duros, en el caso de los blandos nos saldrá una alerta de advertencia diciendo que excedemos dicho límite.
 
-## Campo tipo
+---
+
+## 5. Campo tipo
 
 Antes de la terna de permisos tendremos un caracter que indica el tipo de archivo en cuestión. Como resumen del campo tipo tenemos:
 
-- -: Archivo regular.
-- d: Directorio.
-- l: Enlace simbólico.
-- b: Dispositivo de bloque.
-- c: Dispositivo de carácter.
-- p: Pipe con nombre.
-- s: Socket.
+| Símbolo | Tipo | Ejemplo típico |
+|---|---|---|
+| `-` | Archivo regular | `/etc/passwd` |
+| `d` | Directorio | `/home` |
+| `l` | Enlace simbólico | `/bin -> usr/bin` |
+| `b` | Dispositivo de bloque, con acceso por bloques y almacenamiento intermedio | `/dev/sda` |
+| `c` | Dispositivo de carácter, con acceso byte a byte | `/dev/tty0`, `/dev/null` |
+| `p` | Tubería con nombre (*named pipe* o FIFO) | Creada con `mkfifo` |
+| `s` | Socket de dominio UNIX | `/run/systemd/private` |
+
+Este es el aspecto real de cada uno en un listado:
 
 ```bash
-root@debian:~# ls
--rw-r--r--: archivo.txt              es un archivo regular.
-drwxr-xr-x: directorio               carpeta es un directorio.
-lrwxrwxrwx: enlace -> directorio     es un enlace simbólico que apunta a archivo.txt.
-brw-rw----: /dev/sda                 es un dispositivo de bloque (probablemente un disco duro).
-crw-rw-rw-: /dev/tty0                es un dispositivo de carácter (un terminal).
-prw-r--r--: pipe                     es un pipe con nombre.
-srwxrwxrwx: socket                   es un socket.
+root@debian:~# ls -l /etc/passwd /home /bin /dev/sda /dev/tty0 /dev/null
+-rw-r--r--  1 root root     1738 sep 18 09:14 /etc/passwd
+drwxr-xr-x  3 root root     4096 may  2 16:46 /home
+lrwxrwxrwx  1 root root        7 may  2 16:27 /bin -> usr/bin
+brw-rw----  1 root disk   8,   0 sep 18 08:12 /dev/sda
+crw--w----  1 root tty    4,   0 sep 18 08:12 /dev/tty0
+crw-rw-rw-  1 root root   1,   3 sep 18 08:12 /dev/null
 ```
 
-## Permisos
+> **Nota:** En los ficheros de dispositivo, la columna que en un fichero normal indica el tamaño muestra en su lugar dos números separados por coma: el **número mayor**, que identifica qué controlador del núcleo lo gestiona, y el **número menor**, que distingue el dispositivo concreto dentro de ese controlador. Por eso `/dev/sda` aparece como `8, 0` y `/dev/null` como `1, 3`.
+
+> **Recuerda:** El comando `file` identifica el tipo sin necesidad de interpretar la primera letra del listado:
+>
+> ```bash
+> root@debian:~# file /dev/sda /bin /etc/passwd
+> /dev/sda:    block special (8/0)
+> /bin:        symbolic link to usr/bin
+> /etc/passwd: ASCII text
+> ```
+
+---
+
+## 6. Permisos
 
 A continuación se van a explicar los permisos que pueden existir en un fichero o directorio y como editarlos. Supongamos que tienes un archivo llamado "documento.txt".
 
@@ -387,9 +401,28 @@ A continuación se van a explicar los permisos que pueden existir en un fichero 
 
 2. **Permisos ugo para directorio:**
 
-   - **r (read):** Permite ver el listado de archivos que contiene el directorio.
-   - **w (write):** Permite modificar el contenido del directorio.
-   - **x (execute):** Permite acceder al contenido del directorio.
+   - **r (read):** Permite **listar** los nombres de las entradas que contiene el directorio, es decir, ejecutar `ls` sobre él.
+   - **w (write):** Permite **crear, borrar y renombrar** entradas dentro del directorio.
+   - **x (execute):** Permite **atravesar** el directorio, es decir, acceder a su contenido y usarlo como parte de una ruta.
+
+> **Importante:** Los permisos de un directorio y los de los ficheros que contiene son independientes, y de ahí nacen dos comportamientos que sorprenden:
+>
+> - **Se puede borrar un fichero sobre el que no se tiene ningún permiso.** Borrar no consiste en modificar el fichero, sino en quitar su nombre del directorio, de modo que lo único que hace falta es permiso de escritura **en el directorio**. Un fichero `r--------` propiedad de `root` puede ser eliminado por cualquiera que pueda escribir en la carpeta que lo aloja. Es justamente el problema que resuelve el *sticky bit* que se explica más adelante.
+> - **No basta con `r` para leer un directorio de forma útil.** Con `r` pero sin `x` se obtienen los nombres, pero no se puede consultar ningún dato de los ficheros ni acceder a ellos:
+>
+> ```bash
+> usuario@debian:~$ chmod 400 carpeta    # r-- : solo lectura, sin x
+> usuario@debian:~$ ls carpeta
+> documento.txt
+> usuario@debian:~$ ls -l carpeta
+> ls: no se puede acceder a 'carpeta/documento.txt': Permiso denegado
+> total 0
+> -????????? ? ? ? ?            ? documento.txt
+> usuario@debian:~$ cat carpeta/documento.txt
+> cat: carpeta/documento.txt: Permiso denegado
+> ```
+>
+> El caso inverso también es útil: con `x` pero sin `r` (`--x`, es decir, `chmod 111`) no se puede listar el contenido, pero sí acceder a un fichero **si se conoce su nombre exacto**. Es la configuración habitual de directorios como `/var/www` o de los directorios personales en servidores compartidos.
 
 **Ejemplo 1:**
 
@@ -403,7 +436,7 @@ El archivo "documento.txt" tiene permisos de lectura y escritura para el propiet
 
 Por lo tanto, el comando para establecer estos permisos sería:
 
-```
+```bash
 chmod 644 documento.txt
 ```
 
@@ -415,7 +448,7 @@ chmod 644 documento.txt
 
 El comando sería el mismo:
 
-```
+```bash
 chmod u=rw,g=r,o=r documento.txt
 ```
 
@@ -431,7 +464,7 @@ El archivo "documento.txt" tiene permisos de lectura, escritura y ejecución par
 
 El comando sería:
 
-```
+```bash
 chmod 755 documento.txt
 ```
 
@@ -443,33 +476,83 @@ chmod 755 documento.txt
 
 El comando equivalente sería:
 
-```
+```bash
 chmod u=rwx,g=rx,o=x documento.txt
 ```
 
-**Ejemplo 3:**
+Los ejemplos anteriores empleaban el operador `=`, que **fija** los permisos al valor indicado descartando los que hubiera. Existen otros dos operadores que actúan de forma relativa, sin tocar el resto:
 
-```
+| Operador | Efecto |
+|---|---|
+| `+` | Añade el permiso indicado y conserva los demás. |
+| `-` | Retira el permiso indicado y conserva los demás. |
+| `=` | Establece exactamente los permisos indicados y **elimina los no mencionados**. |
+
+Y cuatro destinatarios posibles:
+
+| Letra | Destinatario |
+|---|---|
+| `u` | *User*: el propietario. |
+| `g` | *Group*: el grupo propietario. |
+| `o` | *Others*: el resto de usuarios. |
+| `a` | *All*: los tres anteriores a la vez. Equivale a `ugo`. |
+
+**Ejemplo 3:** partiendo de `rw-r--r--` (644):
+
+```bash
 chmod u-r,g+rw,o=w documento.txt
 ```
 
+Retira la lectura al propietario, añade lectura y escritura al grupo, y deja a los otros exclusivamente con escritura. El resultado es `-w-rw--w-` (262). Nótese que el propietario se queda sin poder leer su propio fichero, aunque siempre podría devolverse el permiso, ya que `chmod` lo puede ejecutar el dueño con independencia de los permisos actuales.
+
 **Ejemplo 4:**
 
-```
+```bash
 chmod u=rwx,g=rw,o=w documento.txt
 ```
 
-**Ejemplo 5:**
+Fija los tres grupos de permisos de forma absoluta: `rwxrw--w-`, es decir, `762`.
 
-```
+**Ejemplo 5:** partiendo de nuevo de `rw-r--r--` (644):
+
+```bash
 chmod u+wx,g-rw,a=w documento.txt
 ```
 
-## Máscara de permisos en linux
+Aquí conviene fijarse en el orden, porque las cláusulas se aplican **de izquierda a derecha** y la última anula a las anteriores. Tras `u+wx` y `g-rw` tendríamos `rwx----r--`, pero el `a=w` final fija los tres a `-w-`, de modo que el resultado es `--w--w--w-` (222). Es un buen recordatorio de que mezclar `=` con `+` y `-` en la misma orden suele llevar a resultados no deseados.
+
+> **Nota:** Dos opciones de `chmod` que conviene conocer:
+>
+> | Opción | Descripción |
+> |---|---|
+> | `-R` | Aplica el cambio de forma recursiva a todo el árbol. |
+> | `--reference=FICHERO` | Copia los permisos de otro fichero en lugar de indicarlos. |
+> | `X` (mayúscula) | Añade el permiso de ejecución **solo a los directorios y a los ficheros que ya fueran ejecutables** para alguien. |
+>
+> Esa `X` mayúscula resuelve el problema clásico de `chmod -R a+x`, que dejaría ejecutables también todos los ficheros de texto. La forma correcta de dar acceso recursivo a un árbol es:
+>
+> ```bash
+> usuario@debian:~$ chmod -R a+rX carpeta/
+> ```
+
+---
+
+## 7. Máscara de permisos en Linux
 
 En Linux, la máscara de permisos (`umask`) es un valor que determina los permisos predeterminados que se asignan a los nuevos archivos y directorios. Cuando se crea un archivo o directorio, el sistema aplica la `umask` para determinar los permisos efectivos.
 
-### Comando `umask`
+> **Importante:** Pese a que en los ejemplos habituales lo parezca, la `umask` **no se resta**: se aplica como una máscara que *apaga bits*. La operación real es `permisos_base AND NOT umask`. La diferencia no se aprecia mientras los dígitos sean compatibles, pero aflora en cuanto la máscara pide quitar un permiso que la base no concedía:
+>
+> | Base | umask | Resta aritmética | Resultado real |
+> |---|---|---|---|
+> | 666 | 022 | 644 | 644 |
+> | 666 | 027 | 639 (imposible) | 640 |
+> | 666 | 077 | 589 (imposible) | 600 |
+> | 777 | 022 | 755 | 755 |
+>
+> Con `umask 027`, el dígito `7` intenta retirar `rwx` de un `6` que solo tenía `rw`, y el resultado es sencillamente `0`. Por eso conviene razonar bit a bit y no restando.
+
+### 7.1 Comando `umask`
 
 - **`umask`**: Este comando se utiliza para mostrar o establecer la máscara de permisos actual.
 
@@ -487,7 +570,11 @@ En Linux, la máscara de permisos (`umask`) es un valor que determina los permis
     ```
     Esto establece la máscara de permisos a `022`, que significa que los archivos nuevos tendrán permisos `rw-r--r--` y los directorios `rwxr-xr-x`.
 
-### `umask -S`
+> **Advertencia:** Una `umask` fijada desde la línea de órdenes afecta únicamente a la shell actual y a los procesos que esta lance después, y se pierde al cerrar la sesión. Para hacerla permanente hay que declararla en `~/.bashrc` si es para un usuario, o en `/etc/profile` y `/etc/login.defs` (directiva `UMASK`) si debe aplicarse a todo el sistema.
+
+> **Nota:** El valor por defecto en Debian es `022` para `root` y `002` para los usuarios normales. Ese `002` responde al esquema de **grupos privados de usuario**: como cada cuenta tiene un grupo propio con su mismo nombre, conceder permiso de escritura al grupo no supone riesgo alguno y, en cambio, facilita el trabajo en carpetas compartidas. En un servidor con varias cuentas en grupos comunes suele preferirse `027` o incluso `077`.
+
+### 7.2 `umask -S`
 
 - **`umask -S`**: Este comando muestra la máscara de permisos actual en formato simbólico, que puede ser más fácil de entender que el formato octal.
 
@@ -497,7 +584,7 @@ En Linux, la máscara de permisos (`umask`) es un valor que determina los permis
     ```
     Esto podría devolver algo como `u=rwx,g=rx,o=rx`, lo que significa que los permisos de usuario son `rwx`, los permisos de grupo son `rx` y los permisos para otros son `rx`.
 
-### Diferencia en la Asignación de Permisos entre Directorios y Archivos
+### 7.3 Diferencia en la asignación de permisos entre directorios y archivos
 
 - **Archivos**:
   Los archivos en Linux nunca se crean con permisos de ejecución por defecto, incluso si la `umask` lo permitiría. Esto es por razones de seguridad para evitar que los archivos de texto o de datos se ejecuten accidentalmente.
@@ -519,9 +606,11 @@ En Linux, la máscara de permisos (`umask`) es un valor que determina los permis
     ```
     Resulta en permisos efectivos de `755` (rwxr-xr-x)
 
-## Permisos especiales: Setuid, Setgid, Sticky Bit
+---
 
-### Setuid (Set User ID - SUID)
+## 8. Permisos especiales: Setuid, Setgid, Sticky Bit
+
+### 8.1 Setuid (Set User ID - SUID)
 
 Es un mecanismo en sistemas Unix y Unix-like que permite que un programa sea ejecutado con los privilegios del propietario del archivo, en lugar de los del usuario que lo ejecuta. Se denota por la letra 's' en el lugar del bit de ejecución del propietario.
 
@@ -556,7 +645,7 @@ usuario@debian:~$ ls -l fichero.txt
 -rwS------ 1 usuario usuario 9 jun 12 09:23 fichero.txt
 ```
 
-### Setgid (Set Group ID - SGID)
+### 8.2 Setgid (Set Group ID - SGID)
 
 Similar al setuid, el setgid es un mecanismo que permite que un programa se ejecute con los privilegios del grupo del archivo, en lugar de los del usuario que lo ejecuta. Se denota por la letra 's' en el lugar del bit de ejecución del grupo. El permiso Set GID, de forma paralela a Set UID, hace que el grupo de ejecución de un fichero sea el grupo propietario del fichero y no el grupo principal al que pertenece el usuario que lo ejecuta.
 
@@ -580,7 +669,7 @@ usuario@debian:~$ ls -l fichero.txt
 ----rwS--- 1 usuario usuario 9 jun 12 10:50 fichero.txt
 ```
 
-### Sticky bit
+### 8.3 Sticky bit
 
 El Sticky bit es un permiso especial aplicado a directorios en sistemas Unix. Cuando se establece en un directorio, **solo el propietario del archivo o superusuario puede eliminar o renombrar sus archivos**, aunque otros tengan permisos de escritura en el directorio. Se denota por la letra 't' en el lugar del bit de ejecución del otros.
 
@@ -636,7 +725,9 @@ usuario@debian:~$ tree /tmp/sticky/
 
 > **Nota:** Tambien podríamos hacerlo con `chmod +t`.
 
-### Comando install
+---
+
+## 9. Comando install
 
 El comando `install` en Linux se utiliza para **copiar archivos y establecer permisos** en el sistema de archivos. Aunque su nombre puede ser confuso, no se utiliza para instalar paquetes, sino para mover o copiar archivos de manera controlada.
 
@@ -685,13 +776,13 @@ sudo install -v archivo1 archivo2 archivo3 -t /usr/local/bin
 Copia varios archivos al directorio /usr/local/bin.
 La opción -v muestra detalles de la copia.
 
-#### Usos Comunes:
+### 9.1 Usos comunes
 
 Instalación Manual de Scripts: Colocar scripts en directorios como /usr/local/bin.
 Despliegue de Archivos de Configuración: Copiar archivos de configuración con permisos específicos.
 Creación de Estructura de Directorios: Crear rutas completas para aplicaciones.
 
-#### Ejemplo Completo: Despliegue de un Script
+### 9.2 Ejemplo completo: despliegue de un script
 
 Imagina que tienes un script llamado mi_script.sh que deseas copiar a /usr/local/bin con permisos ejecutables para todos:
 
@@ -699,7 +790,9 @@ Imagina que tienes un script llamado mi_script.sh que deseas copiar a /usr/local
 sudo install -m 755 mi_script.sh /usr/local/bin
 ```
 
-### `chattr` y `lsattr`
+---
+
+## 10. Atributos extendidos: `chattr` y `lsattr`
 
 A mayores existen en Linux a editar con los comandos `chattr` y listar con `lsattr` otros permisos. `chattr` es un comando en sistemas Unix y Linux que se utiliza para cambiar los `atributos` de un archivo en el sistema de archivos. Estos atributos pueden controlar varios aspectos del archivo, como su capacidad de modificación, eliminación o incluso si puede ser movido o renombrado. Uno de los atributos más comunes es el atributo de solo lectura.
 
@@ -758,7 +851,9 @@ usuario@debian:/tmp$ lsattr -d COMUN/
 ----i---------e------- COMUN/
 ```
 
-## ACLs
+---
+
+## 11. ACLs
 
 Una ACL (Lista de Control de Acceso) es una lista detallada de permisos que se adjunta a un archivo o carpeta. Sirve para superar la limitación de los permisos básicos de Linux (que solo dejan definir permisos para el Propietario, el Grupo y el Resto).
 
@@ -774,7 +869,7 @@ La máscara en las ACL (Listas de Control de Acceso) de Linux es un concepto fun
 
 > **Nota:** La máscara NO afecta al propietario del fichero ( user:: ) ni a los 'otros' ( other:: ). Solo afecta a los grupos y usuarios específicos añadidos vía ACL.
 
-### Soporte de ACL en el sistema de ficheros
+### 11.1 Soporte de ACL en el sistema de ficheros
 
 Hoy en día el kernel trae incorporado por defecto soporte para ACLs para distintos sistemas de ficheros. Podemos verificarlo con el siguiente comando:
 
@@ -817,7 +912,7 @@ mount -a  #Remonta todos los sistemas de ficheros siguiendo el orden en /etc/fst
 mount -o remount /dev/sda1  #Remonta solamente el sistema de ficheros modificado en /etc/fstab (en este caso /dev/sda1)
 ```
 
-### Prácticas
+### 11.2 Prácticas
 
 Generar 2 grupos: primaria y secundaria; generar 2 usuarios: ana y brais, perteneciendo ana al grupo primaria y brais al grupo secundaria.
 
@@ -839,7 +934,7 @@ primaria:x:1002:
 secundaria:x:1003:
 ```
 
-#### Práctica 1: Conflicto de permisos ugo-ACL (Ver Preferencia de permisos (de mayor a menor))
+#### Práctica 1: conflicto de permisos ugo-ACL
 
 En caso de conflicto entre el usuario propietario/otros ("uo" de ugo) y las ACLs, prevalecen los permisos "uo" de ugo.
 
@@ -885,7 +980,7 @@ root@debian:~# ls -ld /revisar
 dr-xrwx---+ 2 ana primaria 4096 ene  4 15:34 /revisar
 ```
 
-#### Práctica 2: Conflicto permisos ugo-ACL (Ver Preferencia de permisos (de mayor a menor))
+#### Práctica 2: conflicto de permisos ugo-ACL
 
 En caso de conflicto entre el grupo propietario (g de ugo) / otros grupos distintos del propietario / otros usuarios distintos del propietario y las ACLs, prevalecen las ACLs.
 
@@ -980,7 +1075,7 @@ setfacl -x u:carmencita prueba/
 setfacl -x g:primaria prueba/
 ```
 
-### Explicación con ejemplos paso por paso de ACLs
+### 11.3 Explicación con ejemplos paso por paso de ACLs
 
 Configuramos el sistema para realizar la práctica que nos llevará a entender las ACL en Linux.
 
@@ -1339,7 +1434,7 @@ Hola
 caracola
 ```
 
-#### Mask: ¿Qué es la máscara de permisos en ACLs?
+#### La máscara de permisos en ACLs
 
 Pudimos notar en el punto anterior, que en el momento de crear la ACL, apareció una nueva línea de permisos : mask.
 Hay que recordar primero que las ACL no son más que una extensión de los permisos nativos del sistema. Además, todos los permisos de ACL, ya sea para usuarios o grupos nombrados, son asignados a la clase de permisos de grupo, es decir, las ACL extienden los permisos tradicionales de la terna de grupo.
@@ -1516,7 +1611,7 @@ juan@debian:/mnt/datos/deClara$ echo "Primera linea" > archivo
 -bash: archivo: Permiso denegado
 ```
 
-### Notas sobre ACLs
+### 11.4 Notas sobre ACLs
 
 > **Nota:** Es importante tener en cuenta que las ACL añaden tal cual los permisos que se especifican, es decir `g:dam:r-x` asigna solo permisos a dam de lectura y ejecución, igual que `g:dam:rx`. En caso de que existiera el permiso de escritura, este habría desaparecido.
 
@@ -1564,7 +1659,9 @@ usuario@debian:/tmp$ sudo -u lucia ls -l /tmp/prueba
 ls: cannot open directory '/tmp/prueba': Permission denied
 ```
 
-## Capabilities
+---
+
+## 12. Capabilities
 
 Las capabilities en GNU/Linux son un sistema más granular de control de acceso que se utiliza principalmente para elevar los privilegios de ejecución de un programa o binario específico sin otorgarle privilegios totales.
 
@@ -1588,7 +1685,7 @@ Para más información, se puede consultar la página de manual referente a capa
 $ man capabilities
 ```
 
-### Tipos de capabilities
+### 12.1 Tipos de capabilities
 
 Existen diferentes tipos de capabilities que se pueden asignar a un binario. Algunas de ellas son:
 
@@ -1649,7 +1746,7 @@ usuario@debian:~$ getcap /usr/bin/vim.basic
 En el siguiente conjunto de comandos se otorga y verifica una **capability** especial al binario de Vim:
 
 1. `sudo setcap cap_dac_override=ep /usr/bin/vim.basic` → Asigna la capability **CAP_DAC_OVERRIDE** a Vim, permitiéndole ignorar permisos de acceso a archivos.
-2. `getcap /usr/bin/vim.basic` → Verifica que la capability fue aplicada correctamente, mostrando que Vim ahora tiene **CAP_DAC_OVERRIDE** activado. 🚀
+2. `getcap /usr/bin/vim.basic` → Verifica que la capability fue aplicada correctamente, mostrando que Vim ahora tiene **CAP_DAC_OVERRIDE** activado. 
 
 ```bash
 usuario@debian:~$ sudo setcap cap_dac_override=ep /usr/bin/vim.basic
@@ -1665,7 +1762,7 @@ En el siguiente conjunto de comandos se crea un usuario, inicia sesión con él 
 2. `su - pepe` → Inicia sesión como el usuario **pepe**.
 3. `pwd` → Confirma que la sesión está en el directorio home del usuario (**/home/pepe**).
 4. `id` → Muestra el UID, GID y grupos a los que pertenece **pepe**.
-5. `exit` → Cierra la sesión del usuario **pepe** y vuelve al usuario anterior. 🚀
+5. `exit` → Cierra la sesión del usuario **pepe** y vuelve al usuario anterior. 
 
 ```bash
 usuario@debian:~$ sudo useradd -s /bin/bash -p $(mkpasswd 'abc123.' ) -m -d /home/pepe pepe
@@ -1731,7 +1828,9 @@ ERROR, ya no se puede modificar de esta forma el /etc/passwd
 
 Especialmente interesante es el recurso [gtfobins](https://gtfobins.github.io/) donde tenemos diferentes formas de **explotar capabilities** en un sistema.
 
-## Comandos para ver a usuarios conectados en el sistema
+---
+
+## 13. Comandos para ver a usuarios conectados en el sistema
 
 | Comando        | Descripción                                                                         |
 | -------------- | ----------------------------------------------------------------------------------- |
@@ -1748,7 +1847,9 @@ Especialmente interesante es el recurso [gtfobins](https://gtfobins.github.io/) 
 | pkill -KILL -u | Termina todos los procesos de un usuario específico.                                |
 | loginctl       | Gestiona y monitorea sesiones de usuarios en sistemas con systemd (systemd-logind). |
 
-## Comando loginctl
+---
+
+## 14. Comando loginctl
 
 El comando **loginctl** es una herramienta para gestionar y monitorizar sesiones de usuario, usuarios y asientos en sistemas Linux que usan systemd (systemd-logind).Sus principales comandos y opciones:
 

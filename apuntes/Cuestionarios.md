@@ -1,5 +1,42 @@
 # Preguntas de Linux
 
+## Índice
+
+**Bloque LPIC 101**
+
+- [Cuestionario 101](#cuestionario-101)
+- [Cuestionario 102](#cuestionario-102)
+- [Cuestionario 103](#cuestionario-103)
+- [Cuestionario 104](#cuestionario-104)
+- [Test 101.1](#test-1011)
+- [Test 101.2](#test-1012)
+- [Test 101.3](#test-1013)
+- [Test 101.4](#test-1014)
+- [Test 101.5](#test-1015)
+- [Test 101.6](#test-1016)
+- [Test 101.7](#test-1017)
+- [Test 101.8](#test-1018)
+- [Test 101.9](#test-1019)
+- [Examen 101](#examen-101)
+
+**Bloque LPIC 102**
+
+- [Cuestionario 105](#cuestionario-105)
+- [Cuestionario 106](#cuestionario-106)
+- [Cuestionario 107](#cuestionario-107)
+- [Cuestionario 108](#cuestionario-108)
+- [Cuestionario 109](#cuestionario-109)
+- [Cuestionario 110](#cuestionario-110)
+- [Test 102.1](#test-1021)
+- [Test 102.2](#test-1022)
+- [Test 102.3](#test-1023)
+- [Test 102.4](#test-1024)
+- [Test 102.5](#test-1025)
+- [Test 102.6](#test-1026)
+- [Examen 102](#examen-102)
+
+---
+
 ## Cuestionario 101
 
 **La utilidad 'lsmod' lista cuál de las siguientes opciones cuando se ejecuta?**  
@@ -80,7 +117,7 @@ Seleccione una o más de una:
 - C. apt-get  
 - D. synaptic
 ```
-Respuesta correcta: A
+Respuesta correcta: A,C,D
 ```
 
 **¿Cuál de los siguientes nombres de dispositivo sería válido para la primera partición en un disco SCSI instalado como segunda unidad en el sistema?**  
@@ -207,7 +244,7 @@ Respuesta correcta: B
 
 ---
 
-## Test 1
+## Test 101.1
 
 **Un software de copia de seguridad utiliza intensivamente enlaces duros entre archivos que no han cambiado entre dos ejecuciones de respaldo. ¿Qué beneficios se obtienen gracias a estos enlaces duros? (Elija DOS respuestas correctas)**  
 Seleccione una o más de una:  
@@ -419,7 +456,7 @@ Respuesta correcta: /proc/self/mounts
 
 ---
 
-## Test 2
+## Test 101.2
 
 **¿Cuántos campos tiene una línea sintácticamente correcta de /etc/fstab?**  
 Seleccione una:  
@@ -631,7 +668,7 @@ Respuesta correcta: jobs
 
 ---
 
-## Test 3
+## Test 101.3
 
 
 **Un usuario creó por accidente el subdirectorio \dir en su directorio personal. ¿Cuál de los siguientes comandos eliminará ese directorio?**  
@@ -849,7 +886,7 @@ Respuesta correcta: /etc/inittab
 
 --- 
 
-## Test 4
+## Test 101.4
 
 **¿Qué tipo de sistema de archivos crea mkfs cuando se ejecuta solo con el nombre del dispositivo de bloque y sin ningún parámetro adicional?**  
 Seleccione una:  
@@ -1066,7 +1103,7 @@ Respuesta correcta: updatedb
 
 --- 
 
-## Test 5
+## Test 101.5
 
 **¿Cuándo se restablece el contenido del buffer circular (ring buffer) del kernel? (Elige dos.)**  
 Seleccione una o más de una:  
@@ -1290,7 +1327,7 @@ Respuesta correcta: B
 
 ---
 
-## Test 6
+## Test 101.6
 
 **Al redirigir la salida del comando find a xargs, ¿qué opción de find es útil si los nombres de archivo contienen espacios?**  
 Seleccione una:
@@ -1508,12 +1545,12 @@ Respuesta correcta: watch
 
 **¿Qué comando se utiliza para iniciar otro comando con un nivel de nice determinado?**
 ```
-Respuesta correcta: watch
+Respuesta correcta: nice
 ```
 
 ---
 
-## Test 7
+## Test 101.7
 
 **En lugar de proporcionar un dispositivo explícito en /etc/fstab para el montaje, ¿qué otras opciones se pueden utilizar para identificar la partición deseada? (Elige dos.)**  
 Seleccione una o más de una:
@@ -1725,7 +1762,7 @@ Respuesta correcta: /etc/yum.repos.d
 
 ---
 
-## Test 8
+## Test 101.8
 
 **¿Cuáles de los siguientes comandos se pueden usar para mostrar el número de inodo de un archivo dado? (Elige dos.)**  
 Seleccione una o más de una:
@@ -1804,7 +1841,7 @@ Seleccione una:
 Respuesta correcta: D
 ```
 
-**¿Cuál es la salida cuando se aplica la expresión regular s/[ABC] [abc]/xx/ a la siguiente cadena?**  
+**¿Cuál es la salida cuando se aplica la expresión regular s/[ABC][abc]/xx/ a la siguiente cadena?**  
 ABCabc  
 Seleccione una:
 - A. ABCabc
@@ -1944,7 +1981,7 @@ Seleccione una:
 - D. ls > data
 - E. ls 3> data
 ```
-Respuesta correcta: B
+Respuesta correcta: D
 ```
 
 **Siguiendo el Estándar de Jerarquía del Sistema de Archivos (FHS), ¿dónde deberían colocarse los binarios compilados por el administrador del sistema para que estén disponibles para todos los usuarios? (Especifica la ruta completa al directorio.)**
@@ -1954,7 +1991,7 @@ Respuesta correcta: /usr/local/bin/
 
 ---
 
-## Test 9
+## Test 101.9
 
 **¿Cuál de los siguientes comandos puede realizar búsquedas en el contenido de archivos usando expresiones regulares?**  
 Seleccione una:
@@ -2160,7 +2197,7 @@ Respuesta correcta: renice
 
 ---
 
-## Examen 1
+## Examen 101
 
 **¿Qué archivo en el sistema de archivos /proc lista los parámetros pasados desde el gestor de arranque al kernel? (Especifica solo el nombre del archivo, sin ruta.)**
 ```
@@ -2728,7 +2765,7 @@ Seleccione una o más de una:
 - C. /sbin/mkfs -c ext3 /dev/sdb1  
 - D. /sbin/mke3fs -j /dev/sdb1  
 ```
-Respuesta correcta: B
+Respuesta correcta: A,B
 ```
 
 **¿Cuál de los siguientes comandos hace que /bin/foo sea ejecutable por todos pero solo modificable por su propietario?**  
@@ -2822,7 +2859,7 @@ Seleccione una:
 - A. ~/.bash_profile
 - B. ~/.bashrc
 - C. /etc/rc.local
-- D. /etc/rc.local
+- D. ~/.bash_login
 ```
 Respuesta correcta: A,B
 ```
@@ -2964,7 +3001,7 @@ Seleccione una o más de una:
 - C. systemctl network restart
 - D. dhcpd -k
 ```
-Respuesta correcta: A
+Respuesta correcta: A,B
 ```
 
 **¿Qué es la definición de 'time drift'?**
@@ -3028,7 +3065,7 @@ Seleccione una o más de una:
 - C. systemctl network restart
 - D. dhcpd -k
 ```
-Respuesta correcta: A,B,D
+Respuesta correcta: A,B
 ```
 
 **¿Qué puerto es el predeterminado para el servicio 'LDAPS'?**
@@ -3117,7 +3154,7 @@ Respuesta correcta: C
 
 ---
 
-## Test 1
+## Test 102.1
 
 **¿Cuáles de los siguientes subcomandos de nmcli existen? (Elige dos.)**  
 Seleccione una o más de una:  
@@ -3317,7 +3354,7 @@ Respuesta correcta: nmtui
 
 ---
 
-## Test 2
+## Test 102.2
 
 **¿Qué es cierto acerca del archivo /etc/localtime?**
 Seleccione una:
@@ -3447,7 +3484,7 @@ Seleccione una o más de una:
 - D. Minute
 - E. Year
 ```
-Respuesta correcta: C,D
+Respuesta correcta: B,D
 ```
 
 **¿Cuál de los siguientes comandos debe ejecutarse al iniciar un shell de inicio de sesión para cambiar el idioma de los mensajes de un programa internacionalizado a portugués (pt)?**
@@ -3521,7 +3558,7 @@ Respuesta correcta: newaliases
 
 ---
 
-## Test 3
+## Test 102.3
 
 **¿Qué información proporciona el comando echo `$$?`**
 Seleccione una:
@@ -3737,7 +3774,7 @@ Respuesta correcta: alias
 
 ---
 
-## Test 4
+## Test 102.4
 
 **¿Dónde se almacena el diario de systemd (systemd journal)?**
 Seleccione una:
@@ -3964,7 +4001,7 @@ Respuesta correcta: /etc/aliases
 
 ---
 
-## Test 5
+## Test 102.5
 
 **¿Qué información relacionada con una cuenta de usuario se modifica utilizando el comando chage?**
 Seleccione una:
@@ -4149,7 +4186,7 @@ Respuesta correcta: /etc/xinetd.d/
 
 ---
 
-## Test 6
+## Test 102.6
 
 **¿Cuáles de los siguientes comandos eliminarán la puerta de enlace predeterminada de la tabla de rutas IP del sistema? (Elige dos.)**
 Seleccione una o más de una:
@@ -4359,7 +4396,7 @@ Respuesta correcta: -m
 
 ---
 
-## Examen 2
+## Examen 102
 
 **¿Cómo se puede suprimir la variable de entorno FOOBAR existente únicamente para la ejecución del script ./myscript?**
 Seleccione una:
@@ -4402,7 +4439,7 @@ Seleccione una:
 Respuesta correcta: A
 ```
 
-**Cuando el comando echo $ da como salida 1, ¿cuál de las siguientes afirmaciones es verdadera**
+**Cuando el comando echo $? da como salida 1, ¿cuál de las siguientes afirmaciones es verdadera**
 Seleccione una:
 - A. Es el ID del proceso del comando echo.
 - B. Es el ID del proceso del shell actual.
@@ -4460,7 +4497,7 @@ Respuesta correcta: /etc/skel
 
 **¿Qué comando muestra todos los alias definidos en el shell actual? (Especifique el comando sin información de ruta)**
 ```
-Respuesta correcta: select
+Respuesta correcta: alias
 ```
 
 **Para asistencia en accesibilidad, ¿cuál de los siguientes programas es un teclado en pantalla?**
@@ -4491,7 +4528,7 @@ Seleccione una:
 - D. Se coloca después de la fila [SectionName]
 - E. Se coloca entre una línea que contiene Section "SectionName" y una línea que contiene EndSection
 ```
-Respuesta correcta: C
+Respuesta correcta: E
 ```
 
 **¿Cuál es el propósito de un lector de pantalla?**
@@ -4537,7 +4574,7 @@ Respuesta correcta: C
 
 **¿Cuál es el nombre predeterminado del archivo de configuración para el servidor Xorg X11? (Especifique solo el nombre del archivo, sin la ruta.)**
 ```
-Respuesta correcta: org.conf
+Respuesta correcta: xorg.conf
 ```
 
 **¿Cuál es el nombre del gestor de inicio de sesión gráfico simple que viene con una instalación estándar de X11? (Especifique SOLO el comando, sin ruta ni parámetros.)**
@@ -4601,7 +4638,7 @@ Seleccione una o más de una:
 - D. La descripción del grupo.
 - E. La contraseña del grupo.
 ```
-Respuesta correcta: A,C,D
+Respuesta correcta: A,C,E
 ```
 
 **Cada entrada en un crontab debe terminar con qué carácter?**
@@ -4654,7 +4691,7 @@ Seleccione una:
 - D. Consulta la cola de correo del MTA local.
 - E. Es una herramienta basada en línea de comandos para leer y escribir correos electrónicos.
 ```
-Respuesta correcta: C
+Respuesta correcta: D
 ```
 
 **¿Qué es cierto acerca del comando ntpdate?**
@@ -4719,7 +4756,7 @@ Seleccione una:
 - D. export LC_MESSAGES="pt"
 - E. export ALL_MESSAGES="pt"
 ```
-Respuesta correcta: E
+Respuesta correcta: D
 ```
 
 **¿Cuál de los siguientes archivos asigna un usuario a su grupo primario?**
@@ -4762,7 +4799,7 @@ Seleccione una o más de una:
 - D. Establecer el reloj de hardware.
 - E. Actualizar la hora mediante NTP.
 ```
-Respuesta correcta: A,C
+Respuesta correcta: B,C
 ```
 
 **¿Cuál es el comando para eliminar la puerta de enlace predeterminada de la tabla de rutas IP del sistema? (Seleccione DOS respuestas correctas.)**

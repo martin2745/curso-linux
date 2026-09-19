@@ -2,21 +2,33 @@
 
 ## Índice
 
-1. [Introducción a mdadm](#1-introduccion-a-mdadm)
-2. [Práctica: Creación de un RAID 5](#2-practica-creacion-de-un-raid-5)
-   1. [Preparación de discos y particiones](#21-preparacion-de-discos-y-particiones)
-   2. [Instalación de mdadm y creación del RAID](#22-instalacion-de-mdadm-y-creacion-del-raid)
+1. [Introducción a mdadm](#1-introducción-a-mdadm)
+2. [Práctica: Creación de un RAID 5](#2-práctica-creación-de-un-raid-5)
+   1. [Preparación de discos y particiones](#21-preparación-de-discos-y-particiones)
+   2. [Instalación de mdadm y creación del RAID](#22-instalación-de-mdadm-y-creación-del-raid)
    3. [Persistencia del RAID entre reinicios](#23-persistencia-del-raid-entre-reinicios)
    4. [Formateo y montaje](#24-formateo-y-montaje)
    5. [Persistencia del montaje en fstab](#25-persistencia-del-montaje-en-fstab)
-3. [Simulación de fallo y sustitución de disco](#3-simulacion-de-fallo-y-sustitucion-de-disco)
+3. [Simulación de fallo y sustitución de disco](#3-simulación-de-fallo-y-sustitución-de-disco)
 4. [Disco de repuesto (spare)](#4-disco-de-repuesto-spare)
 
 ---
 
 ## 1. Introducción a mdadm
 
-`mdadm` es una herramienta de administración de RAID (Redundant Array of Independent Disks) en sistemas operativos basados en Linux. Se utiliza para configurar y administrar matrices de discos para mejorar la redundancia y/o el rendimiento del almacenamiento de datos.
+`mdadm` es una herramienta de administración de RAID (*Redundant Array of Independent Disks*) en sistemas operativos basados en Linux. Se utiliza para configurar y administrar matrices de discos con el fin de mejorar la redundancia, el rendimiento o ambos. Lo que hace `mdadm` es RAID **por software**, gestionado por el núcleo, sin necesidad de una controladora RAID física.
+
+Antes de la práctica conviene situar los niveles de RAID más habituales, porque la elección condiciona cuántos discos hacen falta, cuánto espacio se aprovecha y cuántos fallos se toleran:
+
+| Nivel | Discos mínimos | Capacidad útil | Tolerancia a fallos | Idea principal |
+|---|---|---|---|---|
+| **RAID 0** | 2 | 100 % | **Ninguna** | Reparte los datos entre los discos (*striping*). Máxima velocidad y capacidad, pero si cae un disco se pierde todo. |
+| **RAID 1** | 2 | 50 % | 1 disco (por par) | Copia idéntica en cada disco (*mirroring*). Sencillo y muy seguro. |
+| **RAID 5** | 3 | (n−1)/n | 1 disco | *Striping* con paridad distribuida. Buen equilibrio entre espacio, velocidad y seguridad. |
+| **RAID 6** | 4 | (n−2)/n | 2 discos | Como RAID 5 pero con doble paridad. Aguanta el fallo de dos discos a la vez. |
+| **RAID 10** | 4 | 50 % | 1 disco por espejo | Combina espejo (1) y reparto (0). Rápido y seguro, a costa de la mitad de la capacidad. |
+
+> **Advertencia:** Un RAID **no es una copia de seguridad**. Protege frente al fallo *físico* de un disco, pero no frente a un borrado accidental, un `rm -rf` equivocado, un cifrado por *ransomware* o la corrupción de un fichero: todos esos daños se replican al instante en los discos de paridad o espejo. El RAID mantiene el servicio en marcha cuando un disco muere; la copia de seguridad recupera los datos cuando se pierden. Son cosas distintas y complementarias.
 
 | Comando | Descripción |
 |---------|-------------|
@@ -31,13 +43,24 @@
 | `mdadm --remove /dev/md0` | Elimina el RAID (debe estar detenido primero). |
 | `mdadm --grow /dev/md0 --raid-device=6` | Amplía el número de discos activos del RAID a 6, tomando los discos en espera. |
 
-> **Nota:** Para hacer el montaje de un RAID 5 necesitamos un mínimo de 3 discos. Con 3 discos de 10 GB obtendremos 20 GB de espacio útil, ya que 10 GB se utilizan para el cálculo de paridad (tolerancia a fallo de 1 disco).
+> **Nota:** Para montar un RAID 5 necesitamos un mínimo de 3 discos. Con 3 discos de 10 GB obtendremos 20 GB de espacio útil, ya que el equivalente a un disco (10 GB) se dedica al cálculo de paridad, lo que da tolerancia al fallo de 1 disco.
+
+> **Recuerda:** El estado de todos los arrays del sistema puede consultarse en cualquier momento leyendo el fichero virtual `/proc/mdstat`, que mantiene el propio núcleo. Durante la creación o la reconstrucción de un array, muestra además una barra de progreso con el porcentaje completado y el tiempo estimado:
+>
+> ```bash
+> root@debian:~# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 sdd1[3] sdc1[1] sdb1[0]
+>       20951040 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
+> ```
+>
+> La secuencia `[UUU]` indica que los tres discos están **U**p (operativos). Si uno fallara, aparecería como `[UU_]`. Para seguir el progreso en vivo: `watch cat /proc/mdstat`.
 
 ---
 
 ## 2. Práctica: Creación de un RAID 5
 
-### 2.1. Preparación de discos y particiones
+### 2.1 Preparación de discos y particiones
 
 Una vez arrancada la máquina, comprobamos que existen los discos con `lsblk`:
 
@@ -97,7 +120,7 @@ sr0     11:0    1 1024M  0 rom
 
 ---
 
-### 2.2. Instalación de mdadm y creación del RAID
+### 2.2 Instalación de mdadm y creación del RAID
 
 Instalamos la herramienta `mdadm`:
 
@@ -170,7 +193,7 @@ Consistency Policy : resync
 
 ---
 
-### 2.3. Persistencia del RAID entre reinicios
+### 2.3 Persistencia del RAID entre reinicios
 
 Por defecto, la configuración del RAID no sobrevive a un reinicio con el mismo nombre de dispositivo (`/dev/md0`). Para hacerla persistente hay que seguir dos pasos.
 
@@ -213,7 +236,7 @@ sr0      11:0    1 1024M  0 rom
 
 ---
 
-### 2.4. Formateo y montaje
+### 2.4 Formateo y montaje
 
 Para poder almacenar datos en el RAID, hay que darle un sistema de ficheros:
 
@@ -253,7 +276,7 @@ sr0      11:0    1 1024M  0 rom
 
 ---
 
-### 2.5. Persistencia del montaje en fstab
+### 2.5 Persistencia del montaje en fstab
 
 Para que el montaje del RAID se realice automáticamente en cada arranque, añadimos la entrada correspondiente a `/etc/fstab`:
 

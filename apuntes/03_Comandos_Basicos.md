@@ -2,38 +2,39 @@
 
 ## Índice
 
-1. [Comandos principales básicos](#comandos-principales-básicos)
-   - [Comando whoami](#comando-whoami)
-   - [Comando id](#comando-id)
-   - [Comando groups](#comando-groups)
-   - [Comando which](#comando-which)
-   - [Comando cat](#comando-cat)
-   - [Comando grep](#comando-grep)
-   - [Comando echo](#comando-echo)
-   - [Comando pwd](#comando-pwd)
-   - [Comando ls](#comando-ls)
-   - [Comando cd](#comando-cd)
-   - [Comando mkdir](#comando-mkdir)
-   - [Comandos cat, more, less y tac](#comandos-cat-more-less-y-tac)
-   - [Comandos head y tail](#comandos-head-y-tail)
-   - [Comandos man, manpath, --help](#comandos-man-manpath---help)
-   - [Comando w](#comando-w)
-   - [Comando tty](#comando-tty)
-   - [Comando cal](#comando-cal)
-   - [Comando date](#comando-date)
-   - [Comando uname](#comando-uname)
-   - [Comando ln](#comando-ln)
-   - [Comando su –](#comando-su-)
+1. [Identidad del usuario](#1-identidad-del-usuario)
+   1. [Comando whoami](#11-comando-whoami)
+   2. [Comando id](#12-comando-id)
+   3. [Comando groups](#13-comando-groups)
+2. [Navegación por el sistema de ficheros](#2-navegación-por-el-sistema-de-ficheros)
+   1. [Comando pwd](#21-comando-pwd)
+   2. [Comando cd](#22-comando-cd)
+   3. [Comando ls](#23-comando-ls)
+   4. [Comando mkdir](#24-comando-mkdir)
+3. [Visualización del contenido de ficheros](#3-visualización-del-contenido-de-ficheros)
+   1. [Comandos cat, more, less y tac](#31-comandos-cat-more-less-y-tac)
+   2. [Comandos head y tail](#32-comandos-head-y-tail)
+4. [Búsqueda de texto y localización de ejecutables](#4-búsqueda-de-texto-y-localización-de-ejecutables)
+   1. [Comando grep](#41-comando-grep)
+   2. [Comando which](#42-comando-which)
+5. [Mostrar texto por pantalla](#5-mostrar-texto-por-pantalla)
+6. [Ayuda y documentación del sistema](#6-ayuda-y-documentación-del-sistema)
+7. [Información del sistema y de la sesión](#7-información-del-sistema-y-de-la-sesión)
+   1. [Comando w](#71-comando-w)
+   2. [Comando tty](#72-comando-tty)
+   3. [Comando cal](#73-comando-cal)
+   4. [Comando date](#74-comando-date)
+   5. [Comando uname](#75-comando-uname)
+8. [Enlaces duros y simbólicos](#8-enlaces-duros-y-simbólicos)
+9. [Cambio de usuario](#9-cambio-de-usuario)
 
 ---
 
-A continuación vamos a ver un conjunto de los principales comandos de Linux con su explicación. La comprensión de estas herramientas es fundamental para desenvolverse con soltura en la línea de comandos.
+## 1. Identidad del usuario
 
----
+El primer grupo de comandos responde a una pregunta básica en cualquier sesión: con qué identidad estamos trabajando y qué permisos nos otorga.
 
-## Comandos principales básicos
-
-### Comando whoami
+### 1.1 Comando whoami
 
 ```bash
 usuario@debian:~$ whoami
@@ -42,9 +43,7 @@ usuario
 
 **Explicación:** El comando `whoami` (del inglés *who am I*, "quién soy yo") muestra el nombre del usuario efectivo con el que estás operando actualmente, que en este caso es `usuario`. Es útil en scripts para verificar si se está ejecutando como `root`.
 
----
-
-### Comando id
+### 1.2 Comando id
 
 ```bash
 usuario@debian:~$ id
@@ -63,9 +62,7 @@ uid=0(root) gid=0(root) grupos=0(root)
 
 **Explicación:** Al ejecutar `sudo id` logramos ejecutar la herramienta bajo el contexto temporal de administrador. El UID y GID de `root` son siempre 0, indicando que se trata del superusuario absoluto del sistema.
 
----
-
-### Comando groups
+### 1.3 Comando groups
 
 ```bash
 usuario@debian:~$ groups
@@ -76,77 +73,11 @@ usuario cdrom floppy sudo audio dip video plugdev users netdev bluetooth lpadmin
 
 ---
 
-### Comando which
+## 2. Navegación por el sistema de ficheros
 
-```bash
-usuario@debian:~$ which whoami
-/usr/bin/whoami
-```
+Estos comandos permiten saber dónde estamos, desplazarnos por el árbol de directorios y crear nuevas carpetas.
 
-**Explicación:** El comando `which whoami` muestra la ubicación o ruta absoluta del ejecutable del comando `whoami` en el sistema. Para encontrarlo, la herramienta `which` lee los directorios definidos en tu variable de entorno `$PATH` y devuelve la primera coincidencia.
-
----
-
-### Comando cat
-
-```bash
-usuario@debian:~$ cat .profile
-# ~/.profile: executed by the command interpreter for login shells.
-...
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
-```
-
-**Explicación:** El comando `cat .profile` vuelca y muestra el contenido completo del archivo de texto `.profile` directamente en la salida estándar de la consola. El nombre viene de concatenar (*concatenate*).
-
----
-
-### Comando grep
-
-```bash
-usuario@debian:~$ grep usuario /etc/passwd
-usuario:x:1000:1000:usuario,,,:/home/usuario:/bin/bash
-```
-
-**Explicación:** El comando `grep` permite buscar patrones dentro de archivos o salidas de comandos. En este ejemplo, filtra y muestra únicamente la línea del archivo `/etc/passwd` que contiene exactamente la palabra `usuario`.
-
----
-
-### Comando echo
-
-```bash
-usuario@debian:~$ echo $PATH
-/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
-```
-
-**Explicación:** El comando `echo` imprime en pantalla el texto o variables que se le pasen por argumento. Aquí se emplea `echo $PATH` para mostrar el valor almacenado en la variable de entorno `$PATH`, la cual contiene los directorios en los que el sistema busca los ejecutables.
-
-A continuación, vemos cómo usar caracteres de escape especiales añadiendo el parámetro `-e`:
-
-```bash
-usuario@debian:~# echo -e "Hola\n que tal\t estás"
-Hola
- que tal         estás
-```
-
-**Explicación:** El parámetro `-e` habilita la interpretación de secuencias de escape como `\n` (nueva línea) y `\t` (tabulación).
-
-> **Nota:** Es muy importante tener en cuenta la diferencia del uso de las comillas dobles y simples en el comando `echo` al evaluar variables:
-
-```bash
-usuario@debian:~# echo "$PWD"
-/root
-usuario@debian:~# echo '$PWD'
-$PWD
-```
-
-**Explicación:** Las comillas dobles (`" "`) permiten la expansión de variables (reemplazando `$PWD` por `/root`), mientras que las comillas simples (`' '`) interpretan todo el contenido de forma estrictamente literal.
-
----
-
-### Comando pwd
+### 2.1 Comando pwd
 
 ```bash
 usuario@debian:~$ pwd
@@ -155,9 +86,34 @@ usuario@debian:~$ pwd
 
 **Explicación:** El comando `pwd` (*Print Working Directory*) muestra la ruta absoluta del directorio de trabajo en el que te encuentras posicionado actualmente. En este caso, el usuario está en el directorio `/home/usuario`.
 
----
+### 2.2 Comando cd
 
-### Comando ls
+```bash
+usuario@debian:~$ cd /
+usuario@debian:/$
+```
+
+**Explicación:** El comando `cd` (*Change Directory*) nos permite navegar por el sistema de ficheros. Ejecutando `cd /` cambia de inmediato al directorio raíz `/`, la parte más alta de la jerarquía.
+
+Para volver rápidamente a nuestra carpeta personal desde cualquier ubicación:
+
+```bash
+usuario@debian:/$ cd ~
+usuario@debian:~$
+```
+
+**Explicación:** La tilde (`~`) es un atajo universal que representa el directorio *home* del usuario actual (ej. `/home/usuario`).
+
+Una alternativa aún más rápida es simplemente ejecutar el comando sin parámetros:
+
+```bash
+usuario@debian:~$ cd
+usuario@debian:~$
+```
+
+**Explicación:** El comando `cd` introducido sin argumentos siempre redirige por defecto al directorio personal del usuario.
+
+### 2.3 Comando ls
 
 ```bash
 usuario@debian:~$ ls
@@ -187,42 +143,11 @@ drwxr-xr-x 2 usuario usuario 4096 may  2 16:53 Vídeos
 | `-a`      | (No mostrado) Muestra también los archivos y carpetas ocultos que comienzan con un punto (`.`). |
 | `-h`      | (No mostrado) Muestra el tamaño de forma legible por humanos (*human-readable*, ej. 4K, 2M) cuando se combina con `-l`. |
 
----
-
-### Comando cd
+### 2.4 Comando mkdir
 
 ```bash
-usuario@debian:~$ cd /
-usuario@debian:/$
-```
-
-**Explicación:** El comando `cd` (*Change Directory*) nos permite navegar por el sistema de ficheros. Ejecutando `cd /` cambia de inmediato al directorio raíz `/`, la parte más alta de la jerarquía.
-
-Para volver rápidamente a nuestra carpeta personal desde cualquier ubicación:
-
-```bash
-usuario@debian:/$ cd ~
-usuario@debian:~$
-```
-
-**Explicación:** La tilde (`~`) es un atajo universal que representa el directorio *home* del usuario actual (ej. `/home/usuario`).
-
-Una alternativa aún más rápida es simplemente ejecutar el comando sin parámetros:
-
-```bash
-usuario@debian:~$ cd
-usuario@debian:~$
-```
-
-**Explicación:** El comando `cd` introducido sin argumentos siempre redirige por defecto al directorio personal del usuario.
-
----
-
-### Comando mkdir
-
-```bash
-usuario@debian:/tmp# mkdir uno
-usuario@debian:/tmp# mkdir -p uno/dos/tres/cuatro
+usuario@debian:/tmp$ mkdir uno
+usuario@debian:/tmp$ mkdir -p uno/dos/tres/cuatro
 ```
 
 **Explicación:** El comando `mkdir` (*Make Directory*) permite crear nuevas carpetas. 
@@ -233,7 +158,11 @@ usuario@debian:/tmp# mkdir -p uno/dos/tres/cuatro
 
 ---
 
-### Comandos cat, more, less y tac
+## 3. Visualización del contenido de ficheros
+
+Existen varias herramientas para leer ficheros de texto, y la elección depende sobre todo del tamaño del fichero y de si necesitamos movernos por él.
+
+### 3.1 Comandos cat, more, less y tac
 
 **Explicación comparativa de herramientas de lectura de texto:**
 - El comando `cat` muestra o concatena el contenido del archivo completo por la salida estándar, ideal para archivos pequeños.
@@ -241,17 +170,29 @@ usuario@debian:/tmp# mkdir -p uno/dos/tres/cuatro
 - El comando `less` es un paginador avanzado. Muestra el archivo por páginas y permite moverse de forma interactiva tanto hacia adelante como hacia atrás utilizando las flechas del teclado y buscar palabras internamente. ("*Less is more*").
 - El comando `tac` es el inverso de `cat`. Muestra las líneas del archivo en orden inverso, leyendo desde la última línea hasta la primera (muy útil para leer *logs* cronológicos donde el final es lo más reciente).
 
----
-
-### Comandos head y tail
+Ejemplo de lectura de un fichero completo con `cat`:
 
 ```bash
-usuario@debian:~# head -n 3 /etc/passwd
+usuario@debian:~$ cat .profile
+# ~/.profile: executed by the command interpreter for login shells.
+...
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+```
+
+**Explicación:** El comando `cat .profile` vuelca el contenido completo del archivo de texto `.profile` por la salida estándar. Su nombre procede de *concatenate*, porque admite varios ficheros y los muestra encadenados uno tras otro.
+
+### 3.2 Comandos head y tail
+
+```bash
+usuario@debian:~$ head -n 3 /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
 bin:x:2:2:bin:/bin:/usr/sbin/nologin
 
-usuario@debian:~# head -3 /etc/passwd
+usuario@debian:~$ head -3 /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 ...
 ```
@@ -259,12 +200,12 @@ root:x:0:0:root:/root:/bin/bash
 Y su equivalente para el final del archivo:
 
 ```bash
-usuario@debian:~# tail -n 3 /etc/passwd
+usuario@debian:~$ tail -n 3 /etc/passwd
 vboxadd:x:999:1::/var/run/vboxadd:/bin/false
 _chrony:x:104:109:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
 usuario:x:1001:1001::/home/usuario:/bin/bash
 
-usuario@debian:~# tail -3 /etc/passwd
+usuario@debian:~$ tail -3 /etc/passwd
 ...
 ```
 
@@ -277,7 +218,63 @@ usuario@debian:~# tail -3 /etc/passwd
 
 ---
 
-### Comandos man, manpath, --help
+## 4. Búsqueda de texto y localización de ejecutables
+
+Dos herramientas complementarias: una busca dentro del contenido de los ficheros y la otra busca el fichero ejecutable de un comando.
+
+### 4.1 Comando grep
+
+```bash
+usuario@debian:~$ grep usuario /etc/passwd
+usuario:x:1000:1000:usuario,,,:/home/usuario:/bin/bash
+```
+
+**Explicación:** El comando `grep` permite buscar patrones dentro de archivos o salidas de comandos. En este ejemplo, filtra y muestra únicamente la línea del archivo `/etc/passwd` que contiene exactamente la palabra `usuario`.
+
+### 4.2 Comando which
+
+```bash
+usuario@debian:~$ which whoami
+/usr/bin/whoami
+```
+
+**Explicación:** El comando `which whoami` muestra la ubicación o ruta absoluta del ejecutable del comando `whoami` en el sistema. Para encontrarlo, la herramienta `which` lee los directorios definidos en tu variable de entorno `$PATH` y devuelve la primera coincidencia.
+
+---
+
+## 5. Mostrar texto por pantalla
+
+```bash
+usuario@debian:~$ echo $PATH
+/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+```
+
+**Explicación:** El comando `echo` imprime en pantalla el texto o variables que se le pasen por argumento. Aquí se emplea `echo $PATH` para mostrar el valor almacenado en la variable de entorno `$PATH`, la cual contiene los directorios en los que el sistema busca los ejecutables.
+
+A continuación, vemos cómo usar caracteres de escape especiales añadiendo el parámetro `-e`:
+
+```bash
+usuario@debian:~$ echo -e "Hola\n que tal\t estás"
+Hola
+ que tal         estás
+```
+
+**Explicación:** El parámetro `-e` habilita la interpretación de secuencias de escape como `\n` (nueva línea) y `\t` (tabulación).
+
+> **Nota:** Es muy importante tener en cuenta la diferencia del uso de las comillas dobles y simples en el comando `echo` al evaluar variables:
+
+```bash
+usuario@debian:~$ echo "$PWD"
+/root
+usuario@debian:~$ echo '$PWD'
+$PWD
+```
+
+**Explicación:** Las comillas dobles (`" "`) permiten la expansión de variables (reemplazando `$PWD` por `/root`), mientras que las comillas simples (`' '`) interpretan todo el contenido de forma estrictamente literal.
+
+---
+
+## 6. Ayuda y documentación del sistema
 
 ```bash
 usuario@debian:~$ manpath
@@ -289,21 +286,43 @@ usuario@debian:~$ manpath
 Para investigar un comando y sus diferentes secciones en el manual:
 
 ```bash
-manpath          # donde se encuentran las paginas del comando man
-man -f passwd    # vemos las secciones asociadas disponibles
-man -f passwd
-sslpasswd (1ssl) # - compute password hashes
-passwd (5)       # - password file
-passwd (1)       # - update user's authentication tokens
-man -s 5 passwd  # Muestra la página del manual para passwd en la sección 5 (archivos de configuración, en este caso el archivo /etc/passwd)
-man -s 1 passwd  # Muestra la página del manual para passwd en la sección 1 (comandos de usuario. Explica cómo cambiar contraseñas)
+usuario@debian:~$ man -f passwd
+sslpasswd (1ssl)     - compute password hashes
+passwd (5)           - password file
+passwd (1)           - update user's authentication tokens
 ```
+
+La salida revela que existen **tres páginas distintas** con el mismo nombre, cada una en una sección diferente del manual. Para abrir una en concreto se indica el número de sección:
+
+```bash
+usuario@debian:~$ man 5 passwd    # sección 5: describe el formato del fichero /etc/passwd
+usuario@debian:~$ man 1 passwd    # sección 1: describe el comando passwd para cambiar contraseñas
+```
+
+> **Importante:** Si se omite el número de sección, `man` muestra la primera coincidencia siguiendo su orden de búsqueda, que empieza por la sección 1. Por eso `man passwd` a secas abre la página del **comando** y no la del **fichero**, un despiste muy habitual al consultar formatos de ficheros de configuración.
+
+Estas son las secciones en las que se divide el manual:
+
+| Sección | Contenido |
+|---|---|
+| 1 | Comandos ejecutables por cualquier usuario. |
+| 2 | Llamadas al sistema proporcionadas por el núcleo. |
+| 3 | Funciones de las bibliotecas de C. |
+| 4 | Ficheros especiales, normalmente los de `/dev`. |
+| 5 | Formatos de fichero y convenios, como `/etc/passwd` o `/etc/fstab`. |
+| 6 | Juegos. |
+| 7 | Miscelánea: convenios, protocolos, conjuntos de caracteres. |
+| 8 | Comandos de administración, reservados normalmente a `root`. |
 
 > **Nota:** También existen otras opciones de ayuda rápida. Casi todos los comandos aceptan la flag `<comando> --help` para imprimir un resumen de uso en la consola. Asimismo, si no sabes el nombre de un comando pero sabes qué hace, puedes usar `apropos [palabra_clave]` para buscar por descripción en todo el sistema de manuales.
 
 ---
 
-### Comando w
+## 7. Información del sistema y de la sesión
+
+Este grupo reúne comandos que informan sobre el estado de la máquina, la sesión activa y el núcleo en ejecución.
+
+### 7.1 Comando w
 
 ```bash
 usuario@debian:~$ w
@@ -315,9 +334,7 @@ usuario  pts/2    10.0.2.2         07:06    0.00s  0.15s  0.01s w
 
 **Explicación**: El comando `w` condensa información vital del sistema. Muestra el tiempo de actividad (*uptime*), la carga promedio y el estado detallado de todos los usuarios actualmente conectados al sistema, desde qué terminal operan y qué procesos concretos están ejecutando. Existen comandos complementarios como `loginctl` o `who` que también permiten administrar o revisar las sesiones activas.
 
----
-
-### Comando tty
+### 7.2 Comando tty
 
 ```bash
 usuario@debian:~$ tty
@@ -332,21 +349,28 @@ Dado que cada terminal es un "archivo", podemos enviar o redirigir mensajes dire
 usuario@debian:~$ echo "Envio mensaje" > /dev/pts/0
 ```
 
-Si estuviésemos sentados frente a la consola virtual que corresponde a `/dev/pts/0` recibiríamos el eco de manera espontánea:
+Si hubiese una sesión abierta en la pseudoterminal `/dev/pts/0`, su usuario vería aparecer el mensaje en pantalla:
 
 ```bash
 usuario@debian:~$ Envio mensaje
 ```
 
-> **Nota:** Si nos encontramos en el entorno de línea de comandos en modo texto (sin servidor gráfico), podemos cambiar dinámicamente entre distintas consolas virtuales (las denominadas TTY nativas) pulsando combinaciones de teclas como `Ctrl + Alt + F1` hasta `F6`.
+> **Nota:** Conviene distinguir los dos tipos de terminal que aparecen en el sistema:
+>
+> | Dispositivo | Tipo | Origen |
+> |---|---|---|
+> | `/dev/tty1` … `/dev/tty6` | Consolas virtuales reales, gestionadas por el núcleo. | Se accede a ellas pulsando `Ctrl + Alt + F1` hasta `F6`. |
+> | `/dev/pts/0`, `/dev/pts/1`… | Pseudoterminales, creadas bajo demanda por software. | Las genera cada ventana de un emulador de terminal gráfico, cada sesión de `ssh` y cada panel de `tmux`. |
+>
+> El ejemplo anterior devolvió `/dev/pts/2`, de modo que se trata de una pseudoterminal y no de una consola virtual.
 
----
+> **Advertencia:** Escribir en el terminal de otro usuario requiere permiso de escritura sobre su dispositivo, algo que por defecto solo tiene `root`. Para la comunicación entre usuarios existen las herramientas `write`, `wall` y `mesg`, que respetan la preferencia de cada usuario sobre si desea o no recibir mensajes.
 
-### Comando cal
+### 7.3 Comando cal
 
 ```bash
-usuario@debian:~# sudo apt install ncal
-usuario@debian:~# cal
+usuario@debian:~$ sudo apt install ncal
+usuario@debian:~$ cal
   Septiembre 2025
 do lu ma mi ju vi sá
     1  2  3  4  5  6
@@ -356,7 +380,9 @@ do lu ma mi ju vi sá
 28 29 30
 ```
 
-**Explicación**: El comando `cal` (*Calendar*) imprime un pequeño calendario formateado en la terminal. A veces es necesario instalar primero el paquete `ncal`.
+**Explicación**: El comando `cal` (*Calendar*) imprime un pequeño calendario formateado en la terminal. En una instalación mínima puede no venir incluido y hay que instalarlo.
+
+> **Nota:** El paquete que proporciona `cal` ha cambiado con las versiones de Debian. Si el comando no está disponible, lo más fiable es averiguar qué paquete lo aporta en tu sistema concreto con `apt-file search bin/cal`, o comprobar de dónde salió el que ya tienes instalado con `dpkg -S $(which cal)`.
 
 **Sintaxis y variantes de `cal`:**
 
@@ -368,12 +394,10 @@ do lu ma mi ju vi sá
 | `cal -y`              | Muestra todo el calendario del año en curso. |
 | `cal -3`              | Muestra el mes actual, el mes anterior y el mes posterior al mismo tiempo. |
 
----
-
-### Comando date
+### 7.4 Comando date
 
 ```bash
-usuario@debian:~# date
+usuario@debian:~$ date
 vie 05 sep 2025 07:37:29 CEST
 ```
 
@@ -382,10 +406,12 @@ vie 05 sep 2025 07:37:29 CEST
 El comando también sirve para configurar el reloj local, pero esto **solo** lo puede realizar el usuario `root` usando las flags `-s` o `--set`:
 
 ```bash
-date --set "2014-11-13 9:30:01"
-date -s "2014-11-13 9:30:01"
-date +%D
+root@debian:~# date --set "2014-11-13 9:30:01"
+root@debian:~# date -s "2014-11-13 9:30:01"
+root@debian:~# date +%D
 ```
+
+> **Advertencia:** En un sistema con sincronización horaria activa (`systemd-timesyncd`, `chrony` o `ntpd`), el cambio realizado con `date -s` será revertido en cuanto el servicio contacte con su servidor NTP. Para fijar la hora manualmente hay que desactivar primero la sincronización con `timedatectl set-ntp false`. Este asunto se trata en detalle en el documento 30.
 
 A continuación, se muestra una lista de algunos especificadores útiles de formato para extraer fracciones específicas de fecha y hora (`date +%<letra>`):
 
@@ -398,9 +424,7 @@ A continuación, se muestra una lista de algunos especificadores útiles de form
 - `%F`: Fecha estandarizada ISO 8601: `aaaa-mm-dd`.
 - `%T`: Hora estandarizada: `HH:MM:SS`.
 
----
-
-### Comando uname
+### 7.5 Comando uname
 
 ```bash
 usuario@debian:~$ uname
@@ -417,7 +441,7 @@ usuario@debian:~$ uname -r
 
 ---
 
-### Comando ln
+## 8. Enlaces duros y simbólicos
 
 ```bash
 usuario@debian:~$ cd /tmp
@@ -428,7 +452,7 @@ usuario@debian:/tmp$ cat test
 fichero test
 ```
 
-A continuación, crearemos un **enlace duro** y verificaremos su comportamiento:
+A continuación creamos un **enlace duro** sobre ese fichero. Obsérvese que el enlace muestra exactamente el mismo contenido que el original:
 
 ```bash
 usuario@debian:/tmp$ ln test enlace-duro-test
@@ -505,7 +529,7 @@ usuario@debian:/tmp$ ls -li test.txt enlace-duro-test
 
 > **Nota:** Por seguridad del sistema de archivos, los enlaces duros no pueden realizarse contra directorios y tampoco pueden cruzar fronteras de sistemas de ficheros distintos (no puedes hacer un enlace duro desde un disco duro hacia un *pendrive* USB externo).
 
-**Tabla Resumen Comparativa de Enlaces:**
+**Tabla resumen comparativa de enlaces:**
 
 | Soft Link (Simbólico) | Hard Link (Duro) |
 | --------------------- | ---------------- |
@@ -517,7 +541,7 @@ usuario@debian:/tmp$ ls -li test.txt enlace-duro-test
 
 ---
 
-### Comando su –
+## 9. Cambio de usuario
 
 **Explicación**: El comando `su` (*Substitute User* o *Switch User*) se utiliza para saltar temporalmente a la cuenta de otro usuario interactivo (generalmente `root`) aportando su contraseña, pero existen matices cruciales en su comportamiento según se acompañe o no del guion:
 
@@ -532,7 +556,7 @@ root@debian:/home/usuario# echo $PWD
 /home/usuario
 ```
 
-- **`su -` (con guion):** Simula un inicio de sesión completo y limpio (*login shell*). Carga todos los perfiles (`.bashrc`, `.profile`), renueva el entorno y salta físicamente al directorio `/home` o directorio por defecto del nuevo usuario. Es la forma más predecible y recomendada de cambiar a `root` en administración de sistemas.
+- **`su -` (con guion):** Simula un inicio de sesión completo y limpio (*login shell*). Carga todos los perfiles (`.profile`, `.bashrc`), renueva por completo el entorno y sitúa la sesión en el directorio personal del usuario destino, que en el caso de `root` es `/root` y no `/home`. Es la forma más predecible y recomendada de cambiar a `root` en administración de sistemas.
 
 ```bash
 usuario@debian:~$ echo $PWD

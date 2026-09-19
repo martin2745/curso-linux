@@ -4,16 +4,38 @@
 
 1. [Inicio del instalador](#1-inicio-del-instalador)
 2. [Configuración regional e idioma](#2-configuración-regional-e-idioma)
+   1. [Selección de idioma](#21-selección-de-idioma)
+   2. [Selección de ubicación](#22-selección-de-ubicación)
+   3. [Selección del mapa de teclado](#23-selección-del-mapa-de-teclado)
 3. [Carga de componentes del instalador](#3-carga-de-componentes-del-instalador)
 4. [Configuración de la red](#4-configuración-de-la-red)
+   1. [Nombre de la máquina (Hostname)](#41-nombre-de-la-máquina-hostname)
+   2. [Nombre de dominio](#42-nombre-de-dominio)
 5. [Configuración de usuarios y contraseñas](#5-configuración-de-usuarios-y-contraseñas)
+   1. [Contraseña de superusuario (root)](#51-contraseña-de-superusuario-root)
+   2. [Creación del usuario estándar](#52-creación-del-usuario-estándar)
 6. [Configuración del reloj y zona horaria](#6-configuración-del-reloj-y-zona-horaria)
 7. [Particionado de discos](#7-particionado-de-discos)
+   1. [Selección del método de particionado](#71-selección-del-método-de-particionado)
+   2. [Selección de la unidad de disco](#72-selección-de-la-unidad-de-disco)
+   3. [Esquema de particionado](#73-esquema-de-particionado)
+   4. [Resumen y confirmación de particiones](#74-resumen-y-confirmación-de-particiones)
 8. [Configuración del gestor de paquetes (APT)](#8-configuración-del-gestor-de-paquetes-apt)
+   1. [Medios de instalación adicionales](#81-medios-de-instalación-adicionales)
+   2. [Selección de la réplica de Debian (Espejo / Mirror)](#82-selección-de-la-réplica-de-debian-espejo--mirror)
+   3. [Configuración del proxy HTTP](#83-configuración-del-proxy-http)
 9. [Encuesta de uso de paquetes (Popularity-Contest)](#9-encuesta-de-uso-de-paquetes-popularity-contest)
 10. [Selección e instalación de software](#10-selección-e-instalación-de-software)
+    1. [Selección de colecciones de programas](#101-selección-de-colecciones-de-programas)
+    2. [Descarga e instalación de paquetes](#102-descarga-e-instalación-de-paquetes)
 11. [Instalación del cargador de arranque GRUB](#11-instalación-del-cargador-de-arranque-grub)
+    1. [Confirmación de instalación de GRUB](#111-confirmación-de-instalación-de-grub)
+    2. [Selección del dispositivo de arranque](#112-selección-del-dispositivo-de-arranque)
 12. [Finalización de la instalación y primer arranque](#12-finalización-de-la-instalación-y-primer-arranque)
+    1. [Aviso de fin de instalación](#121-aviso-de-fin-de-instalación)
+    2. [Menú de arranque de GRUB](#122-menú-de-arranque-de-grub)
+    3. [Pantalla de inicio de sesión (GDM)](#123-pantalla-de-inicio-de-sesión-gdm)
+    4. [Escritorio GNOME activo](#124-escritorio-gnome-activo)
 
 ---
 
@@ -42,7 +64,7 @@ A continuación se describen las opciones disponibles en el menú de inicio:
 
 La primera etapa de la configuración consiste en definir la localización e idioma del sistema. Esta elección influye directamente en las variables de entorno de localización (`LC_*` y `LANG`), la zona horaria sugerida y la disposición por defecto del teclado.
 
-### Selección de idioma
+### 2.1 Selección de idioma
 
 ![Selección de idioma](../imagenes/recursos/instalacion_debian/002.png)
 
@@ -50,15 +72,15 @@ En esta pantalla se selecciona el idioma principal que utilizará tanto el insta
 
 > **Importante:** El idioma seleccionado establecerá el valor predeterminado del locale del sistema (por ejemplo, `es_ES.UTF-8`), afectando a la codificación de caracteres y traducciones en la consola y aplicaciones.
 
-### Selección de ubicación
+### 2.2 Selección de ubicación
 
 ![Selección de ubicación](../imagenes/recursos/instalacion_debian/003.png)
 
 A continuación, se define el país o territorio de residencia. Al seleccionar `España`, el instalador ajustará automáticamente los parámetros de formato de fecha, moneda, separadores decimales y determinará la zona horaria predeterminada.
 
-> **Recuerda:** Si estás instalando el sistema en una ubicación distinta, seleccionar el país adecuado garantiza la sincronización correcta con los servidores NTP locales y los repositorios espejo más cercanos.
+> **Recuerda:** Si estás instalando el sistema en una ubicación distinta, seleccionar el país adecuado ajusta la zona horaria propuesta por defecto y hace que el instalador te ofrezca los repositorios espejo más cercanos en el paso de configuración de APT.
 
-### Selección del mapa de teclado
+### 2.3 Selección del mapa de teclado
 
 ![Selección de la distribución del teclado](../imagenes/recursos/instalacion_debian/004.png)
 
@@ -70,8 +92,6 @@ En esta pantalla se establece la distribución física de las teclas. Selecciona
 
 ## 3. Carga de componentes del instalador
 
-![Carga de componentes del instalador](../imagenes/recursos/instalacion_debian/005.png)
-
 Una vez definidos los parámetros regionales básicos, el instalador procede a la detección de hardware y a la carga de módulos adicionales del kernel desde el medio de instalación (como `nic-shared-modules`).
 
 Durante este paso:
@@ -79,13 +99,15 @@ Durante este paso:
 - Se cargan los controladores necesarios para acceder a discos duros, controladores SATA/NVMe y dispositivos PCI.
 - Se configura la pila de red básica para permitir la comunicación por DHCP en los siguientes pasos.
 
+![Carga de componentes del instalador](../imagenes/recursos/instalacion_debian/005.png)
+
 ---
 
 ## 4. Configuración de la red
 
 La configuración de red permite identificar al equipo de forma única dentro de una red local o corporativa y le proporciona acceso a internet para descargar paquetes durante la instalación.
 
-### Nombre de la máquina (Hostname)
+### 4.1 Nombre de la máquina (Hostname)
 
 ![Configuración del nombre de la máquina](../imagenes/recursos/instalacion_debian/006.png)
 
@@ -93,13 +115,13 @@ El nombre de la máquina (*hostname*) es la etiqueta alfa-numérica que identifi
 
 > **Nota:** El nombre asignado aquí se registrará automáticamente en el archivo `/etc/hostname` y se asociará a la dirección `127.0.1.1` dentro del archivo `/etc/hosts`.
 
-### Nombre de dominio
+### 4.2 Nombre de dominio
 
 ![Configuración del nombre de dominio](../imagenes/recursos/instalacion_debian/007.png)
 
 El nombre de dominio es la parte que complementa al nombre de máquina para formar su nombre de dominio completo o FQDN (*Fully Qualified Domain Name*), como por ejemplo `debian.local` o `debian.empresa.com`.
 
-> **Nota:** En redes domésticas o laboratorios personales se puede dejar este campo en blanco. Si se especifica, se almacenará en `/etc/resolv.conf` y `/etc/hosts`.
+> **Nota:** En redes domésticas o laboratorios personales se puede dejar este campo en blanco. Si se especifica, el instalador lo añadirá como directiva `search` en `/etc/resolv.conf` y construirá el FQDN asociado a la dirección `127.0.1.1` dentro de `/etc/hosts` (por ejemplo, `127.0.1.1 debian.local debian`).
 
 ---
 
@@ -107,7 +129,7 @@ El nombre de dominio es la parte que complementa al nombre de máquina para form
 
 Debian aplica un estricto modelo de seguridad UNIX que distingue entre la cuenta del administrador del sistema (`root`) y las cuentas de usuario estándar sin privilegios.
 
-### Contraseña de superusuario (root)
+### 5.1 Contraseña de superusuario (root)
 
 ![Configuración de la contraseña de root](../imagenes/recursos/instalacion_debian/008.png)
 
@@ -115,7 +137,7 @@ El superusuario `root` posee acceso ilimitado a todos los archivos, procesos y c
 
 > **Advertencia:** Si se deja la clave de `root` vacía en este paso, la cuenta de `root` quedará desactivada para el inicio de sesión directo y el instalador configurará el usuario estándar (creado en los siguientes pasos) con permisos para ejecutar comandos administrativos mediante `sudo`.
 
-### Creación del usuario estándar
+### 5.2 Creación del usuario estándar
 
 ![Nombre completo del nuevo usuario](../imagenes/recursos/instalacion_debian/009.png)
 
@@ -135,9 +157,9 @@ Se establece y confirma la contraseña para el nuevo usuario. Esta cuenta será 
 
 ## 6. Configuración del reloj y zona horaria
 
-![Configuración de la zona horaria](../imagenes/recursos/instalacion_debian/012.png)
-
 Dado que anteriormente se seleccionó `España` como país de ubicación, el instalador solicita ajustar la zona horaria concreta entre las opciones disponibles: `Península`, `Ceuta y Melilla` o `Islas Canarias`. Para este ejemplo elegimos `Península`.
+
+![Configuración de la zona horaria](../imagenes/recursos/instalacion_debian/012.png)
 
 > **Nota:** En sistemas Linux, el reloj del sistema opera habitualmente en hora UTC (*Coordinated Universal Time*) a nivel de hardware, mientras que el sistema operativo aplica el desfase correspondiente mediante un enlace simbólico desde `/etc/localtime` apuntando a la zona definida en `/usr/share/zoneinfo/Europe/Madrid`.
 
@@ -147,7 +169,7 @@ Dado que anteriormente se seleccionó `España` como país de ubicación, el ins
 
 El particionado de discos es uno de los pasos más críticos en la instalación de un sistema operativo, ya que define cómo se estructurará el almacenamiento físico para albergar el sistema de ficheros.
 
-### Selección del método de particionado
+### 7.1 Selección del método de particionado
 
 ![Método de particionado](../imagenes/recursos/instalacion_debian/013.png)
 
@@ -162,13 +184,13 @@ El instalador ofrece diferentes esquemas para preparar los discos de almacenamie
 
 > **Nota:** Para esta instalación de referencia se selecciona `Guiado - utilizar todo el disco`.
 
-### Selección de la unidad de disco
+### 7.2 Selección de la unidad de disco
 
 ![Selección del disco a particionar](../imagenes/recursos/instalacion_debian/014.png)
 
 Se elige la unidad física donde se aplicará el particionado. En este caso se selecciona la unidad `/dev/sda` (`SCSI3 (0,0,0) - 53.7 GB ATA VBOX HARDDISK`), correspondiente al disco virtual de la máquina.
 
-### Esquema de particionado
+### 7.3 Esquema de particionado
 
 ![Esquema de particionado](../imagenes/recursos/instalacion_debian/015.png)
 
@@ -179,7 +201,7 @@ El instalador permite estructurar las particiones según el propósito del siste
 
 > **Nota:** Seleccionamos `Todos los ficheros en una partición (recomendado para novatos)`.
 
-### Resumen y confirmación de particiones
+### 7.4 Resumen y confirmación de particiones
 
 ![Resumen del particionado](../imagenes/recursos/instalacion_debian/016.png)
 
@@ -201,13 +223,13 @@ Por motivos de seguridad, el instalador requiere una confirmación explícita an
 
 El gestor de paquetes APT (*Advanced Package Tool*) requiere configurar los orígenes de software y repositorios desde los que se actualizarán e instalarán las aplicaciones del sistema.
 
-### Medios de instalación adicionales
+### 8.1 Medios de instalación adicionales
 
 ![Análisis de medios adicionales](../imagenes/recursos/instalacion_debian/018.png)
 
 El instalador detecta el medio utilizado (`Debian GNU/Linux 13.6.0 NETINST`) y pregunta si se desea escanear DVDs o CDs adicionales. Dado que la instalación se realiza con conexión a red a través del instalador de red (*NETINST*), seleccionamos `No`.
 
-### Selección de la réplica de Debian (Espejo / Mirror)
+### 8.2 Selección de la réplica de Debian (Espejo / Mirror)
 
 ![Selección del país de la réplica](../imagenes/recursos/instalacion_debian/019.png)
 
@@ -219,7 +241,7 @@ A continuación se elige el servidor espejo concreto. Se selecciona `deb.debian.
 
 > **Nota:** `deb.debian.org` es el servicio oficial de redirección de réplicas de Debian. Utiliza CDN y geolocalización por DNS para dirigir las peticiones al servidor más rápido y cercano disponible automáticamente.
 
-### Configuración del proxy HTTP
+### 8.3 Configuración del proxy HTTP
 
 ![Configuración del proxy HTTP](../imagenes/recursos/instalacion_debian/021.png)
 
@@ -229,9 +251,9 @@ Si la red requiere salir a internet a través de un servidor Proxy HTTP intermed
 
 ## 9. Encuesta de uso de paquetes (Popularity-Contest)
 
-![Configuración de popularity-contest](../imagenes/recursos/instalacion_debian/022.png)
-
 El instalador ofrece la posibilidad de enviar estadísticas anónimas periódicas a los desarrolladores de Debian mediante el paquete `popularity-contest` (`popcon`). Estos datos ayudan a la comunidad a decidir qué software se incluye en los medios de instalación principales.
+
+![Configuración de popularity-contest](../imagenes/recursos/instalacion_debian/022.png)
 
 > **Nota:** La participación es totalmente voluntaria. En esta instalación de ejemplo se selecciona `No`. Si en el futuro se desea activar, se puede reconfigurar ejecutando el comando `dpkg-reconfigure popularity-contest`.
 
@@ -241,7 +263,7 @@ El instalador ofrece la posibilidad de enviar estadísticas anónimas periódica
 
 Debian permite personalizar la colección de paquetes (*tasks*) que se instalarán durante la configuración inicial del sistema.
 
-### Selección de colecciones de programas
+### 10.1 Selección de colecciones de programas
 
 ![Selección de programas](../imagenes/recursos/instalacion_debian/023.png)
 
@@ -259,7 +281,7 @@ En esta pantalla se seleccionan los entornos de escritorio y componentes del ser
 
 > **Nota:** Seleccionamos `Entorno de escritorio Debian` con `GNOME` y las `Utilidades estándar del sistema`.
 
-### Descarga e instalación de paquetes
+### 10.2 Descarga e instalación de paquetes
 
 ![Progreso de instalación de programas](../imagenes/recursos/instalacion_debian/024.png)
 
@@ -271,43 +293,45 @@ El instalador descarga y configura todos los paquetes correspondientes a las col
 
 El cargador de arranque GRUB 2 (*Grand Unified Bootloader*) es el programa encargado de tomar el control del hardware tras el firmware del equipo (BIOS/UEFI) y cargar el kernel de Linux en memoria RAM.
 
-### Confirmación de instalación de GRUB
+### 11.1 Confirmación de instalación de GRUB
 
 ![Confirmación de instalación de GRUB](../imagenes/recursos/instalacion_debian/025.png)
 
 Dado que Debian es el único sistema operativo detectado en la máquina, el instalador consulta si se debe escribir GRUB en el sector de arranque de la unidad principal. Seleccionamos `Sí`.
 
-### Selección del dispositivo de arranque
+### 11.2 Selección del dispositivo de arranque
 
 ![Selección del dispositivo para GRUB](../imagenes/recursos/instalacion_debian/026.png)
 
 Se indica explícitamente el dispositivo físico donde se registrará el cargador de arranque. Seleccionamos `/dev/sda` (`ata-VBOX_HARDDISK`).
 
-> **Importante:** No debe seleccionarse una partición específica (como `/dev/sda1`), sino la unidad de disco completa (`/dev/sda`) para garantizar que la tabla de particiones MBR/UEFI sea leída correctamente al encender la máquina.
+> **Importante:** En un arranque clásico BIOS/MBR debe seleccionarse la unidad de disco completa (`/dev/sda`) y nunca una partición concreta (`/dev/sda1`), porque el código de arranque de GRUB se escribe en el MBR, los primeros 440 bytes del disco, que es exactamente lo que el firmware lee al encender la máquina.
+
+> **Nota:** Si el equipo arranca en modo UEFI este paso se comporta de forma distinta: GRUB no se escribe en el MBR, sino que se instala como un ejecutable `.efi` dentro de la partición de sistema EFI (ESP), montada habitualmente en `/boot/efi`, y es el propio firmware UEFI quien lo localiza a través de sus variables de arranque (`efibootmgr`).
 
 ---
 
 ## 12. Finalización de la instalación y primer arranque
 
-### Aviso de fin de instalación
+### 12.1 Aviso de fin de instalación
 
 ![Instalación completada](../imagenes/recursos/instalacion_debian/027.png)
 
 El instalador notifica que el proceso se ha completado con éxito. Se debe retirar el medio de instalación (imagen ISO en la máquina virtual o pendrive USB físico) antes de pulsar `Continuar` para evitar que el equipo vuelva a arrancar el instalador.
 
-### Menú de arranque de GRUB
+### 12.2 Menú de arranque de GRUB
 
 ![Menú de arranque de GRUB](../imagenes/recursos/instalacion_debian/028.png)
 
 Al reiniciar el equipo, se presenta el menú de arranque de GNU GRUB. Tras esperar 5 segundos o pulsar `Intro` sobre la opción `Debian GNU/Linux`, el gestor carga el kernel de Linux y los servicios iniciales del sistema (`systemd`).
 
-### Pantalla de inicio de sesión (GDM)
+### 12.3 Pantalla de inicio de sesión (GDM)
 
 ![Pantalla de inicio de sesión GDM](../imagenes/recursos/instalacion_debian/029.png)
 
 El gestor de pantalla de GNOME (*GDM - GNOME Display Manager*) muestra la interfaz gráfica para seleccionar el usuario `usuario` e introducir la contraseña establecida durante la instalación.
 
-### Escritorio GNOME activo
+### 12.4 Escritorio GNOME activo
 
 ![Escritorio GNOME de Debian 13](../imagenes/recursos/instalacion_debian/030.png)
 

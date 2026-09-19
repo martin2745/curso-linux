@@ -16,7 +16,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [03 - Comandos básicos](./apuntes/03_Comandos_Basicos.md)
 - [04 - Comando ls, lspci, lsusb y lsmod](./apuntes/04_Comando_ls_lspci_lsusb_lsmod.md)
 - [05 - Comando head y tail](./apuntes/05_Comando_head_y_tail.md)
-- [06 - Comando who, whoami, id y groups](./apuntes/06_who_whoami_id_y_groups.md)
+- [06 - Comando who, whoami, id y groups](./apuntes/06_Comando_who_whoami_id_y_groups.md)
 - [07 - Comando whitch y type](./apuntes/07_Comando_whitch_y_type.md)
 - [08 - Comando sort](./apuntes/08_Comando_sort.md)
 - [09 - Comando grep, egre, expresiones regulares y metacaracteres](./apuntes/09_Comando_grep_egre_expresiones_regulares_y_metacaracteres.md)
@@ -32,7 +32,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [19 - Comando awk](./apuntes/19_Comando_awk.md)
 - [20 - Comando tr](./apuntes/20_Comando_tr.md)
 - [21 - Comando history](./apuntes/21_Comando_history.md)
-- [22 - Gestión de procesos](./apuntes/22_Gestion_de_procesos.md.md)
+- [22 - Gestión de procesos](./apuntes/22_Gestion_de_procesos.md)
 - [23 - Compresión de archivos](./apuntes/23_Compresion_de_archivos.md)
 - [24 - Comando atime, mtime, ctime y touch](./apuntes/24_Comando_atime_mtime_ctime_y_touch.md)
 - [25 - Comando mount y umount](./apuntes/25_Comando_mount_y_umount.md)
@@ -51,6 +51,11 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [38 - Raid con mdadm](./apuntes/38_Raid_con_mdadm.md)
 - [39 - Herramienta tmux](./apuntes/39_Herramienta_tmux.md)
 - [40 - Configuración de logs](./apuntes/40_Configuracion_logs.md)
+- [41 - Retos de SSH: OverTheWire Bandit](./apuntes/41_Retos_Bandit_OverTheWire.md)
+- [42 - LVM: gestión de volúmenes lógicos](./apuntes/42_LVM_Gestion_de_volumenes_logicos.md)
+- [43 - El editor vi y vim](./apuntes/43_Editor_vi_vim.md)
+- [44 - Cortafuegos: nftables y ufw](./apuntes/44_Cortafuegos_nftables_y_ufw.md)
+- [45 - Comando rsync](./apuntes/45_Comando_rsync.md)
 - [Cuestionarios](./apuntes/Cuestionarios.md)
 
 ### Tareas de manejo de Linux, entorno y comandos
@@ -130,7 +135,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 
 ### Tareas de servicios en red
 
-- [01 Tarea: Servidor Web Apache](./servicios_redes/tareas/tarea01/01_tarea.md)
+- [01 Tarea: Servidor Web Apache](./servicios_en_red/tareas/tarea01/01_tarea.md)
 
 ### Sistemas operativos en red
 
@@ -139,7 +144,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [01 - LDAP con OpenLDAP (slapd)](./sistemas_operativos_en_red/01_ldap-slapd.md)
 - [02 - NFS](./sistemas_operativos_en_red/02_NFS.md)
 - [03 - Perfiles móviles en Linux con LDAP y NFS](./sistemas_operativos_en_red/03_perfiles_moviles.md)
-- [04 - Seguridad del escenario y kerberos](./sistemas_operativos_en_red/04_seguridad_del%20escenario_y_kerberos.md)
+- [04 - Seguridad del escenario y kerberos](./sistemas_operativos_en_red/04_seguridad_del_escenario_y_kerberos.md)
 - [05 - Samba](./sistemas_operativos_en_red/05_samba.md)
 
 #### Active Directory con Samba promocionado a controlador de dominio

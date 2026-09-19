@@ -2,31 +2,31 @@
 
 ## Índice
 
-1. [Tipos de particionado](#tipos-de-particionado)
-   1. [Tipos de particionado: MBR y GPT](#tipos-de-particionado-mbr-y-gpt)
-2. [Estado de partida](#estado-de-partida)
-3. [lsblk](#lsblk)
-   1. [Dispositivos `loop`](#dispositivos-loop)
-   2. [Disco principal `sda`](#disco-principal-sda)
-   3. [Segundo disco `sdb`](#segundo-disco-sdb)
-4. [fdisk](#fdisk)
-5. [blkid](#blkid)
-6. [mkfs](#mkfs)
-7. [mount y umount](#mount-y-umount)
-8. [fstab](#fstab)
-   1. [Como recuperar el sistema si cometemos un error en el archivo /etc/fstab](#como-recuperar-el-sistema-si-cometemos-un-error-en-el-archivo-etcfstab)
-9. [Particionado con parted](#particionado-con-parted)
-   1. [Ejercicio](#ejercicio)
-10. [Partición de swap](#particion-de-swap)
+1. [Tipos de particionado](#1-tipos-de-particionado)
+   1. [MBR (Master Boot Record)](#11-mbr-master-boot-record)
+   2. [GPT (GUID Partition Table)](#12-gpt-guid-partition-table)
+2. [Estado de partida](#2-estado-de-partida)
+3. [lsblk](#3-lsblk)
+   1. [Dispositivos `loop`](#31-dispositivos-loop)
+   2. [Disco principal `sda`](#32-disco-principal-sda)
+   3. [Segundo disco `sdb`](#33-segundo-disco-sdb)
+4. [fdisk](#4-fdisk)
+5. [blkid](#5-blkid)
+6. [mkfs](#6-mkfs)
+7. [mount y umount](#7-mount-y-umount)
+8. [fstab](#8-fstab)
+   1. [Como recuperar el sistema si cometemos un error en el archivo /etc/fstab](#81-como-recuperar-el-sistema-si-cometemos-un-error-en-el-archivo-etcfstab)
+9. [Particionado con parted](#9-particionado-con-parted)
+   1. [Ejercicio](#91-ejercicio)
+10. [Partición de swap](#10-partición-de-swap)
 
 ---
 
+## 1. Tipos de particionado
 
-## Tipos de particionado
+Toda tabla de particiones sigue uno de dos esquemas, MBR o GPT, y conviene decidirlo antes de tocar nada porque condiciona el número de particiones, el tamaño máximo del disco y el modo de arranque compatible.
 
-### Tipos de particionado: MBR y GPT
-
-#### MBR (Master Boot Record)
+### 1.1 MBR (Master Boot Record)
 
 El esquema **MBR** es el más antiguo y se introdujo en 1983 con IBM PC DOS 2.0. Sus características principales son:
 
@@ -35,7 +35,7 @@ El esquema **MBR** es el más antiguo y se introdujo en 1983 con IBM PC DOS 2.0.
 - **Ubicación del registro de arranque**: Se encuentra en el primer sector del disco (sector 0) y contiene la tabla de particiones junto con el **código de arranque**.
 - **Compatibilidad**: Es compatible con sistemas operativos más antiguos y con el modo BIOS.
 
-#### GPT (GUID Partition Table)
+### 1.2 GPT (GUID Partition Table)
 
 El esquema **GPT** es más moderno y forma parte del estándar UEFI. Sus características principales son:
 
@@ -61,7 +61,9 @@ En pocas palabras:
 
 ![MBR vs GPT](../imagenes/recursos/particionado/MBRvsGPT.png)
 
-## Estado de partida
+---
+
+## 2. Estado de partida
 
 A continuación, vamos a realizar el particionado de un disco y vamos a proceder a su montado. Inicialmente partimos de la siguiente situación.
 
@@ -109,7 +111,9 @@ Disposit.  Inicio Comienzo     Final  Sectores Tamaño Id Tipo
 /dev/sda5          1001472 134215679 133214208  63,5G 8e Linux LVM
 ```
 
-## lsblk
+---
+
+## 3. lsblk
 
 Nos muestra información relevante de los dispositivos de almacenamiento.
 
@@ -135,7 +139,7 @@ sda                         8:0    0   64G  0 disk
 - _TYPE_: Tipo de dispositivo (disk, part, rom, lvm, etc.).
 - _MOUNTPOINT_: Punto de montaje del dispositivo.
 
-### Dispositivos `loop`
+### 3.1 Dispositivos `loop`
 
 Un dispositivo `loop` es un disco virtual que permite montar un archivo como si fuera un dispositivo de almacenamiento real. Se usa para acceder a archivos de imagen (ISO, IMG) o paquetes Snap sin necesidad de grabarlos en un disco físico.
 
@@ -143,7 +147,7 @@ Un dispositivo `loop` es un disco virtual que permite montar un archivo como si 
 loop2    7:2    0 271,2M  1 loop /snap/firefox/4848
 ```
 
-### Disco principal `sda`
+### 3.2 Disco principal `sda`
 
 ```bash
 sda      8:0    0    50G  0 disk
@@ -165,7 +169,7 @@ sda      8:0    0    50G  0 disk
 
 Si tienes Windows y Linux en el mismo PC, el **gestor de arranque (GRUB)** te permite elegir cuál arrancar. Una vez elegido el sistema, el **cargador de arranque** carga el kernel de Linux o Windows en la memoria.
 
-### Segundo disco `sdb`
+### 3.3 Segundo disco `sdb`
 
 ```bash
 sdb      8:16   0    25G  0 disk
@@ -193,7 +197,9 @@ sda      8:0    0    50G  0 disk
 sdb      8:16   0    25G  0 disk
 ```
 
-## fdisk
+---
+
+## 4. fdisk
 
 `fdisk` es la herramienta de administración de discos y particiones tradicional del shell de Linux.
 
@@ -363,7 +369,9 @@ Disklabel type: gpt
 Disk identifier: 9D46AE3B-2D99-F94C-8C2F-3A58DB60DC6F
 ```
 
-## blkid
+---
+
+## 5. blkid
 
 `blkid`: Permite consultar el identificador único de cada disco. Como no tienen un sistema de ficheros asignado el identificador va a tener el tamaño que se muestra a continuación.
 
@@ -373,7 +381,9 @@ root@debian:~# blkid | grep sdb
 /dev/sdb1: PARTUUID="20eab2f1-01"
 ```
 
-## mkfs
+---
+
+## 6. mkfs
 
 `mkfs` Permite aplicar un formato de sistema de ficheros a una partición.
 
@@ -414,7 +424,9 @@ root@debian:~# blkid | grep sdb
 /dev/sdb5: UUID="054a4742-ad44-4132-bfb9-ce927f9bfdc3" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="20eab2f1-05"
 ```
 
-## mount y umount
+---
+
+## 7. mount y umount
 
 El paso final para poder leer y escribir de particiones es montarlas en una ruta del sistema de archivos para lo cual utilizaremos el comando mount:
 
@@ -444,7 +456,9 @@ fichero10.txt  fichero2.txt  fichero4.txt  fichero6.txt  fichero8.txt  fichero.t
 fichero1.txt   fichero3.txt  fichero5.txt  fichero7.txt  fichero9.txt
 ```
 
-## fstab
+---
+
+## 8. fstab
 
 Para que el montaje de la partición `/dev/sdb1` sea persistente y no tener que volver a realizar este proceso cuando encendamos de nuevo el ordenador tenemos que añadir la configuración correspondiente en el fichero `/etc/fstab`. Tenemos que tener cuidado con las modificaciones realizadas en este fichero ya que si los datos introducidos son incorrectos podría no iniciarse el ordenador. Para ello vamos a hacer un `cp -pv /etc/fstab /etc/fstab_VIEJO` y ejecutar el comando `mount -a` para ver si tenemos algún error antes de reiniciar la máquina.
 
@@ -453,12 +467,12 @@ root@debian:~# cp -pv /etc/fstab /etc/fstab_VIEJO
 '/etc/fstab' -> '/etc/fstab_VIEJO'
 ```
 
-Neceitamos añadir en una nueva entrada del `/etc/fstab` el identificador de la partición. Dentro del `/etc/fstab` la entrada va a tener 6 columnas de datos:
+Necesitamos añadir en una nueva entrada del `/etc/fstab` el identificador de la partición. Dentro del `/etc/fstab` la entrada va a tener 6 columnas de datos:
 
 - El UUID o nombre de partición, el punto de montaje y el tipo de sistema de archivos.
 - Opciones de montaje. Si dejamos `defaults` se aplicarán opciones por defecto según el sistema de archivos, pero hay múltiples opciones que nos permite configurar: si queremos o no montaje automático, modo de sólo lectura o lectura/escritura, permitir o bloquear el uso de los bits suid y sgid, limitar los usuarios que pueden montar la partición, ...
 - Opción dump: Número de veces que se aplicará un backup al sistema de ficheros por el programa dump (0 indica que no se aplica).
-- Opción pass: Orden en el que se comprobará el sistema de archivos en el arranque. El 1 se reservar para el sistema raíz (/). Si ponemos un 0 no se comprueba en el arranque.
+- Opción pass: Orden en el que se comprobará el sistema de archivos en el arranque. El 1 se reserva para el sistema raíz (`/`). Si ponemos un 0 no se comprueba en el arranque.
 
 ```bash
 root@usuario:/home/usuario# blkid | grep sdb | awk -F ' ' '{print $2}' | sed 's/"//g'
@@ -545,13 +559,21 @@ Resumen de lo que pueden contener los campos:
 5. **dump**: 0 o 1 para respaldo con `dump`, es decir, si hay un fallo en disco se almacena en un log dicha información.
 6. **pass**: 0 (sin chequeo), 1 (chequeo para raíz), 2 (chequeo para otras particiones).
 
-> **Nota:** Este funcionamiento era el empleado en SystemV, actualmente con SystemD esto ha quedado desactualizado y los campos 5 y 6 deben ser 0.
+> **Advertencia:** Es inexacto afirmar que con systemd los campos 5 y 6 "deban ser 0". El campo `pass` (el sexto) **sigue en uso**: systemd lo lee para decidir qué sistemas de ficheros comprueba con `fsck` durante el arranque y en qué orden. Lo correcto es mantener `1` en la partición raíz, `2` en las demás particiones nativas de Linux que se monten al arrancar, y `0` solo donde no proceda comprobación, como en `swap`, en sistemas de red o en particiones que se montan bajo demanda. El campo `dump` (el quinto) sí suele dejarse a `0`, porque la herramienta `dump` apenas se usa hoy, pero eso es independiente de systemd.
 
-Si tuvieramos algún error en la configuración del `/etc/fstab` debería notificarmelo por pantalla. Como no exite ningún error reiniciamos la máquina.
+> **Importante:** Al añadir un disco de datos secundario conviene incluir la opción `nofail` entre las opciones de montaje. Sin ella, si ese disco falla o se retira, el arranque se detiene y cae en el modo de emergencia exigiendo la contraseña de `root`. Con `nofail`, el sistema simplemente continúa sin montar esa partición:
+>
+> ```bash
+> UUID=79d603be-...   /media/sdb1   ext4   defaults,nofail   0   2
+> ```
+
+Antes de reiniciar es **imprescindible** validar el fichero, y para eso sirve `mount -a`, que intenta montar todo lo declarado en `/etc/fstab` que no esté ya montado. Si no devuelve ningún error, la configuración es correcta:
 
 ```bash
 root@debian:~# mount -a
 ```
+
+> **Importante:** Este paso es el que evita el problema descrito en el apartado siguiente. Reiniciar sin ejecutar antes `mount -a` es la causa número uno de que una máquina no vuelva a arrancar tras editar `/etc/fstab`: un error se descubre entonces en el peor momento posible, con el sistema ya a medio arrancar y sin acceso. Con `mount -a`, el mismo error aparece de inmediato y en un sistema plenamente funcional. En systemd, además, conviene ejecutar `systemctl daemon-reload` tras editar el fichero, ya que genera unidades de montaje a partir de él.
 
 Despues de volver a iniciar el sistema tenemos montados las particiones `sdb1` y `sdb5`.
 
@@ -567,9 +589,9 @@ root@usuario:~# cat /media/sdb5/prueba/prueba.txt
 Hola Mundo!
 ```
 
-### Como recuperar el sistema si cometemos un error en el archivo /etc/fstab
+### 8.1 Como recuperar el sistema si cometemos un error en el archivo /etc/fstab
 
-Vamos a cometer un error en el `/etc/fstab` para que el sistema no pueda cargar las particiones, esto producirá que el sistema no carge correctamente.
+Vamos a cometer un error en el `/etc/fstab` para que el sistema no pueda cargar las particiones, esto producirá que el sistema no cargue correctamente.
 
 ```bash
 root@usuario:~# mount -a
@@ -584,7 +606,9 @@ Si no arranca el sistema ya que el archivo `/etc/fstab` está incorrectamente fo
 
 ![kernel-parametros-arranque-syslinux](../imagenes/recursos/varios/kernel-parametros-arranque-syslinux.png)
 
-## Particionado con parted
+---
+
+## 9. Particionado con parted
 
 1. Asignamos el tipo de particionado.
 
@@ -630,9 +654,9 @@ root@debian:~# parted -s /dev/sdb rm 1
 ```
 
 4. Proceso de montado.
-   Una vez realizado todo este proceso, lo siguiente sería realizar el montado de las particiones o realizar las modificaciones en el `/etc/fstab` para que se cargen en el inicio.
+   Una vez realizado todo este proceso, lo siguiente sería realizar el montado de las particiones o realizar las modificaciones en el `/etc/fstab` para que se carguen en el inicio.
 
-### Ejercicio
+### 9.1 Ejercicio
 
 Crear un script bash llamado **`particionar.sh`** que realice las siguientes acciones:
 
@@ -666,7 +690,9 @@ mkfs.ext4 /dev/sdb2
 mkfs.ext4 /dev/sdb3
 ```
 
-## Partición de swap
+---
+
+## 10. Partición de swap
 
 La partición o espacio swap en Linux es un área del disco duro que el sistema usa como extensión de la memoria RAM. Cuando la RAM se llena, Linux mueve datos menos usados a la swap para liberar memoria y evitar que el sistema se quede sin recursos, aunque acceder a swap es mucho más lento que a la RAM física.
 
@@ -702,11 +728,14 @@ Este archivo swap (`/swapfile`) se encuentra en la raíz del sistema de archivos
 
 Si quisieramos configurar una partición como swap tendriamos que hacer lo siguiente:
 
-- Desactiva el swap actual (opcional, recomendado si hay swap activa).
+- Desactiva el swap actual (opcional, recomendado si hay swap activa). Se usa **una** de las dos formas, no ambas encadenadas:
 
 ```bash
-swapoff -a | swapoff /swapfile
+root@debian:~# swapoff -a           # desactiva TODAS las areas de swap
+root@debian:~# swapoff /swapfile    # desactiva solo esa
 ```
+
+> **Advertencia:** En el original estas dos órdenes aparecían unidas por una tubería (`swapoff -a | swapoff /swapfile`), lo que no tiene sentido: la barra `|` conecta la salida de un comando con la entrada del siguiente, y aquí no hay nada que conectar. La barra vertical se usó con el sentido coloquial de "o", pero en la shell significa otra cosa. El resultado real es que se ejecutarían las dos, la segunda sin efecto.
 
 - Prepara la partición /dev/sdb1 como swap.
 
@@ -730,7 +759,7 @@ free -h
 fdisk /dev/sdb
 
 #se dará formato como partición de memoria de intercambio
-mkswap -c /dev/sdb1
+mkswap /dev/sdb1
 
 #En el siguiente ejemplo se activa como partición de memoria de intercambio a la partición /dev/sdb1:
 swapon /dev/sdb1

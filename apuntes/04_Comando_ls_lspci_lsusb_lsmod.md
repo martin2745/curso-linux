@@ -1,17 +1,24 @@
-# Comando ls y Gestión de Hardware/Módulos
+# Comando ls e inspección de hardware y módulos del núcleo
 
 ## Índice
 
-1. [Comando ls](#comando-ls)
-2. [Comandos lspci, lsusb y lsmod (Hardware e interfaces)](#comandos-lspci-lsusb-y-lsmod-hardware-e-interfaces)
-3. [Comando lspci](#comando-lspci)
-4. [Comando lsusb](#comando-lsusb)
-5. [Comando lsmod y gestión de módulos del kernel](#comando-lsmod-y-gestión-de-módulos-del-kernel)
-6. [Comando dmesg](#comando-dmesg)
+1. [Comando ls](#1-comando-ls)
+   1. [Parámetros más habituales](#11-parámetros-más-habituales)
+   2. [Ejemplos de uso avanzado del comando ls](#12-ejemplos-de-uso-avanzado-del-comando-ls)
+2. [Inspección de hardware y módulos del núcleo](#2-inspección-de-hardware-y-módulos-del-núcleo)
+3. [Comando lspci](#3-comando-lspci)
+   1. [Opciones más usadas de `lspci`](#31-opciones-más-usadas-de-lspci)
+4. [Comando lsusb](#4-comando-lsusb)
+   1. [Opciones más usadas de `lsusb`](#41-opciones-más-usadas-de-lsusb)
+5. [Comando lsmod y gestión de módulos del kernel](#5-comando-lsmod-y-gestión-de-módulos-del-kernel)
+   1. [Herramientas básicas de gestión de módulos](#51-herramientas-básicas-de-gestión-de-módulos)
+   2. [La herramienta avanzada modprobe](#52-la-herramienta-avanzada-modprobe)
+   3. [Persistencia: carga y bloqueo de módulos tras el reinicio](#53-persistencia-carga-y-bloqueo-de-módulos-tras-el-reinicio)
+6. [Comando dmesg](#6-comando-dmesg)
 
 ---
 
-## Comando ls
+## 1. Comando ls
 
 El comando `ls` (*List*) se utiliza para listar archivos y directorios en un directorio especificado. Es uno de los comandos más utilizados en la administración diaria para observar la estructura del sistema de ficheros y revisar atributos, permisos y fechas de los elementos.
 
@@ -32,7 +39,7 @@ drwxr-xr-x 2 usuario usuario 4096 feb  2 18:10 Vídeos
 
 > **Nota:** El campo de fecha y hora mostrado en el formato extendido se refiere por defecto al momento en el que se hizo la última modificación del contenido del fichero o directorio (creación o eliminación de contenido en su interior, es decir, el *mtime*).
 
-### Tabla de Parámetros bien conocidos
+### 1.1 Parámetros más habituales
 
 Para ajustar la salida de `ls`, podemos usar los siguientes parámetros:
 
@@ -45,13 +52,18 @@ Para ajustar la salida de `ls`, podemos usar los siguientes parámetros:
 | `-r` | (*Reverse*) Invierte el orden de la salida listada. |
 | `-v` | (*Version*) Ordena la salida numéricamente teniendo en cuenta el versionado de los nombres de fichero. |
 | `-t` | (*Time*) Ordena la lista basándose en la fecha de modificación (los más recientes primero) en lugar del orden alfabético. |
+| `-S` | (*Size*) Ordena de mayor a menor tamaño. |
+| `-m` | Presenta los nombres en una única lista separada por comas. |
+| `-x` | Ordena la salida en varias columnas pero rellenándolas en horizontal, línea a línea. |
+| `-R` | (*Recursive*) Desciende por todos los subdirectorios mostrando también su contenido. |
+| `-d` | (*Directory*) Muestra el directorio en sí mismo en lugar de su contenido. Combinado con `-l` es la forma de consultar los permisos de una carpeta. |
 | `--sort=WORD` | Ordena explícitamente usando palabras clave como `none`, `time`, `size`, `extension` o `version`. |
 | `--size` o `-s` | Muestra o utiliza para ordenar el tamaño asignado de los archivos. |
 | `--format=WORD` | Configura el aspecto de la salida (ej. `across`, `commas`, `horizontal`, `long`, `single-column`, `vertical`). |
 | `--time=WORD` | Cambia el tiempo mostrado u ordenado entre tiempo de acceso (`atime`), cambio de atributos (`ctime`) o modificación (`mtime`). |
 | `-1` (uno) | Obliga a que la salida se muestre en una sola columna vertical estricta. |
 
-### Ejemplos de uso avanzado del comando ls
+### 1.2 Ejemplos de uso avanzado del comando ls
 
 **1. Ordenación por tiempo:** Lista los ficheros o directorios más nuevos al principio. El parámetro `-t` o `--sort=time` realiza esta misma acción.
 
@@ -95,7 +107,7 @@ drwxr-xr-x 2 usuario usuario 4096 mar  4 09:58 d1
 ```bash
 usuario@debian:~$ ls -m
 # O de manera equivalente:
-usuario@debian:~$ ls -l --format=commas
+usuario@debian:~$ ls --format=commas
 ```
 
 La salida resultante rellena la pantalla usando todo el ancho disponible:
@@ -106,7 +118,7 @@ d1, Descargas, Documentos, Escritorio, fichero.txt, Imágenes, Música, Plantill
 Público, Vídeos
 ```
 
-**4. Visualización Vertical, Horizontal y Columna Única:** Por defecto, la salida simple de `ls` intenta mostrarse en varias columnas ordenadas verticalmente, pero podemos forzar el diseño.
+**4. Visualización vertical, horizontal y en columna única:** Por defecto, la salida simple de `ls` intenta mostrarse en varias columnas ordenadas verticalmente, pero podemos forzar el diseño.
 
 ```bash
 usuario@debian:~$ ls
@@ -132,22 +144,27 @@ Documentos
 ...
 ```
 
-**5. Ordenación numérica natural (Version):** El uso de `-v` junto con `-1` garantiza que los nombres que terminan en números (como `file1`, `file2`, `file10`) se listen correctamente de forma numérica y no en el estricto orden alfabético del diccionario.
+**5. Ordenación numérica natural (`-v`):** El orden alfabético compara los nombres carácter a carácter, de modo que `file10` queda antes que `file2` porque el `1` precede al `2`. La opción `-v` interpreta los dígitos como números y corrige ese comportamiento.
 
 ```bash
-si@si-VirtualBox:~$ ls -1
-Desktop
-Documents
-...
-si@si-VirtualBox:~$ ls -1 -v
-Desktop
-Documents
-...
+usuario@debian:~$ touch file1 file2 file10 file20
+usuario@debian:~$ ls -1
+file1
+file10
+file2
+file20
+usuario@debian:~$ ls -1 -v
+file1
+file2
+file10
+file20
 ```
+
+> **Nota:** Es un detalle que importa más de lo que parece al trabajar con ficheros de registro rotados (`syslog.1`, `syslog.2`, ..., `syslog.10`) o con copias de seguridad numeradas, donde el orden alfabético daría una secuencia cronológicamente falsa.
 
 ---
 
-## Comandos lspci, lsusb y lsmod (Hardware e interfaces)
+## 2. Inspección de hardware y módulos del núcleo
 
 Los comandos `lspci`, `lsusb` y `lsmod` actúan como interfaces para leer e interpretar la información del hardware y dispositivos almacenada internamente por el sistema operativo.
 
@@ -155,7 +172,7 @@ Este tipo de información de bajo nivel se encuentra documentada y guardada en a
 
 ---
 
-## Comando lspci
+## 3. Comando lspci
 
 El comando `lspci` (*List PCI*) muestra información detallada sobre los buses PCI (*Peripheral Component Interconnect*) y los dispositivos conectados a ellos en el sistema. Esto abarca un gran número de componentes internos fundamentales, como tarjetas de red, controladoras de vídeo (gráficas), puertos USB base, controladores SATA/IDE, y tarjetas de sonido.
 
@@ -171,7 +188,7 @@ usuario@debian:~$ lspci
 ...
 ```
 
-### Opciones más usadas de `lspci`
+### 3.1 Opciones más usadas de `lspci`
 
 | Parámetro | Descripción |
 |-----------|-------------|
@@ -221,7 +238,7 @@ usuario@debian:~$ lspci -s 00:03.0 -k
 
 ---
 
-## Comando lsusb
+## 4. Comando lsusb
 
 El comando `lsusb` muestra información sobre los buses USB (*Universal Serial Bus*) de la placa base y todos los dispositivos físicos actualmente conectados a ellos. Permite identificar memorias pendrive, impresoras, webcams, ratones y teclados que estén siendo reconocidos.
 
@@ -233,7 +250,7 @@ Bus 001 Device 002: ID 80ee:0021 VirtualBox USB Tablet
 Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
 ```
 
-### Opciones más usadas de `lsusb`
+### 4.1 Opciones más usadas de `lsusb`
 
 | Parámetro | Descripción |
 |-----------|-------------|
@@ -278,7 +295,7 @@ usuario@debian:~$ lsusb -t
 
 ---
 
-## Comando lsmod y gestión de módulos del kernel
+## 5. Comando lsmod y gestión de módulos del kernel
 
 Esta familia de herramientas está enfocada exclusivamente en interactuar con los **módulos del kernel**. 
 
@@ -295,11 +312,12 @@ root@debian:~# uname -r
 6.8.0-49-generic
 ```
 
-### Herramientas básicas de gestión de módulos
+### 5.1 Herramientas básicas de gestión de módulos
 
 | Comando | Descripción de uso |
 |---------|--------------------|
-| `lsmod` | Muestra una lista limpia de todos los módulos actualmente inyectados y activos en la memoria del núcleo, indicando su tamaño y si están siendo utilizados por otros. |
+| `lsmod` | Muestra una lista limpia de todos los módulos actualmente inyectados y activos en la memoria del núcleo, indicando su tamaño y qué otros módulos dependen de ellos. En realidad se limita a dar formato al contenido del fichero `/proc/modules`. |
+| `depmod` | Recalcula el mapa de dependencias entre módulos y lo escribe en `modules.dep`. Es lo que permite a `modprobe` saber qué cargar y en qué orden. |
 | `modinfo [modulo]` | Proporciona amplia información extraída del interior del propio fichero `.ko` (autor, licencia, descripciones, alias). |
 | `insmod [ruta]` | (*Insert module*) Carga un fichero `.ko` crudo pasándole su ruta absoluta en el sistema. **No** resuelve ni carga dependencias automáticamente. |
 | `rmmod [modulo]`| (*Remove module*) Expulsa o quita un módulo actualmente cargado en memoria, liberando recursos. |
@@ -329,18 +347,19 @@ root@debian:/lib/modules/6.8.0-49-generic# insmod $(find -name psmouse.ko) && ls
 psmouse               217088  0
 ```
 
-> **Advertencia:** El comando `insmod` es rústico. En caso de que el módulo requiera la ayuda o dependencias de otros módulos previos para funcionar, el comando arrojará un error silencioso o fallará, obligándonos a insertar manualmente las dependencias en orden.
+> **Advertencia:** El comando `insmod` es rústico y no resuelve dependencias. Si el módulo necesita símbolos que aporta otro módulo todavía no cargado, la orden falla con un mensaje del tipo `insmod: ERROR: could not insert module ...: Unknown symbol in module`, y hay que insertar manualmente cada dependencia en el orden correcto. Por este motivo, en la práctica siempre se prefiere `modprobe`.
 
-### La herramienta avanzada modprobe
+### 5.2 La herramienta avanzada modprobe
 
 Para evitar el tedio de localizar rutas y esquivar la resolución manual de dependencias complejas, surge el comando inteligente **`modprobe`**. Esta herramienta actúa como un orquestador: carga o retira módulos automáticamente leyendo unas tablas maestras de dependencias (generadas por `depmod`). 
 
 | Parámetro | Descripción de uso |
 |-----------|--------------------|
 | `-f`      | Fuerza la carga del módulo saltándose las comprobaciones, incluso si la etiqueta de versión no coincide plenamente con la del kernel en ejecución. |
-| `-r`      | Elimina u expulsa el módulo de manera recursiva (también intentará quitar módulos inactivos que ya no son requeridos tras esta extracción). |
+| `-r`      | Elimina o expulsa el módulo de manera recursiva (también intentará quitar módulos inactivos que ya no son requeridos tras esta extracción). |
 | `-v`      | (*Verbose*) Muestra la traza exacta de directorios y acciones internas que ejecuta el orquestador por debajo. |
 | `-n`      | (*Dry-run*) Realiza una simulación visual para predecir lo que va a ocurrir, pero sin inyectar ni alterar el sistema en realidad. |
+| `--show-depends` | Lista las dependencias que se cargarían, en su orden exacto, sin llegar a cargarlas. |
 
 Si repetimos el ejemplo anterior de borrar y cargar el módulo `psmouse` valiéndonos ahora de `modprobe`:
 
@@ -354,9 +373,30 @@ psmouse               217088  0
 
 En este caso `psmouse` no requiere dependencias secundarias, pero de haber sido así, `modprobe` habría ido a la carpeta `/lib/modules/` para ir activándolas e inyectándolas en cascada antes que a él.
 
+### 5.3 Persistencia: carga y bloqueo de módulos tras el reinicio
+
+Todo lo anterior surte efecto únicamente sobre el núcleo en ejecución. Al reiniciar la máquina, los cambios se pierden. Para que sean permanentes hay que recurrir a los ficheros de configuración:
+
+| Ruta | Función |
+|---|---|
+| `/etc/modules` | Lista, un nombre por línea, de los módulos que deben cargarse automáticamente durante el arranque. |
+| `/etc/modules-load.d/*.conf` | Equivalente moderno gestionado por `systemd`, con el mismo formato pero de tipo *drop-in*. |
+| `/etc/modprobe.d/*.conf` | Fichero donde se definen opciones de los módulos, alias y, sobre todo, exclusiones. |
+
+Para impedir que un módulo concreto se cargue de forma automática se emplea la directiva `blacklist` dentro de un fichero en `/etc/modprobe.d/`:
+
+```bash
+root@debian:~# echo "blacklist psmouse" > /etc/modprobe.d/sin-psmouse.conf
+root@debian:~# update-initramfs -u
+```
+
+> **Importante:** La regla `blacklist` impide únicamente la carga **automática** del módulo. Si otro módulo lo declara como dependencia, o si alguien lo invoca explícitamente con `modprobe psmouse`, se cargará igualmente. Para bloquearlo de forma incondicional hay que usar `install psmouse /bin/false`.
+
+> **Nota:** Tras modificar estos ficheros conviene ejecutar `update-initramfs -u`, ya que algunos módulos se cargan desde el *initramfs* en una fase de arranque tan temprana que el sistema de ficheros raíz todavía no está montado y `/etc/modprobe.d/` aún no es accesible.
+
 ---
 
-## Comando dmesg
+## 6. Comando dmesg
 
 Para diagnosticar el éxito de la carga de los módulos, o para visualizar reportes internos del hardware de bajo nivel, existe el comando **`dmesg`** (*Diagnostic Messages*). Esta instrucción lee y vuelca por pantalla los eventos atrapados temporalmente en el búfer anular de los mensajes de arranque y estado del núcleo (*kernel ring buffer*).
 
@@ -364,4 +404,11 @@ Para diagnosticar el éxito de la carga de los módulos, o para visualizar repor
 |----------|-------------|
 | `dmesg`  | Despliega el volcado masivo y bruto de todos los mensajes registrados desde el encendido hasta el momento actual. |
 | `dmesg --level=err` | Filtra el búfer para mostrar exclusivamente aquellos mensajes catalogados con severidad de error crítico (problemas hardware o de módulos insalvables). |
-| `dmesg -T` | Introduce una pequeña transformación que nos muestra el sello de tiempo crudo del kernel traducido a una fecha y hora estándar (legible para humanos). |
+| `dmesg -T` | Traduce el sello de tiempo crudo del núcleo (segundos transcurridos desde el arranque) a una fecha y hora legibles. |
+| `dmesg -w` | (*Follow*) Permanece a la espera y va mostrando los mensajes nuevos según se producen, igual que `tail -f`. Resulta muy útil para observar en directo qué detecta el núcleo al conectar un dispositivo USB. |
+| `dmesg -H` | (*Human*) Salida paginada, coloreada y con marcas de tiempo relativas. |
+| `dmesg -k` / `dmesg -u` | Muestra únicamente los mensajes procedentes del núcleo o los del espacio de usuario, respectivamente. |
+
+> **Advertencia:** En Debian y otras distribuciones actuales, el parámetro del núcleo `kernel.dmesg_restrict` está activado, de modo que un usuario sin privilegios recibirá el error `dmesg: read kernel buffer failed: Operation not permitted`. Es necesario ejecutarlo con `sudo`.
+
+> **Nota:** El búfer del núcleo es circular y de tamaño fijo, así que los mensajes más antiguos se van descartando. Para consultar los mensajes de arranques anteriores hay que recurrir al registro persistente de `journalctl -k -b -1`, que se explica en el documento 40.

@@ -2,29 +2,41 @@
 
 ## Índice
 
-1. [rsyslog: Conceptos generales](#1-rsyslog-conceptos-generales)
-2. [Configurar rsyslog como servidor remoto (recepción por UDP)](#2-configurar-rsyslog-como-servidor-remoto-recepcion-por-udp)
-3. [Configuración del cliente Linux para enviar logs (UDP)](#3-configuracion-del-cliente-linux-para-enviar-logs-udp)
-4. [Configuración del cliente Linux para enviar logs por TCP](#4-configuracion-del-cliente-linux-para-enviar-logs-por-tcp)
+1. [rsyslog: conceptos generales](#1-rsyslog-conceptos-generales)
+2. [Configurar rsyslog como servidor remoto (recepción por UDP)](#2-configurar-rsyslog-como-servidor-remoto-recepción-por-udp)
+3. [Configuración del cliente Linux para enviar logs (UDP)](#3-configuración-del-cliente-linux-para-enviar-logs-udp)
+4. [Configuración del cliente Linux para enviar logs por TCP](#4-configuración-del-cliente-linux-para-enviar-logs-por-tcp)
 5. [Notas sobre el uso de `@` y `@@`](#5-notas-sobre-el-uso-de--y-)
 6. [Probando los logs locales](#6-probando-los-logs-locales)
 7. [journalctl y almacenamiento persistente](#7-journalctl-y-almacenamiento-persistente)
 8. [Facilidades en rsyslog](#8-facilidades-en-rsyslog)
+   1. [Facilidades locales (local0 a local7)](#81-facilidades-locales-local0-a-local7)
+   2. [Ejemplos de uso de facilidades locales](#82-ejemplos-de-uso-de-facilidades-locales)
+   3. [Recomendaciones para el uso de facilidades locales](#83-recomendaciones-para-el-uso-de-facilidades-locales)
 9. [logrotate](#9-logrotate)
-   1. [Comandos básicos](#91-comandos-basicos)
-   2. [Opciones de configuración](#92-opciones-de-configuracion)
-   3. [Parámetros size, minsize y maxsize](#93-parametros-size-minsize-y-maxsize)
-   4. [Verificar la configuración](#94-verificar-la-configuracion)
+   1. [¿Por qué usar logrotate?](#91-por-qué-usar-logrotate)
+   2. [Arquitectura de logrotate](#92-arquitectura-de-logrotate)
+   3. [Comandos básicos](#93-comandos-básicos)
+   4. [Descripción de las opciones de rotación](#94-descripción-de-las-opciones-de-rotación)
+   5. [Opciones de configuración](#95-opciones-de-configuración)
+   6. [Parámetros size, minsize y maxsize](#96-parámetros-size-minsize-y-maxsize)
+   7. [Descripción de las opciones de tamaño](#97-descripción-de-las-opciones-de-tamaño)
+   8. [Verificar la configuración](#98-verificar-la-configuración)
+   9. [¿Cuándo usar logrotate -d?](#99-cuándo-usar-logrotate--d)
 10. [Archivo de marca de tiempo en logrotate](#10-archivo-de-marca-de-tiempo-en-logrotate)
+    1. [Eliminar el archivo de marca de tiempo](#101-eliminar-el-archivo-de-marca-de-tiempo)
+    2. [Cambiar la ubicación del archivo de estado](#102-cambiar-la-ubicación-del-archivo-de-estado)
 
 ---
 
-## 1. rsyslog: Conceptos generales
+## 1. rsyslog: conceptos generales
 
 Cuando el sistema se inicia o efectúa cualquier tipo de acción, se registran sus acciones y las de la mayoría de sus servicios en diferentes ficheros. Dos servicios están especializados en la recepción de los mensajes que tienen como destino estos ficheros.
 
-- `syslogd`: gestiona los logs del sistema. Distribuye los mensajes a archivos, tuberías, destinos remotos, terminales o usuarios, usando las indicaciones especificadas en su archivo de configuración `/etc/syslog.conf`, donde se indica qué se loguea y a dónde se envían estos logs. Por otro lado, es posible configurar el servicio `rsyslog.service` para que equipos remotos puedan escribir sus mensajes de log en el propio servidor que ejecuta el servicio syslog remoto.
-- `klogd`: se encarga de los logs del kernel. Lo normal es que `klogd` envíe sus mensajes a syslogd pero no siempre es así, sobre todo en los eventos de alta prioridad, que salen directamente por pantalla.
+- `syslogd`: es el demonio clásico que gestiona los logs del sistema, distribuyendo los mensajes a archivos, tuberías, destinos remotos, terminales o usuarios según las reglas de su fichero de configuración.
+- `klogd`: se encargaba específicamente de los logs del kernel.
+
+> **Importante:** En Debian y en la mayoría de distribuciones actuales, tanto `syslogd` como `klogd` han sido sustituidos por **`rsyslog`** (*rocket-fast system for log processing*), que asume ambas funciones. Su fichero de configuración es `/etc/rsyslog.conf` junto con los ficheros de `/etc/rsyslog.d/`, y **no** `/etc/syslog.conf`, que corresponde al antiguo `syslogd`. Además, en un sistema con systemd conviven dos registros en paralelo: el de `rsyslog`, en ficheros de texto dentro de `/var/log`, y el de `journald`, en formato binario, que se consulta con `journalctl`. El apartado 7 trata este último.
 
 Los logs se guardan en archivos ubicados en el directorio `/var/log`, aunque muchos programas manejan sus propios logs y los guardan en `/var/log/<programa>`. Algunos de los logs más importantes son:
 
@@ -125,22 +137,46 @@ mail.info                                               -/var/log/maillog
 
 Reinicia el servicio rsyslog:
 
-```
+```bash
 systemctl restart rsyslog.service
 ```
+
+---
+
+## 5. Notas sobre el uso de `@` y `@@`
+
+En la configuración de reenvío, el número de arrobas que precede a la dirección del servidor determina el protocolo de transporte:
 
 | Notación | Protocolo | Descripción |
 |----------|-----------|-------------|
 | `@host` | UDP | Envía los mensajes al servidor syslog remoto por UDP. |
 | `@@host` | TCP | Envía los mensajes al servidor syslog remoto por TCP. |
 
-> **Nota:** Se recomienda usar `@@` (TCP) en entornos donde la integridad y la fiabilidad de los registros son críticas. TCP garantiza la entrega, el orden correcto y la retransmisión ante pérdida de paquetes, a diferencia de UDP.
+> **Nota:** Se recomienda usar `@@` (TCP) en entornos donde la integridad y la fiabilidad de los registros son críticas. TCP garantiza la entrega, el orden correcto y la retransmisión ante pérdida de paquetes, a diferencia de UDP, que es más ligero pero puede perder mensajes sin avisar.
+
+> **Recuerda:** El puerto estándar de syslog es el **514**, tanto en UDP como en TCP. Para dirigir los logs a un puerto distinto se indica tras dos puntos: `@@192.168.33.10:1514`.
 
 ---
 
 ## 6. Probando los logs locales
 
-El comando _logger_ en Linux se utiliza para enviar mensajes al sistema de registro de eventos (syslog o rsyslog). Es una forma conveniente de generar mensajes de registro directamente desde la línea de comandos o desde scripts.
+El comando `logger` en Linux se utiliza para enviar mensajes al sistema de registro de eventos (syslog o rsyslog). Es la forma correcta de que un script de administración deje constancia de lo que hace en el registro central del sistema, en lugar de escribir en un fichero propio.
+
+| Parámetro | Descripción |
+|---|---|
+| `-p facilidad.nivel` | Envía el mensaje con la prioridad indicada, por ejemplo `-p local0.err`. Por defecto es `user.notice`. |
+| `-t etiqueta` | Añade una etiqueta identificativa al mensaje, normalmente el nombre del script. |
+| `-s` | Muestra el mensaje también por la salida de error estándar, además de registrarlo. |
+
+Un uso típico dentro de un script de copia de seguridad sería:
+
+```bash
+logger -t backup -p local0.info "Copia de seguridad iniciada"
+# ... tareas de la copia ...
+logger -t backup -p local0.err "Fallo al copiar /var/www"
+```
+
+Esos mensajes aparecerán en el registro con su etiqueta, lo que permite localizarlos después con `journalctl -t backup` o `grep backup /var/log/syslog`.
 
 Para probar nuestro sistema de forma local, vamos a simular un error en una aplicación  
 de correo. Los logs no se escriben a mano sino a través de la orden “logger”. La sintaxis  
@@ -254,11 +290,31 @@ usermod -G systemd-journal operador
 
 ## 8. Facilidades en rsyslog
 
-En rsyslog, las **facilidades** (*facilities*) son categorías que identifican el origen o tipo de los mensajes de log. Permiten clasificar y gestionar los logs de manera eficiente. Cada facilidad tiene un nombre predefinido y un código numérico asociado.
+Cada regla del fichero `/etc/rsyslog.conf` tiene la forma **`selector    destino`**, donde el selector se compone a su vez de una **facilidad** y un **nivel de severidad** separados por un punto: `facilidad.nivel`. Ese es el mecanismo que decide qué mensajes van a dónde, y aparece en todos los ejemplos anteriores (`*.info`, `authpriv.*`, `mail.none`).
+
+Los **niveles de severidad**, de menor a mayor gravedad, son:
+
+| Nivel | Código | Significado |
+|---|---|---|
+| `debug` | 7 | Información detallada de depuración. |
+| `info` | 6 | Mensajes informativos del funcionamiento normal. |
+| `notice` | 5 | Sucesos normales pero reseñables. |
+| `warning` | 4 | Advertencias; algo no va bien pero no es un error. |
+| `err` | 3 | Errores. |
+| `crit` | 2 | Situaciones críticas. |
+| `alert` | 1 | Hay que actuar de inmediato. |
+| `emerg` | 0 | El sistema es inutilizable. |
+
+> **Importante:** Al indicar un nivel en un selector, `rsyslog` captura ese nivel **y todos los superiores**. Por eso `mail.info` registra los mensajes de correo de nivel `info`, `warning`, `err` y por encima, pero no los `debug`. Existen dos modificadores para afinar:
+>
+> - `mail.=info` captura **solo** el nivel `info`, ni más ni menos grave.
+> - `mail.none` **excluye** por completo los mensajes de esa facilidad. Es lo que hace `*.info;mail.none`: "todo lo de nivel info o superior, excepto el correo".
+
+Además del nivel, en `rsyslog` las **facilidades** (*facilities*) son categorías que identifican el origen o tipo de los mensajes de log. Cada facilidad tiene un nombre predefinido y un código numérico asociado.
 
 Las facilidades más comunes son:
 
-| Facilidad | Código Numérico | Descripción                                            |
+| Facilidad | Código numérico | Descripción                                            |
 | --------- | --------------- | ------------------------------------------------------ |
 | auth      | 4               | Mensajes relacionados con la autenticación del sistema |
 | authpriv  | 10              | Mensajes de autenticación privados, como SSH           |
@@ -272,11 +328,11 @@ Las facilidades más comunes son:
 | user      | 1               | Mensajes generados por procesos de usuario             |
 | uucp      | 8               | Mensajes de protocolos UUCP                            |
 
-## Facilidades Locales (local0 a local7)
+### 8.1 Facilidades locales (local0 a local7)
 
 Las facilidades local0 a local7 están reservadas para uso personalizado o privado. No están asignadas a ningún servicio en particular, lo que permite a los administradores y desarrolladores utilizarlas para registrar mensajes específicos de sus aplicaciones o procesos personalizados.
 
-| Facilidad | Código Numérico |
+| Facilidad | Código numérico |
 | --------- | --------------- |
 | local0    | 16              |
 | local1    | 17              |
@@ -287,7 +343,7 @@ Las facilidades local0 a local7 están reservadas para uso personalizado o priva
 | local6    | 22              |
 | local7    | 23              |
 
-## Ejemplos de Uso de Facilidades Locales
+### 8.2 Ejemplos de uso de facilidades locales
 
 **Configuración en rsyslog:**
 
@@ -323,7 +379,7 @@ tail -f /var/log/local1.log
 tail -f /var/log/local7.log
 ```
 
-## Recomendaciones para el Uso de Facilidades Locales
+### 8.3 Recomendaciones para el uso de facilidades locales
 
 1. Organización y Documentación:
 
@@ -343,14 +399,14 @@ tail -f /var/log/local7.log
 
 `logrotate` es una herramienta en sistemas Linux utilizada para la gestión y rotación de archivos de registro (logs). Su objetivo principal es archivar, comprimir, eliminar o enviar archivos de registro antiguos para mantener el almacenamiento bajo control y garantizar que los archivos de log no crezcan indefinidamente.
 
-### ¿Por qué usar logrotate?
+### 9.1 ¿Por qué usar logrotate?
 
 - **Gestión de espacio en disco:** Evita que los archivos de log ocupen todo el almacenamiento.
 - **Automatización:** Realiza la rotación, compresión y eliminación de logs automáticamente.
 - **Mantenimiento de históricos:** Guarda archivos antiguos comprimidos para referencia futura.
 - **Flexibilidad:** Soporta configuraciones personalizadas para diferentes aplicaciones y servicios.
 
-### Arquitectura de logrotate
+### 9.2 Arquitectura de logrotate
 
 `logrotate` utiliza archivos de configuración para definir la frecuencia de rotación (diaria, semanal, mensual), la cantidad de archivos a retener, la compresión de logs y las acciones posteriores (como reiniciar servicios).
 
@@ -360,7 +416,7 @@ tail -f /var/log/local7.log
 | `/etc/logrotate.conf` | Archivo de configuración global de logrotate. |
 | `/etc/logrotate.d/` | Directorio con configuraciones específicas por servicio. |
 
-### 9.1. Comandos básicos
+### 9.3 Comandos básicos
 
 ```bash
 logrotate
@@ -383,7 +439,7 @@ Ejemplo de configuración `/etc/logrotate.d/httpd`:
 }
 ```
 
-### Descripción de las opciones
+### 9.4 Descripción de las opciones de rotación
 
 - `/var/log/httpd/*log`: Indica que todos los archivos de logs dentro de `/var/log/httpd/` que terminen en log serán rotados.
 - `missingok`: No muestra errores si los archivos de log no existen.
@@ -395,7 +451,7 @@ Ejemplo de configuración `/etc/logrotate.d/httpd`:
   - `> /dev/null 2>/dev/null`: Silencia la salida estándar y los errores.
   - `|| true`: Evita que un fallo en el comando detenga logrotate.
 
-### 9.2. Opciones de configuración
+### 9.5 Opciones de configuración
 
 Ejemplo de configuración global `/etc/logrotate.conf`:
 
@@ -431,7 +487,7 @@ Con esto debe generar un archivo compreso en la carpeta `/var/log/` (si es que n
 logrotate -f /etc/logrotate.conf
 ```
 
-### 9.3. Parámetros size, minsize y maxsize
+### 9.6 Parámetros size, minsize y maxsize
 
 - **size**: Define el tamaño mínimo que un archivo debe alcanzar para rotarse. No se basa en la frecuencia, solo en el tamaño.
 
@@ -486,7 +542,7 @@ vi /etc/logrotate.d/tomcat
 }
 ```
 
-### Descripción de las opciones
+### 9.7 Descripción de las opciones de tamaño
 
 - `/tomcat-9/logs/*.log`: Aplica la configuración a todos los archivos de log en el directorio `/tomcat-9/logs/` que terminen con `.log`.
 - `daily`: Realiza la rotación diariamente.
@@ -499,7 +555,7 @@ vi /etc/logrotate.d/tomcat
 **Funcionamiento en conjunto:**  
 Este bloque de configuración rotará los archivos de log de Tomcat diariamente o cuando el archivo alcance 50MB, lo que ocurra primero. Mantendrá los últimos 7 archivos rotados y comprimidos, eliminando los más antiguos. Además, el uso de `copytruncate` permite que el archivo de log sea truncado sin tener que reiniciar el servicio de Tomcat.
 
-### 9.4. Verificar la configuración
+### 9.8 Verificar la configuración
 
 ```bash
 logrotate -f /etc/logrotate.d/tomcat
@@ -517,7 +573,7 @@ El flag `-d` (o `--debug`) en logrotate se utiliza para ejecutar una simulación
 logrotate -d -v /etc/logrotate.conf
 ```
 
-### ¿Cuándo usar logrotate -d?
+### 9.9 ¿Cuándo usar logrotate -d?
 
 - Verificar la Configuración: Para comprobar si el archivo de configuración de logrotate está correcto.
 - Depuración de Problemas: Si los archivos de log no se están rotando correctamente, puedes usar el modo de depuración para ver qué está pasando.
@@ -525,7 +581,7 @@ logrotate -d -v /etc/logrotate.conf
 
 #### Salida de ejemplo
 
-```
+```text
 reading config file /etc/logrotate.conf
 including /etc/logrotate.d
 reading config file nginx
@@ -555,7 +611,7 @@ En logrotate, el archivo de marca de tiempo es utilizado para registrar la últi
 **Ubicación del fichero de marca de tiempo**  
 El archivo de marca de tiempo por defecto se encuentra en:
 
-```
+```text
 /var/lib/logrotate/status
 ```
 
@@ -563,7 +619,7 @@ Este archivo contiene la información sobre la última rotación de cada archivo
 
 **Formato del archivo de marca de tiempo**
 
-```
+```text
 logrotate state -- version 2
 "/var/log/nginx/access.log" 2025-03-23-03:15:01
 "/var/log/nginx/error.log" 2025-03-23-03:15:01
@@ -575,7 +631,7 @@ logrotate state -- version 2
 - Ruta del archivo de log: Entre comillas dobles.
 - Marca de tiempo: Fecha y hora de la última rotación en formato AAAA-MM-DD-HH:MM:SS.
 
-### Eliminar el archivo de marca de tiempo
+### 10.1 Eliminar el archivo de marca de tiempo
 
 Si deseas forzar que todos los logs se roten la próxima vez que se ejecute logrotate, puedes eliminar el archivo de estado:
 
@@ -589,7 +645,7 @@ Luego, ejecuta manualmente:
 logrotate -f /etc/logrotate.conf
 ```
 
-### Cambiar la ubicación del archivo de estado
+### 10.2 Cambiar la ubicación del archivo de estado
 
 Puedes cambiar la ubicación del archivo de estado en el archivo de configuración global:
 

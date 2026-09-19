@@ -1,4 +1,4 @@
-# Secuencia de Arranque
+# Secuencia de arranque
 
 ## Índice
 
@@ -36,7 +36,7 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
    - **Bytes 446–509 (64 bytes):** Tabla de particiones (hasta 4 entradas de 16 bytes).
    - **Bytes 510–511 (2 bytes):** Firma de arranque (valor 0x55AA).
 
-   En Linux decimos que el _cargador de arranque_ (bootloader) es el programa encargado de cargar el núcleo del sistema operativo o kernel en memoria RAM y transferirle el control, para ello interviene el _código de arranque o bootstrap_ que es un pequeño programa inicial que reside en el MBR y solo inicia el proceso de arranque localizando la partición activa donde está la imagen del sistema operativo. Para decidir que sistema operativo cargar en memoria RAM existe el _gestor de arranque_ (boot manager) suele ser la parte del cargador y tambien permite ralizar ciertas configuraciones antes de arrancar, normalmente a través de un menú. En la práctica, programas como GRUB en su segunda versión son los encargados de decidir que sistema operativo cargar. La configuración del _gestor de arranque_ está en la partición `/boot` la cual corresponde con `/dev/sda2`. A continuación tenemos una salida del comando `df -Th`.
+   En Linux decimos que el _cargador de arranque_ (bootloader) es el programa encargado de cargar el núcleo del sistema operativo o kernel en memoria RAM y transferirle el control, para ello interviene el _código de arranque o bootstrap_ que es un pequeño programa inicial que reside en el MBR y solo inicia el proceso de arranque localizando la partición activa donde está la imagen del sistema operativo. Para decidir que sistema operativo cargar en memoria RAM existe el _gestor de arranque_ (boot manager) suele ser la parte del cargador y tambien permite ralizar ciertas configuraciones antes de arrancar, normalmente a través de un menú. En la práctica, programas como GRUB en su segunda versión son los encargados de decidir que sistema operativo cargar. La configuración del _gestor de arranque_ reside en la partición `/boot`, que en el ejemplo siguiente se corresponde con `/dev/sda2`, aunque el nombre concreto del dispositivo depende de cómo se haya particionado cada equipo. A continuación tenemos una salida del comando `df -Th`.
 
    ```bash
    # BIOS
@@ -68,13 +68,15 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
    Se elige el dispositivo desde donde se iniciará el sistema operativo (disco duro, USB, CD/DVD, etc.). El cargador de arranque, como GRUB, se localiza en el dispositivo seleccionado.
 
 5. **Cargador de arranque GRUB:**  
-   GRUB (GRand Unified Bootloader) lee su archivo de configuración (habitualmente en `/etc/grub2.cfg` o similar). GRUB carga el núcleo (kernel) de Linux y las bibliotecas necesarias para inicializar el sistema, y transfiere el control al kernel.
+   GRUB (GRand Unified Bootloader) lee su archivo de configuración, que en Debian es `/boot/grub/grub.cfg`. GRUB carga el núcleo (kernel) de Linux junto con el `initramfs` y transfiere el control al kernel.
+
+> **Advertencia:** El fichero `/boot/grub/grub.cfg` **no se edita a mano**: lo genera automáticamente la herramienta `update-grub` (que es una envoltura de `grub-mkconfig`) a partir de dos fuentes: el fichero `/etc/default/grub`, donde se ajustan opciones como el tiempo de espera del menú o los parámetros del núcleo, y los scripts de `/etc/grub.d/`. Tras cualquier cambio en esos ficheros hay que ejecutar `update-grub` para regenerar la configuración. La ruta `/etc/grub2.cfg` que mencionaban algunas guías antiguas no existe en Debian.
 
 6. **Ejecución de systemd (primer proceso en espacio de usuario):**
 
    El núcleo del sistema operativo abrirá el _initramfs_ (initial RAM filesystem). Initramfs es un archivo que contiene un sistema de archivos utilizado como un sistema de archivos raíz temporal durante el proceso de arranque. El objetivo principal de un archivo initramfs es proporcionar los módulos necesarios para que el núcleo pueda acceder al sistema de archivos raíz "real" del sistema operativo. Tan pronto como el sistema de archivos raíz esté disponible, el núcleo montará todos los sistemas de archivos configurados en `/etc/fstab` y luego ejecutará el primer programa, una utilidad llamada init.
 
-   El programa init es responsable de ejecutar todos los scripts de inicialización y demonios del sistema. Existen implementaciones distintas de tales iniciadores de sistemas aparte del _init_ tradicional, como systemd y Upstart. Una vez que se carga el programa init, initramfs se elimina de la RAM.
+   El programa init es responsable de ejecutar todos los scripts de inicialización y demonios del sistema. Existen implementaciones distintas de tales iniciadores de sistemas aparte del _init_ tradicional, como systemd y Upstart. El documento 29 las compara en detalle. Una vez montado el sistema de ficheros raíz definitivo y arrancado init, el `initramfs` se descarta de la RAM.
 
    En resumen, una vez cargado el kernel, este inicializa el sistema en el espacio de usuario ejecutando el primer proceso, generalmente `systemd` (PID 1). `systemd` coordina el inicio de todos los servicios necesarios para el funcionamiento del sistema.
 
@@ -85,7 +87,7 @@ El proceso de arranque de un sistema Linux se desarrolla en varias etapas consec
    - `multi-user.target`: modo multiusuario sin entorno gráfico.
    - `getty.target`: gestión de terminales de texto.
 
-   > **Nota:** Estos targets gestionan el nivel de ejecución del sistema.
+   > **Nota:** Los *targets* de systemd cumplen un papel equivalente al de los *runlevels* del antiguo SysVinit, y de hecho existen alias de compatibilidad (`runlevel3.target` apunta a `multi-user.target`, `runlevel5.target` a `graphical.target`). El documento 29 desarrolla esta correspondencia.
 
 8. **Ejecución de scripts de inicio:**  
    `systemd` ejecuta scripts que inicializan servicios y preparan el entorno para los usuarios, incluyendo configuraciones como `/systemd-logind`, `/etc/profile` (global), y `~/.bashrc` (específica del usuario).
@@ -101,7 +103,7 @@ A modo de resumen:
 
 1. Arranque eléctrico una vez pulsado el botón de encender.
 2. BIOS/UEFI.
-3. Lectura del MBR del Boot Loader que carga el Gestor de arranque (GRUBv2).
+3. Lectura del código de arranque (en el MBR si es BIOS, o en la partición ESP si es UEFI), que carga el gestor de arranque GRUB 2.
 4. Opción A
    1. Se carga el Kernel, lo que implica lanzar el _Initial Ramdisk o initrd_ para cargar los módulos necesarios.
    2. Inicia el proceso init (PID 1) en SysVinit o el proceso systemd.
