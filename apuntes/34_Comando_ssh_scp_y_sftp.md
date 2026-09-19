@@ -232,6 +232,35 @@ Por otra parte existe el parámetro `StrictHostKeyChecking` en SSH (Secure Shell
    - **Descripción**: Cuando se establece en `no`, el cliente SSH aceptará automáticamente la clave del host del servidor sin pedir confirmación, incluso si la clave del servidor no está en el archivo `known_hosts` o si la clave ha cambiado. Añade la Host Key del servidor SSH.
    - **Ejemplo de uso**: `StrictHostKeyChecking no`
 
+#### Verificar el fingerprint antes de aceptar la primera conexión
+
+La seguridad de la primera conexión no la aporta SSH, sino el usuario. Cuando el cliente muestra el fingerprint y pregunta si continuar, responder `yes` a ciegas equivale a fiarse de un desconocido: para hacerlo bien hay que **obtener el fingerprint auténtico del servidor por un canal distinto** al de la propia conexión (fuera de banda) y compararlo antes de aceptar.
+
+En nuestro laboratorio, donde el servidor es una máquina virtual a la que tenemos acceso directo por su consola, basta con entrar en ella (no por SSH) y pedirle su huella:
+
+```bash
+usuario@servidor:~$ ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+256 SHA256:3tIVYNy+hQ+hwK+HD+ToWa+/a4HgFPwfVFNWn9ldz+g root@servidor (ED25519)
+```
+
+Ese `SHA256:...` debe coincidir **carácter a carácter** con el que muestra el cliente al conectar. Si coinciden, el servidor es auténtico y se responde `yes`; si no, se responde `no` y no se establece la conexión.
+
+> **Importante:** La comparación debe hacerse entre huellas del **mismo tipo de clave**. Un servidor tiene varias claves de host a la vez (RSA, ECDSA, Ed25519), así que hay que asegurarse de comparar la Ed25519 del cliente contra la Ed25519 del servidor, y no contra otra. Para ver todas de golpe en el servidor: `for k in /etc/ssh/ssh_host_*_key.pub; do ssh-keygen -lf "$k"; done`.
+
+> **Nota:** Fuera del laboratorio, cuando no se tiene acceso directo a la máquina, el fingerprint legítimo se consigue por la vía de confianza que corresponda: la salida de consola de arranque en un servidor de un proveedor cloud, o pidiéndoselo al administrador que lo instaló por un medio seguro. En infraestructuras grandes puede automatizarse publicando la huella en un registro DNS firmado (SSHFP) y conectando con `ssh -o VerifyHostKeyDNS=yes servidor`.
+
+Una vez guardada la clave, también se puede comprobar en cualquier momento que la entrada del `known_hosts` sigue correspondiendo con la del servidor. La opción `-F` (mayúscula) de `ssh-keygen` busca una entrada por su nombre de host, y combinada con `-l` muestra su fingerprint:
+
+```bash
+usuario@debian:~$ ssh-keygen -lF "[localhost]:2222"
+# Host [localhost]:2222 found: line 4
+[localhost]:2222 ED25519 SHA256:3tIVYNy+hQ+hwK+HD+ToWa+/a4HgFPwfVFNWn9ldz+g
+```
+
+Ese fingerprint debe coincidir con el que devuelve `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` en el servidor. Es exactamente la comprobación que SSH hace de forma automática en cada conexión posterior a la primera.
+
+> **Nota:** Si en lugar del fingerprint se quiere cotejar la clave completa, se omite la `-l`: `ssh-keygen -F "[localhost]:2222"` imprime la línea del `known_hosts` con la clave en Base64, que debe ser idéntica a la parte `AAAA...` del fichero `/etc/ssh/ssh_host_ed25519_key.pub` del servidor.
+
 Ejemplos de uso:
 
 ```bash
