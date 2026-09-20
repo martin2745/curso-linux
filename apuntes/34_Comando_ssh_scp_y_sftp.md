@@ -14,6 +14,8 @@
    2. [Redirección gráfica por SSH](#32-redirección-gráfica-por-ssh)
    3. [Comando SSH + contraseña](#33-comando-ssh--contraseña)
    4. [Cifrado asimétrico](#34-cifrado-asimétrico)
+   5. [Práctica guiada: conexión por clave desde Windows a una máquina virtual](#35-práctica-guiada-conexión-por-clave-desde-windows-a-una-máquina-virtual)
+   6. [Diferencia entre known_hosts y authorized_keys](#36-diferencia-entre-knownhosts-y-authorizedkeys)
 4. [scp](#4-scp)
    1. [scp de máquina A a B indicado desde máquina C](#41-scp-de-máquina-a-a-b-indicado-desde-máquina-c)
    2. [Ejemplos de uso curiosos y cuestiones a considerar](#42-ejemplos-de-uso-curiosos-y-cuestiones-a-considerar)
@@ -508,7 +510,7 @@ Number of key(s) added: 1
 ...
 ```
 
-Ejecutamos el comando _eval $(ssh-agent)_ para realizar el procedimiento, decimos que queremos que se almacene el passphrase por tiempo indefinido y realizamos la conexión. A continuación detenemos el procedimiento con _eval $(ssh-agent -k)_. Tambien podríamos realizar este procedimiento por un tiempo determinado.
+Ejecutamos el comando `eval $(ssh-agent)` para realizar el procedimiento, decimos que queremos que se almacene el passphrase por tiempo indefinido y realizamos la conexión. A continuación detenemos el procedimiento con `eval $(ssh-agent -k)`. Tambien podríamos realizar este procedimiento por un tiempo determinado.
 
 ```bash
 usuarioA@debian:~$ eval $(ssh-agent)
@@ -560,6 +562,169 @@ Enter new passphrase (empty for no passphrase):
 Enter same passphrase again:
 Your identification has been saved with the new passphrase.
 ```
+
+### 3.5 Práctica guiada: conexión por clave desde Windows a una máquina virtual
+
+Los ejemplos anteriores usan dos máquinas Linux. En la práctica es muy frecuente administrar desde un **Windows** una **máquina virtual** Linux, y ese escenario tiene un par de particularidades que causan mucha confusión al empezar. Esta sección lo resuelve paso a paso.
+
+El escenario es el habitual en el aula: un cliente **Windows 11**, y como servidor una **VM de VirtualBox en modo NAT** con una regla de **reenvío de puertos** que envía el puerto `2222` del equipo Windows al puerto `22` de la VM. Por eso, desde Windows, el servidor se alcanza como `localhost:2222`. El objetivo es entrar sin escribir la contraseña cada vez.
+
+#### La idea que hay que tener clara antes de empezar
+
+Es la fuente de casi todos los tropiezos, así que conviene fijarla:
+
+> **El par de claves se genera en el equipo desde el que te conectas (Windows), no en el servidor.** La clave **privada se queda siempre en Windows** y no sale de ahí; solo la clave **pública** viaja al servidor.
+
+Sirve la analogía del candado y la llave:
+
+- **Clave pública** = un **candado**. No es secreto, se reparte. Se **coloca en la puerta del servidor** (dentro de `~/.ssh/authorized_keys`).
+- **Clave privada** = la **llave**. Es secreta, **se queda en el cliente** (Windows).
+
+Para entrar sin contraseña hacen falta las dos cosas: la llave en tu bolsillo (Windows) y el candado puesto en la puerta (el servidor). Tener una copia suelta del candado (el fichero `.pub`) en el cliente no abre nada.
+
+| Pieza | Se genera en | Debe quedar en | Función |
+|---|---|---|---|
+| Clave privada (`id_ed25519`) | Windows | **Windows** | La llave. Nunca se mueve. |
+| Clave pública (`id_ed25519.pub`) | Windows | El **servidor**, en `~/.ssh/authorized_keys` | El candado. Se copia una vez. |
+
+> **Advertencia:** El error más común es generar el par **en la VM** pensando que "las claves van en el servidor". Si se hace así, la llave (la privada) queda en el sitio equivocado y no sirve para conectarse desde Windows. Ante la duda, se empieza de cero generando el par en Windows, como se explica a continuación.
+
+#### Paso 1: generar el par de claves en Windows
+
+Windows 10 y 11 incluyen el cliente OpenSSH, de modo que `ssh` y `ssh-keygen` funcionan directamente en **PowerShell**. Se genera el par con:
+
+```powershell
+PS C:\Users\usuario> ssh-keygen -t ed25519 -C "Clave para el servidor desde Windows"
+```
+
+El programa hace tres preguntas:
+
+- **`Enter file in which to save the key`**: se pulsa **Intro** para aceptar la ruta por defecto (`C:\Users\usuario\.ssh\id_ed25519`).
+- **`Enter passphrase`**: la frase de contraseña que protege la clave. Se trata en el apartado siguiente; para una primera prueba se puede dejar vacía pulsando **Intro**.
+- **`Enter same passphrase again`**: se repite (o **Intro** de nuevo si se dejó vacía).
+
+El resultado son **dos ficheros** nuevos en `C:\Users\usuario\.ssh\`:
+
+| Fichero | Qué es |
+|---|---|
+| `id_ed25519` | La clave **privada** (la llave). Se queda en Windows. |
+| `id_ed25519.pub` | La clave **pública** (el candado). Es la que se copiará al servidor. |
+
+#### La passphrase: qué es y si conviene ponerla
+
+La **passphrase** es una contraseña que **cifra la clave privada en el disco**. Si se le pone, el fichero `id_ed25519` queda protegido: aunque alguien consiga ese fichero, no puede usarlo sin conocer la passphrase. Siguiendo la analogía, es la **caja fuerte con combinación donde se guarda la llave**.
+
+Es importante no confundirla con la contraseña del usuario del servidor, porque son cosas totalmente distintas:
+
+| | Contraseña del usuario (del servidor) | Passphrase de la clave |
+|---|---|---|
+| Qué protege | La cuenta de usuario en la VM | El fichero de clave privada en Windows |
+| Dónde vive | En el servidor | Solo en tu equipo; **nunca viaja** |
+| ¿La conoce el servidor? | Sí | **No.** El servidor ni se entera de que la clave tiene passphrase |
+
+El detalle clave es que la passphrase **no viaja a ningún sitio** y se resuelve **en el cliente**, antes de contactar con el servidor. Es una capa de seguridad **añadida** sobre la llave, no un sustituto de nada.
+
+| | Sin passphrase | Con passphrase |
+|---|---|---|
+| Comodidad | Entra sola | Hay que introducirla |
+| Seguridad | Si roban el fichero de la llave, entran en el servidor | Si roban el fichero, no pueden usarlo |
+| Recomendada para | Automatización (`cron`, `rsync`), laboratorio de aula | Claves personales, portátiles, equipos compartidos |
+
+> **Advertencia:** La passphrase **no se puede recuperar**. Si se olvida, la clave privada queda inservible y hay que generar un par nuevo y volver a copiar la pública al servidor. Es el comportamiento buscado: sin ella, la llave no se puede descifrar.
+
+> **Nota:** Poner passphrase no obliga a teclearla en cada conexión. El **agente** de claves la pide una sola vez por sesión y mantiene la llave descifrada en memoria el resto del tiempo. En Windows se activa arrancando el servicio `ssh-agent` (como administrador, `Start-Service ssh-agent`) y añadiendo la clave con `ssh-add`, tal como se detalla al final de esta sección.
+
+#### Paso 2: copiar la clave pública al servidor
+
+Ahora hay que colocar el candado (`id_ed25519.pub`) en la puerta de la VM, es decir, añadirlo a su fichero `~/.ssh/authorized_keys`.
+
+> **Nota:** En Linux esto se haría con `ssh-copy-id`, pero **el cliente OpenSSH de Windows no incluye esa herramienta**. Por eso en PowerShell se hace de forma manual con el comando siguiente, que es exactamente el equivalente: coge la clave pública, la añade a `authorized_keys` del servidor y ajusta los permisos.
+
+```powershell
+PS C:\Users\usuario> type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh -p 2222 usuario@localhost "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+usuario@localhost's password:
+```
+
+Este comando **pedirá la contraseña del usuario**, y esta es **la última vez** que hará falta. El motivo es que esa conexión todavía se autentica por contraseña, porque en ese instante la clave aún no está instalada en el servidor; y es precisamente esa conexión la que la deja puesta. Desglosado:
+
+| Parte | Qué hace | Dónde |
+|---|---|---|
+| `type ...\id_ed25519.pub` | Muestra el contenido de la clave pública. | Windows |
+| `\|` | Envía esa clave como entrada al comando siguiente. | Windows |
+| `ssh -p 2222 usuario@localhost "..."` | Ejecuta en la VM lo que va entre comillas. | VM |
+| `mkdir -p ~/.ssh && chmod 700 ~/.ssh` | Crea la carpeta `.ssh` con permisos correctos. | VM |
+| `cat >> ~/.ssh/authorized_keys` | Añade la clave recibida al final de `authorized_keys`. | VM |
+| `chmod 600 ~/.ssh/authorized_keys` | Ajusta los permisos del fichero. | VM |
+
+#### Paso 3: conectarse sin contraseña
+
+```powershell
+PS C:\Users\usuario> ssh -p 2222 usuario@localhost
+```
+
+Ahora debe entrar **sin pedir la contraseña**. No hace falta indicar la clave con `-i`, porque `ssh` busca `id_ed25519` por su nombre de forma automática.
+
+La razón de que ya no pida contraseña es que se cumplen a la vez las dos condiciones: el servidor tiene tu candado (en `authorized_keys`) y tu cliente tiene la llave (`id_ed25519`). En cada conexión, el servidor lanza un **reto** que solo la clave privada puede resolver; el cliente lo responde con la llave y el servidor lo verifica con el candado. Todo ello de forma automática e instantánea, sin escribir nada.
+
+#### Comodidades finales
+
+**Un alias para no repetir puerto ni usuario.** En el fichero `C:\Users\usuario\.ssh\config` (créalo si no existe) se puede definir:
+
+```text
+Host servidor
+    HostName localhost
+    Port 2222
+    User usuario
+    IdentityFile ~/.ssh/id_ed25519
+```
+
+A partir de ahí basta con `ssh servidor`, y el alias lo aprovechan también `scp` y `sftp`.
+
+**El agente, si pusiste passphrase.** Para introducirla una sola vez por sesión en lugar de en cada conexión:
+
+```powershell
+PS C:\Users\usuario> Start-Service ssh-agent          # una vez, como administrador
+PS C:\Users\usuario> ssh-add $env:USERPROFILE\.ssh\id_ed25519
+```
+
+#### Errores frecuentes
+
+- **Sigue pidiendo la contraseña tras el Paso 2.** Casi siempre es por permisos en la VM: `~/.ssh` debe ser `700` y `~/.ssh/authorized_keys` debe ser `600`. El comando del Paso 2 ya los ajusta, pero si la clave se copió a mano conviene revisarlos. Si la tubería del Paso 2 diera problemas de codificación, la alternativa infalible es mostrar la pública con `Get-Content` y pegarla a mano al final de `~/.ssh/authorized_keys` en la VM.
+- **Descargar el `.pub` al cliente no autentica nada.** Copiar un fichero `.pub` al equipo Windows no tiene ningún efecto sobre el acceso: la pública solo cumple su función cuando está en el `authorized_keys` del **servidor**, y quien autentica es la **privada** que ya está en el cliente.
+- **Confundir la passphrase con la contraseña del servidor.** Si al conectar te piden algo tras poner claves, fíjate en el texto: `Enter passphrase for key` es tu passphrase (local, descifra la llave); `usuario@localhost's password` es la contraseña de la cuenta (señal de que la clave todavía no está bien instalada).
+
+### 3.6 Diferencia entre known_hosts y authorized_keys
+
+A lo largo de esta sección han aparecido dos ficheros que se confunden constantemente, porque los dos guardan **claves públicas** y los dos sirven para **autenticar**. La diferencia es que cumplen funciones **opuestas** y viven en **lados opuestos** de la conexión: el `known_hosts` se ha visto en el apartado 3.1 (verificación del servidor mediante su *fingerprint*) y el `authorized_keys` en los apartados 3.4 y 3.5 (acceso del usuario mediante su clave).
+
+| | `known_hosts` | `authorized_keys` |
+|---|---|---|
+| ¿Dónde está? | En el **cliente** (`~/.ssh/known_hosts`) | En el **servidor** (`~/.ssh/authorized_keys` del usuario) |
+| ¿Qué claves guarda? | Las públicas de los **servidores** a los que el cliente se ha conectado | Las públicas de los **usuarios** a los que el servidor permite entrar |
+| ¿Quién verifica a quién? | El **cliente** comprueba que el **servidor** es auténtico | El **servidor** comprueba que el **cliente** está autorizado |
+| Responde a la pregunta | "¿Confío en este servidor?" | "¿Dejo entrar a este usuario sin contraseña?" |
+| ¿Cómo se rellena? | Automáticamente, al aceptar `yes` en la primera conexión | Manualmente, al copiar la clave pública (con `ssh-copy-id` o el método equivalente) |
+
+#### Las dos mitades de una verificación mutua
+
+Ambos ficheros son las dos caras de una misma moneda: en SSH, cliente y servidor se verifican **el uno al otro**, y cada uno se apoya en su propio fichero.
+
+- El **servidor** demuestra su identidad al cliente, que la comprueba contra su `known_hosts` (es el *fingerprint* del apartado 3.1).
+- El **cliente** demuestra su identidad al servidor, que la comprueba contra su `authorized_keys` (es el acceso por clave del apartado 3.5).
+
+La clave para no confundirlos es entender que en juego hay **dos pares de claves distintos**:
+
+| Par de claves | Se genera en | Su clave pública se guarda en | Sirve para verificar al |
+|---|---|---|---|
+| **Del host** (propio del servidor) | El servidor, al instalar OpenSSH | El `known_hosts` del cliente | **Servidor** |
+| **De usuario** (propio de quien se conecta) | El cliente, con `ssh-keygen` | El `authorized_keys` del servidor | **Cliente** |
+
+Con la analogía del candado y la llave usada en el apartado 3.5:
+
+- El `known_hosts` guarda el **candado del servidor**, que el cliente usa para reconocerlo y evitar que se lo suplanten.
+- El `authorized_keys` guarda **el candado del usuario**, que el servidor usa para reconocerlo y dejarlo pasar.
+
+> **Recuerda:** En una frase, **`known_hosts` protege al cliente de servidores falsos, y `authorized_keys` permite al servidor reconocer clientes legítimos**. Los dos usan claves públicas, pero uno mira "hacia fuera" (yo verifico al servidor) y el otro "hacia dentro" (el servidor me verifica a mí).
 
 ## 4. scp
 
@@ -980,7 +1145,18 @@ Una vez instalada la clave pública en el servidor, se le indica a PuTTY que use
 
 > **Advertencia:** Los permisos en el servidor son **críticos** y son una fuente de fallos silenciosos muy habitual. El directorio `~/.ssh` debe tener permisos `700` y el fichero `authorized_keys` debe tener `600`. Si son más abiertos, el servidor SSH **ignora la clave sin dar ninguna explicación** (por seguridad, se niega a fiarse de ficheros que otros usuarios podrían haber manipulado) y vuelve a pedir la contraseña, dejando al alumno sin entender por qué su clave "no funciona".
 
-> **Nota:** Si se tiene una clave OpenSSH creada en Linux (`id_ed25519`) y se quiere usar en PuTTY, no hace falta generar otra: PuTTYgen puede **convertirla** con `Conversions > Import key` y luego `Save private key` en formato `.ppk`.
+> **Advertencia:** PuTTY **no admite las claves privadas en el formato de OpenSSH**, que es precisamente el que genera `ssh-keygen`. Si se intenta cargar en PuTTY una clave `id_ed25519` (o `id_rsa`) creada con `ssh-keygen`, la conexión falla con un mensaje como el siguiente y PuTTY vuelve a pedir la contraseña del usuario:
+>
+> ```text
+> Unable to use key file "C:\Users\usuario\.ssh\id_ed25519" (OpenSSH SSH-2 private key (new format))
+> ```
+>
+> Según de dónde venga la clave, hay dos caminos para resolverlo:
+>
+> - **Si el par ya se generó con `ssh-keygen`** (por ejemplo siguiendo el apartado 3.5), no hay que rehacer nada en el servidor: basta con **convertir** la clave privada al formato `.ppk`. En PuTTYgen se hace con `Conversions > Import key`, se selecciona la clave de OpenSSH (`C:\Users\usuario\.ssh\id_ed25519`), se introduce su passphrase y se pulsa `Save private key`. Es la **misma** clave, solo cambia el formato del fichero, así que la pública que ya está en el `authorized_keys` del servidor sigue siendo válida.
+> - **Si se empieza de cero pensando en usar PuTTY**, es más directo **generar el par en PuTTYgen** (los pasos 1 a 5 de este apartado): nace ya en formato `.ppk` y solo hay que copiar su clave pública al `authorized_keys` del servidor.
+
+> **Nota:** El cliente `ssh` de PowerShell, en cambio, sí lee directamente las claves generadas con `ssh-keygen`, sin ninguna conversión. El formato `.ppk` solo lo necesitan PuTTY y sus utilidades `pscp` y `psftp`.
 
 ### 10.6 Pageant: el agente de claves
 
