@@ -16,14 +16,16 @@
    2. [Desactivar la respuesta de paquetes ICMP](#32-desactivar-la-respuesta-de-paquetes-icmp)
 4. [Herramientas de utilidad de red](#4-herramientas-de-utilidad-de-red)
    1. [ping](#41-ping)
-   2. [Netcat](#42-netcat)
-   3. [nmcli](#43-nmcli)
-   4. [hostnamectl](#44-hostnamectl)
-   5. [Configurar el cliente de DNS](#45-configurar-el-cliente-de-dns)
-   6. [Comando dig](#46-comando-dig)
-   7. [Comando host](#47-comando-host)
-   8. [Comando getent](#48-comando-getent)
-   9. [Comando nmap](#49-comando-nmap)
+   2. [ss](#42-ss)
+   3. [traceroute y tracepath](#43-traceroute-y-tracepath)
+   4. [Netcat](#44-netcat)
+   5. [nmcli](#45-nmcli)
+   6. [hostnamectl](#46-hostnamectl)
+   7. [Configurar el cliente de DNS](#47-configurar-el-cliente-de-dns)
+   8. [Comando dig](#48-comando-dig)
+   9. [Comando host](#49-comando-host)
+   10. [Comando getent](#410-comando-getent)
+   11. [Comando nmap](#411-comando-nmap)
 5. [Configuración de proxy en Debian](#5-configuración-de-proxy-en-debian)
 
 ---
@@ -128,6 +130,7 @@ iface enp0s8 inet static
     address 192.168.2.7
     netmask 255.255.255.0
     gateway 192.168.2.1
+    dns-nameservers 8.8.8.8 1.1.1.1
 ```
 
 > **Nota:** La directiva `auto` hace que la interfaz se levante durante el arranque del sistema, mientras que `allow-hotplug` la levanta cuando el núcleo detecta que se conecta el dispositivo. En un servidor con la tarjeta siempre presente basta con `auto`; ambas pueden convivir sin problema.
@@ -136,7 +139,7 @@ iface enp0s8 inet static
 
 > **Nota:** Tras editar la configuración, los cambios no se aplican solos. Hay que reiniciar el servicio con `systemctl restart networking`, o levantar y bajar la interfaz concreta con `ifup enp0s8` e `ifdown enp0s8`.
 
-> **Aviso:** Cuando se emplea este archivo, es necesario configurar los servidores DNS manualmente en el fichero `/etc/resolv.conf`.
+> **Aviso:** Los servidores DNS también se declaran aquí, con la directiva `dns-nameservers` (como en el ejemplo estático). Para que esa línea surta efecto y actualice `/etc/resolv.conf` debe estar instalado el paquete `resolvconf`; si no lo está, los servidores DNS se fijan a mano en `/etc/resolv.conf`, tal como se explica en el apartado «Configurar el cliente de DNS».
 
 > **Advertencia:** En un sistema donde `NetworkManager` gestione la red, no deben mezclarse ambos métodos: una interfaz declarada en `/etc/network/interfaces` queda fuera del control de `NetworkManager`, y configurar la misma tarjeta por los dos sitios provoca conflictos. Conviene decidir un único gestor de red por máquina.
 
@@ -226,7 +229,41 @@ ping -c 1 10.9.238.170
 ping -I eth0 192.168.1.60
 ```
 
-### 4.2 Netcat
+### 4.2 ss
+
+`ss` (*socket statistics*) muestra los sockets abiertos del sistema: qué puertos están en escucha y qué conexiones hay establecidas. Sustituye al antiguo `netstat` del paquete `net-tools`, igual que `ip` sustituyó a `ifconfig`.
+
+| Comando | Descripción |
+|---|---|
+| `ss -tuln` | Lista los puertos TCP (`-t`) y UDP (`-u`) en escucha (`-l`), sin resolver nombres (`-n`). |
+| `ss -tulnp` | Igual, añadiendo el proceso (`-p`) que abre cada puerto (requiere `root`). |
+| `ss -t state established` | Muestra solo las conexiones TCP ya establecidas. |
+| `ss -s` | Imprime un resumen con el número de sockets por protocolo y estado. |
+
+```bash
+root@debian:~# ss -tulnp
+Netid  State   Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process
+tcp    LISTEN  0       128     0.0.0.0:22          0.0.0.0:*          users:(("sshd",pid=612,fd=3))
+tcp    LISTEN  0       244     127.0.0.1:5432      0.0.0.0:*          users:(("postgres",pid=811,fd=6))
+```
+
+> **Nota:** La equivalencia con el viejo `netstat` es directa: `ss -tulnp` hace lo mismo que `netstat -tulnp`. Conviene acostumbrarse a `ss`, porque `netstat` ya no viene instalado por defecto en Debian ni Ubuntu recientes. En la salida, una dirección local `0.0.0.0` indica que el servicio escucha en **todas** las interfaces, mientras que `127.0.0.1` significa que solo acepta conexiones desde la propia máquina.
+
+### 4.3 traceroute y tracepath
+
+Mientras que `ping` solo dice si el destino responde, `traceroute` muestra **el camino** que siguen los paquetes salto a salto (cada router intermedio) con el tiempo de respuesta de cada uno. Es la herramienta para localizar en qué punto de la red se pierde o se ralentiza el tráfico.
+
+```bash
+usuario@debian:~$ traceroute www.debian.org
+ 1  _gateway (192.168.1.1)   0.512 ms   0.480 ms   0.470 ms
+ 2  10.0.0.1 (10.0.0.1)      8.933 ms   9.021 ms   8.870 ms
+ 3  * * *
+ 4  ae-1.router.isp.net ...  12.4 ms   12.1 ms   12.6 ms
+```
+
+> **Nota:** `traceroute` no viene instalado por defecto (`apt install traceroute`). Como alternativa, `tracepath` ofrece una función parecida, no necesita privilegios de `root` y suele estar ya presente. Los saltos que aparecen como `* * *` son routers que no responden a este tipo de sondeo, algo normal que no implica un fallo de la conexión.
+
+### 4.4 Netcat
 
 `nc` es la "navaja suiza" de las redes. Permite abrir puertos, crear clientes TCP/UDP y comprobar si un puerto remoto está abierto.
 
@@ -271,13 +308,30 @@ nc -lvnp 1331
 
 > **Advertencia:** El segundo comando **no usa `netcat`**: aprovecha el fichero virtual `/dev/tcp/host/puerto`, una función propia de Bash tratada en el documento 10, que abre una conexión de red al leer o escribir en él. Por eso funciona incluso en sistemas donde `netcat` no está instalado. Comprender este mecanismo es tan útil para el que defiende una red como para el que la audita: detectar una conexión saliente inesperada hacia un puerto poco habitual es una de las señales de compromiso más claras.
 
-### 4.3 nmcli
+### 4.5 nmcli
 
-Herramienta CLI para interactuar con **NetworkManager**.
+Herramienta de línea de órdenes para gestionar **NetworkManager**, el gestor de red por defecto en los escritorios de Debian y Ubuntu. Permite consultar el estado de la red y crear o modificar conexiones de forma persistente, sin editar ficheros a mano.
 
-*   Permite gestionar interfaces, configurar IPs (DHCP/Estática), conexiones WiFi o VPN y rutas. Muy útil para scripts automatizados.
+| Comando | Descripción |
+|---|---|
+| `nmcli device status` | Muestra las interfaces y su estado (conectada, sin gestionar...). |
+| `nmcli connection show` | Lista los perfiles de conexión definidos. |
+| `nmcli connection up NOMBRE` | Activa un perfil de conexión (usar `down` para desactivarlo). |
+| `nmcli device wifi list` | Muestra las redes WiFi al alcance. |
+| `nmcli device wifi connect SSID password CLAVE` | Se conecta a una red WiFi. |
 
-### 4.4 hostnamectl
+Ejemplo de creación de una conexión con IP estática, persistente de inmediato:
+
+```bash
+root@debian:~# nmcli connection add type ethernet ifname enp0s8 con-name lan-fija \
+    ip4 192.168.2.7/24 gw4 192.168.2.1
+root@debian:~# nmcli connection modify lan-fija ipv4.dns "8.8.8.8 1.1.1.1"
+root@debian:~# nmcli connection up lan-fija
+```
+
+> **Nota:** Existe además `nmtui`, una interfaz de texto interactiva basada en menús para quien prefiera no memorizar la sintaxis de `nmcli`. Ambas actúan sobre NetworkManager, de modo que no deben combinarse con la edición manual de `/etc/network/interfaces` sobre la misma interfaz (ver la advertencia del apartado 2.1).
+
+### 4.6 hostnamectl
 
 Muestra y permite configurar el nombre del equipo, administrado por `systemd`.
 
@@ -293,7 +347,7 @@ root@debian:~# hostnamectl
 
 > **Recuerda:** Cambiar el *hostname* no basta para que la máquina se reconozca a sí misma por ese nombre. Conviene añadir también la línea correspondiente en `/etc/hosts` asociándolo a `127.0.1.1`, tal como hace el instalador de Debian. De lo contrario, algunos programas tardan en arrancar mientras intentan resolver sin éxito el nombre del propio equipo.
 
-### 4.5 Configurar el cliente de DNS
+### 4.7 Configurar el cliente de DNS
 
 Edición manual de `/etc/resolv.conf`:
 
@@ -313,7 +367,7 @@ search localdomain curso.local
 >
 > En ese caso, los servidores DNS se configuran en el gestor correspondiente: con la directiva `dns-nameservers` en `/etc/network/interfaces`, en la sección `nameservers` de Netplan, o mediante `nmcli`.
 
-### 4.6 Comando dig
+### 4.8 Comando dig
 
 Consulta avanzada a servidores DNS para extraer registros (A, MX, TXT, etc.).
 
@@ -321,7 +375,7 @@ Consulta avanzada a servidores DNS para extraer registros (A, MX, TXT, etc.).
 dig a +short www.aibench.org
 ```
 
-### 4.7 Comando host
+### 4.9 Comando host
 
 Alternativa simplificada a `dig` para resolución DNS rápida.
 
@@ -329,7 +383,7 @@ Alternativa simplificada a `dig` para resolución DNS rápida.
 host tele2.es
 ```
 
-### 4.8 Comando getent
+### 4.10 Comando getent
 
 Consulta bases de datos del sistema controladas por NSS (Name Service Switch) en `/etc/nsswitch.conf`. 
 
@@ -341,7 +395,7 @@ getent hosts google.com  # Resuelve el nombre usando el mismo camino que las apl
 
 > **Importante:** El valor de `getent hosts` frente a `dig` o `host` es que sigue **exactamente el mismo camino de resolución que usan las aplicaciones normales**, definido en `/etc/nsswitch.conf`. Eso incluye `/etc/hosts`, el DNS y cualquier otra fuente configurada, en el orden establecido. Por eso, si un programa resuelve un nombre de forma distinta a lo que devuelve `dig`, la respuesta suele estar en `getent`: probablemente exista una entrada en `/etc/hosts` que `dig`, que consulta el DNS directamente, no llega a ver.
 
-### 4.9 Comando nmap
+### 4.11 Comando nmap
 
 Herramienta avanzada de escaneo de puertos, detección de versiones y OS.
 
@@ -351,6 +405,8 @@ nmap -v -A 192.168.1.125
 ```
 
 > **Nota:** La opción `-A` activa detección de SO, versiones de servicios, scripts de reconocimiento (NSE) y traceroute. La opción `-v` aumenta la verbosidad de salida.
+
+> **Advertencia:** `nmap` solo debe usarse contra equipos y redes **propios o con autorización expresa**. Escanear sistemas de terceros sin permiso puede ser constitutivo de delito, además de disparar las alarmas de sus sistemas de detección de intrusiones. En este curso se emplea siempre dentro del laboratorio virtual.
 
 ---
 
@@ -377,4 +433,18 @@ source /etc/profile.d/proxy.sh
 > **Nota:** Para que las aplicaciones ejecutadas con `sudo` conserven estas variables, se debe añadir al archivo `/etc/sudoers`:
 > ```bash
 > Defaults        env_keep += "http_proxy https_proxy HTTP_PROXY HTTPS_PROXY"
+> ```
+
+> **Nota:** Es habitual declarar también la variable `no_proxy` con las direcciones que deben quedar **fuera** del proxy (el bucle local y la red interna), para no encaminar por él el tráfico local:
+>
+> ```bash
+> export no_proxy="localhost,127.0.0.1,192.168.0.0/16"
+> ```
+
+> **Importante:** El gestor de paquetes `apt` **no** siempre usa estas variables de entorno, sobre todo al ejecutarse desde servicios del sistema. Para que descargue a través del proxy, lo más fiable es configurarlo en su propio fichero:
+>
+> ```bash
+> # /etc/apt/apt.conf.d/95proxy
+> Acquire::http::Proxy  "http://xx.xx.xx.xx:yyyy/";
+> Acquire::https::Proxy "http://xx.xx.xx.xx:yyyy/";
 > ```
