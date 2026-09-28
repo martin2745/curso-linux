@@ -26,8 +26,8 @@ Directorios estáticos donde se encuentran los **binarios** propios del usuario 
 
 Tenemos que hablar de dos directorios cuando hablamos de binarios del sistema:
 
-- `/bin/`: Programas básicos. Almacena todos los binarios necesarios para garantizar las funciones básicas a nivel de usuario (herramientas esenciales de línea de comandos).
-- `/sbin/`: Programas de sistema. Almacena los binarios necesarios para tareas administrativas del sistema (como herramientas de gestión de red o particiones) y solo pueden ser gestionadas por el usuario `root`.
+- `/bin/`: Programas básicos. Almacena todos los binarios necesarios para garantizar las funciones básicas a nivel de usuario (herramientas esenciales de línea de comandos). Por ejemplo, `ls` (listar el contenido de un directorio) o `cp` (copiar ficheros), que puede ejecutar cualquier usuario.
+- `/sbin/`: Programas de sistema. Almacena los binarios necesarios para tareas administrativas del sistema (como herramientas de gestión de red o particiones) y solo pueden ser gestionadas por el usuario `root`. Por ejemplo, `fdisk` (crear y modificar particiones de disco) o `mkfs` (formatear una partición con un sistema de ficheros), que requieren privilegios de administrador.
 
 En las distribuciones actuales (Debian 12 en adelante, Ubuntu, Fedora, etc.) ambos son ya simples **enlaces simbólicos** a `/usr/bin` y `/usr/sbin`. Este cambio estructural, conocido como *UsrMerge*, unifica todas las herramientas y bibliotecas del sistema bajo una misma ruta para facilitar la compatibilidad, las actualizaciones atómicas y el montaje de `/usr` en modo solo lectura.
 
@@ -93,6 +93,23 @@ lrwxrwxrwx   1 root root     9 Feb 10 11:41 lib32 -> usr/lib32
 lrwxrwxrwx   1 root root     9 Feb 10 11:41 lib64 -> usr/lib64
 ```
 
+> **Nota:** Un apunte de vocabulario antes de empezar: el término correcto en español es **biblioteca** (traducción de *library*), pero es muy habitual llamarla *librería* por calco del inglés. En rigor no son lo mismo, ya que en español una *librería* es la tienda donde se venden libros; aun así, ambos términos se usan indistintamente en informática y se entienden. En estos apuntes se emplea *biblioteca*.
+>
+> Aclarado esto, aunque las bibliotecas y los módulos conviven bajo `/lib` y a veces se confunden, una **biblioteca** y un **módulo del kernel** son cosas distintas. Una biblioteca es código que amplía a los **programas** y se ejecuta en el **espacio de usuario**; un módulo del kernel es código que amplía al **propio núcleo** y se ejecuta en el **espacio de kernel** (por ejemplo, para dar soporte a un dispositivo de hardware o a un sistema de ficheros).
+>
+> | | Biblioteca | Módulo del kernel |
+> |---|---|---|
+> | Qué amplía | A los programas (aplicaciones) | Al núcleo del sistema |
+> | Dónde se ejecuta | Espacio de usuario | Espacio de kernel |
+> | Extensión | `.so` (*shared object*) | `.ko` (*kernel object*) |
+> | Ubicación | `/lib`, `/usr/lib` | `/lib/modules/<versión>/` |
+> | Cómo se carga | El enlazador dinámico `ld.so`, al ejecutar un programa | Con `modprobe` o `insmod` (documento 04) |
+> | Ejemplo | `libc.so.6` (funciones básicas de C), `libssl.so` (cifrado) | `e1000` (tarjeta de red), `ext4` (sistema de ficheros) |
+>
+> Un término muy relacionado es el de **driver** (controlador): el software que sabe manejar un dispositivo de hardware concreto, traduciendo las órdenes genéricas del sistema a las señales que ese hardware entiende. En Linux, la mayoría de los drivers **se entregan como módulos del kernel**, de modo que *driver* describe la **función** (controlar un hardware) y *módulo* describe la **forma** de empaquetarla y cargarla. No son sinónimos: no todos los módulos son drivers (`ext4` es un módulo, pero es un sistema de ficheros, no un driver), y no todos los drivers son módulos (algunos van compilados dentro del propio núcleo).
+>
+> En una frase: la biblioteca `libssl.so` la usa un **programa** como un navegador para cifrar, y el módulo `e1000` —que contiene el **driver** de esa tarjeta— lo usa el **kernel** para hablar con la red. Los módulos y drivers del kernel se tratan en detalle en el documento 04.
+
 Para ver los módulos del kernel podemos revisar la ruta `/lib/modules` y para saber la versión exacta de nuestro kernel actual disponemos del comando `uname -r`.
 
 Comprobación de la versión del kernel:
@@ -147,6 +164,16 @@ Punto de montaje de los volúmenes lógicos que se montan en el sistema de forma
 - `/media/`: puntos de montaje automático para dispositivos removibles gestionados por el entorno gráfico (CD-ROM, llaves USB, discos externos, etc.).
 - `/mnt/`: punto de montaje temporal y manual no gestionado automáticamente. Usado tradicionalmente por administradores para montar particiones de disco durante mantenimientos o copias de seguridad.
 
+> **Importante:** Tanto `/media` como `/mnt` están reservados para montajes **no permanentes** (removibles o temporales). Entonces, ¿dónde se monta lo que queremos de forma **persistente**, como el disco de datos de un servidor? La respuesta es que **lo que hace persistente a un montaje no es el directorio donde se monta, sino que esté declarado en `/etc/fstab`** (documento 37). El directorio de montaje es libre y se elige según la **función** de esos datos:
+>
+> | Qué se monta | Dónde suele montarse |
+> |---|---|
+> | Datos que **sirve** el sistema a la red (web, FTP, Git) | `/srv` (por ejemplo `/srv/www`), que el FHS reserva para eso |
+> | `/home` o `/var` en una partición o disco aparte | Sobre esos mismos directorios del sistema |
+> | Almacenamiento adicional de datos | Un directorio propio creado por el administrador (`/datos`, `/almacen`, `/backup`…) |
+>
+> Montar algo permanente en `/media` o `/mnt` técnicamente funciona, pero rompe la convención: cualquier administrador que vea un disco importante montado en `/mnt` pensará que es temporal. En resumen: **lo efímero va a `/media` (removible) o `/mnt` (temporal); lo persistente va al directorio que le corresponda por su función y se declara en `/etc/fstab`**.
+
 ---
 
 ## 7. /usr y /opt
@@ -179,30 +206,11 @@ Incluye todos los dispositivos de almacenamiento o hardware conectados al sistem
 
 ## 9. /proc y /sys
 
-`/sys` se enfoca en la configuración y el hardware del sistema (representación orientada a objetos de los dispositivos), mientras que `/proc` contiene información de los procesos y aplicaciones que se están ejecutando en un momento dado en el sistema, exponiendo estructuras internas del núcleo. Ambos son pseudo-sistemas de ficheros, es decir, residen en memoria RAM y no ocupan espacio real en disco duro.
+Conviene entender `/proc` y `/sys` juntos, porque comparten una naturaleza poco intuitiva: son **pseudo-sistemas de ficheros** (sistemas de ficheros virtuales). Esto quiere decir que **no están en el disco**: viven en la memoria RAM y ocupan cero bytes reales. El **núcleo los genera al vuelo**, de modo que cuando se lee uno de sus ficheros no se está leyendo algo guardado, sino preguntándole al kernel su estado **en ese preciso instante**.
 
-- `/sys`: Contiene información y configuraciones del sistema a nivel de hardware y del núcleo (kernel), expuestas en tiempo real. Permite interactuar directamente con parámetros del hardware y configuraciones de energía del sistema mediante el sistema `sysfs`.
-- `/proc`: Es un sistema de archivos temporal (virtual) que proporciona información sobre procesos en ejecución y el estado del sistema, como la memoria, CPU y demás recursos de hardware. El controlador interno encargado de generar en tiempo de ejecución el contenido de `/proc` es `procfs`.
-  - `/proc/interrupts`: Fichero que recoge los IRQ o interrupciones del sistema, es decir, los canales (identificados por un número) que necesitan los dispositivos de hardware para comunicarse con la CPU. Al leerlo obtenemos la relación entre cada dispositivo y la interrupción que tiene asignada.
-  - `/proc/ioports`: Fichero que lista las localizaciones en memoria reservadas para la comunicación básica entre CPU y dispositivos de hardware específicos.
-  - `/proc/dma`: Canales de acceso directo a memoria para transferencias rápidas sin intervención de la CPU.
-  - `/proc/sys`: Contiene parámetros de red y configuraciones afinables del Kernel (`sysctl`). Contiene información similar al propio directorio `/sys` pero más enfocada en configuraciones del software interno del núcleo.
-  - `/proc/meminfo`: Muestra detalles exhaustivos sobre el uso y estado de la memoria RAM del sistema.
-  - `/proc/cpuinfo`: Muestra información sobre el procesador, núcleos, características y extensiones soportadas.
-  - `/proc/partitions`: Lista los bloques y particiones de discos reconocidas actualmente por el núcleo.
-  - `/proc/mounts`: Muestra los sistemas de archivos montados actualmente (normalmente un enlace simbólico a `/proc/self/mounts`).
-  - `/proc/swaps`: Muestra información sobre las áreas de intercambio (swap) activas, fundamentales para evitar cuelgues cuando se agota la memoria RAM física.
+Su razón de ser es la idea que vertebra todo Linux, "todo es un fichero": en lugar de necesitar programas especiales para consultar o configurar el núcleo, el kernel **se expone a sí mismo como ficheros**, de manera que se puede **leer su estado con `cat`** y **cambiar su comportamiento con `echo`**. Es como abrir el capó del sistema: `/proc` y `/sys` dejan ver los "sensores" del kernel y tocar algunos "mandos", usando comandos de ficheros corrientes.
 
-A continuación podemos ver un ejemplo de lectura del fichero `speed` de la tarjeta de red `enp0s3` de una máquina Linux. Podemos ver que es una tarjeta Ethernet ya que su velocidad es de 1000 Mbps. La información de los parámetros expuestos de los dispositivos de red está en la ruta `/sys/class/net`.
-
-```bash
-usuario@usuario:/sys/class/net$ ls
-enp0s3  lo
-usuario@usuario:/sys/class/net$ cat enp0s3/speed
-1000
-```
-
-Por otra parte, si hacemos un listado del directorio `/proc`, encontraremos una gran cantidad de directorios numéricos creados en tiempo de ejecución, estos números corresponden con el PID (*Process Identifier*) de los procesos vivos en el sistema.
+**`/proc`: el estado del sistema y de los procesos.** Gestionado por el controlador `procfs`, contiene información sobre los **procesos en ejecución** y el **estado general del sistema**. Al listarlo aparecen muchos **directorios con nombre numérico**: cada número es el **PID** (*Process Identifier*) de un proceso vivo, y dentro está todo lo relativo a él.
 
 ```bash
 usuario@usuario:/proc$ ls
@@ -213,7 +221,52 @@ usuario@usuario:/proc$ ls
 ...
 ```
 
-> **Nota:** Estos directorios `/proc`, `/sys` y `/dev` son cruciales para la administración de sistemas y proporcionan interfaces muy poderosas para la gestión de procesos, hardware, y recursos del sistema. A modo de resumen podemos decir que los archivos dentro del directorio `/sys` tienen roles similares a los de `/proc`. Sin embargo, el directorio `/sys` tiene el propósito específico de almacenar información del dispositivo y datos del núcleo del sistema operativo relacionados con el hardware subyacente, mientras que `/proc` también contiene información sobre varias estructuras de datos del núcleo del sistema operativo, incluidos los procesos en ejecución y parámetros de red.
+Junto a esos directorios de procesos hay ficheros que reflejan el estado del sistema. Estos son algunos de los más útiles:
+
+| Fichero | Qué muestra |
+|---|---|
+| `/proc/cpuinfo` | Información del procesador: núcleos, características y extensiones soportadas. |
+| `/proc/meminfo` | Uso y estado de la memoria RAM y la swap. |
+| `/proc/mounts` | Sistemas de ficheros montados actualmente (enlace a `/proc/self/mounts`). |
+| `/proc/partitions` | Bloques y particiones de disco reconocidos por el núcleo. |
+| `/proc/swaps` | Áreas de intercambio (swap) activas. |
+| `/proc/cmdline` | Parámetros con los que arrancó el kernel. |
+| `/proc/interrupts` | Interrupciones (IRQ): qué canal usa cada dispositivo para avisar a la CPU. |
+| `/proc/sys/` | Parámetros ajustables del núcleo, los que gestiona el comando `sysctl`. |
+
+> **Nota:** Muchos comandos de administración no hacen nada mágico: en realidad **leen de `/proc`** y presentan el resultado de forma legible. `free` no es más que una lectura formateada de `/proc/meminfo`, y `ps` o `top` recorren los directorios numéricos de `/proc` para listar los procesos.
+
+**`/sys`: el hardware y los dispositivos.** Gestionado por `sysfs`, es más moderno y está mejor organizado. Expone de forma **jerárquica el hardware y los dispositivos** que el núcleo conoce: interfaces de red, discos, batería, USB, etc. Por ejemplo, la velocidad de una tarjeta de red se lee en `/sys/class/net`:
+
+```bash
+usuario@usuario:/sys/class/net$ ls
+enp0s3  lo
+usuario@usuario:/sys/class/net$ cat enp0s3/speed
+1000
+```
+
+Que la tarjeta `enp0s3` reporte `1000` indica que es una Ethernet de 1000 Mbps (Gigabit).
+
+**La diferencia entre ambos.** Los dos son pseudo-sistemas de ficheros en RAM y ventanas al kernel, pero con enfoques distintos:
+
+| | `/proc` | `/sys` |
+|---|---|---|
+| Antigüedad | El histórico (heredado de UNIX) | Más moderno (desde el kernel 2.6) |
+| Orientado a | **Procesos** y estado general del sistema | **Dispositivos y hardware** |
+| Organización | Algo desordenado, mezcla muchas cosas | Estructurado y jerárquico |
+| Ejemplo típico | `/proc/meminfo`, `/proc/1234/` | `/sys/class/net/enp0s3/speed` |
+
+**No solo se lee: también se configura.** La parte más potente es que en muchos de estos ficheros no solo se puede **leer**, sino también **escribir**, y al hacerlo se le da una orden directa al núcleo. El ejemplo clásico, que reaparece en el documento 31, es activar el reenvío de paquetes para convertir la máquina en un router:
+
+```bash
+root@debian:~# cat /proc/sys/net/ipv4/ip_forward      # muestra 0 (desactivado)
+0
+root@debian:~# echo 1 > /proc/sys/net/ipv4/ip_forward  # lo activa al instante
+```
+
+> **Recuerda:** El comando `sysctl` no es más que una forma cómoda y segura de leer y escribir esos mismos ficheros de `/proc/sys/`. Escribir directamente en ellos surte efecto **de inmediato**, pero se pierde al reiniciar; para que el cambio sea permanente hay que declararlo en `/etc/sysctl.conf`, como se explica en el documento 31.
+
+> **Nota:** Junto con `/dev`, los directorios `/proc` y `/sys` forman el conjunto de interfaces con las que el sistema operativo expone su interior. Son la primera parada para **diagnosticar** problemas de hardware, memoria o procesos, porque reflejan el estado real del núcleo en cada momento.
 
 ---
 
@@ -260,7 +313,48 @@ Para almacenar en tiempo de ejecución datos no persistentes requeridos para el 
 
 ## 14. Resumen del árbol de directorios
 
-Repasados ya los directorios principales, este es el aspecto de la raíz de un sistema Debian real. Conviene fijarse en los enlaces simbólicos de la parte superior (`bin`, `lib`, `lib64`, `sbin`), consecuencia del *UsrMerge*, y en los permisos `drwxrwxrwt` de `/tmp`, donde la `t` final delata el Sticky Bit:
+A modo de mapa, este diagrama recoge el árbol raíz completo **agrupado por función**, con una nota de para qué sirve cada directorio. Sirve como referencia rápida de todo lo visto en las secciones anteriores (los directorios resaltados en rojo son los **sistemas de ficheros virtuales**, que no ocupan disco y se generan en memoria):
+
+```mermaid
+graph LR
+    R["/ (raíz)"]
+
+    R --> C1["Comandos y bibliotecas"]
+    R --> C2["Configuración y arranque"]
+    R --> C3["Usuarios"]
+    R --> C4["Sistemas virtuales · en RAM"]
+    R --> C5["Puntos de montaje"]
+    R --> C6["Datos y software"]
+
+    C1 --> bin["bin → usr/bin<br/>comandos de usuario (ls, cp)"]
+    C1 --> sbin["sbin → usr/sbin<br/>administración, solo root (fdisk)"]
+    C1 --> lib["lib → usr/lib<br/>bibliotecas y módulos del kernel"]
+    C1 --> usr["usr<br/>programas y recursos del sistema"]
+
+    C2 --> etc["etc<br/>configuración del sistema"]
+    C2 --> boot["boot<br/>núcleo, initramfs y GRUB"]
+
+    C3 --> home["home<br/>usuarios normales"]
+    C3 --> rootd["root<br/>directorio del administrador"]
+
+    C4 --> dev["dev<br/>ficheros de dispositivos"]
+    C4 --> proc["proc<br/>estado del sistema y procesos"]
+    C4 --> sys["sys<br/>hardware del kernel"]
+    C4 --> run["run<br/>datos volátiles del arranque"]
+
+    C5 --> media["media<br/>montaje automático (USB, CD)"]
+    C5 --> mnt["mnt<br/>montaje manual y temporal"]
+
+    C6 --> opt["opt<br/>software de terceros"]
+    C6 --> srv["srv<br/>datos servidos (web, FTP)"]
+    C6 --> tmp["tmp<br/>ficheros temporales"]
+    C6 --> var["var<br/>logs, cachés y colas"]
+
+    classDef virtual fill:#f8d7da,stroke:#c0392b,color:#000;
+    class dev,proc,sys,run virtual;
+```
+
+Y así se ve en la práctica: este es el aspecto de la raíz de un sistema Debian real. Conviene fijarse en los enlaces simbólicos de la parte superior (`bin`, `lib`, `lib64`, `sbin`), consecuencia del *UsrMerge*, y en los permisos `drwxrwxrwt` de `/tmp`, donde la `t` final delata el Sticky Bit:
 
 ```bash
 root@debian:/# ls -l
@@ -290,14 +384,6 @@ drwxr-xr-x  11 root root  4096 may  2 16:27 var
 lrwxrwxrwx   1 root root    27 may  2 16:32 vmlinuz -> boot/vmlinuz-6.1.0-34-amd64
 lrwxrwxrwx   1 root root    27 may  2 16:29 vmlinuz.old -> boot/vmlinuz-6.1.0-32-amd64
 ```
-
-En este listado aparecen además tres elementos que no son directorios estándar del FHS:
-
-| Elemento | Descripción |
-|---|---|
-| `lost+found` | Directorio propio de los sistemas de ficheros de la familia `ext`. La herramienta `fsck` deposita aquí los fragmentos de ficheros que logra recuperar tras una comprobación de integridad. Existe uno por cada partición formateada en `ext2/3/4`. |
-| `vmlinuz` | Enlace simbólico al núcleo en uso dentro de `/boot`. El sufijo `.old` apunta a la versión anterior, que sigue disponible en el menú de GRUB como alternativa de arranque. |
-| `initrd.img` | Enlace simbólico al *initial RAM disk*, el sistema de ficheros mínimo que el núcleo carga en memoria para poder montar después la raíz real. |
 
 ---
 
