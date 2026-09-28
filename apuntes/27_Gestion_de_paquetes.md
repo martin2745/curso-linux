@@ -7,8 +7,9 @@
    1. [Herramienta dpkg](#21-herramienta-dpkg)
    2. [Herramienta apt](#22-herramienta-apt)
    3. [Búsqueda e instalación de paquetes con apt](#23-búsqueda-e-instalación-de-paquetes-con-apt)
-   4. [Actualización de la distribución](#24-actualización-de-la-distribución)
-   5. [Diferencias entre clean, remove, purge y autoremove](#25-diferencias-entre-clean-remove-purge-y-autoremove)
+   4. [Diferencia entre update, upgrade y dist-upgrade](#24-diferencia-entre-update-upgrade-y-dist-upgrade)
+   5. [Actualización de la distribución](#25-actualización-de-la-distribución)
+   6. [Diferencias entre clean, remove, purge y autoremove](#26-diferencias-entre-clean-remove-purge-y-autoremove)
 3. [Sistemas basados en Red Hat (.rpm)](#3-sistemas-basados-en-red-hat-rpm)
    1. [Herramienta rpm](#31-herramienta-rpm)
    2. [Herramienta yum / dnf](#32-herramienta-yum--dnf)
@@ -48,7 +49,7 @@ Gestiona paquetes **`.deb`** a bajo nivel, es decir, **sin gestión automática 
 | `-S ruta/archivo` | Determina a qué paquete pertenece un archivo existente en el disco. |
 | `-r paquete` | Elimina un paquete instalado, pero **deja** sus archivos de configuración. |
 | `-P paquete` | Elimina (purga) un paquete instalado, **incluyendo** sus archivos de configuración. |
-| `--get-selections` | Busca paquetes instalados, desinstalados y purgados en el SO. |
+| `--get-selections` | Lista el estado de selección de los paquetes (instalados, eliminados, purgados). Sirve para exportar la lista y replicarla en otra máquina con `--set-selections`. |
 | `--configure --pending` | Reconfigura paquetes que no terminaron su configuración. |
 | `--info paquete.deb` | Muestra metadatos y dependencias del archivo `.deb`. |
 | `--unpack paquete.deb` | Desempaqueta un archivo `.deb` sin llegar a configurarlo. |
@@ -211,7 +212,41 @@ neovim/oldstable,now 0.7.2-7 amd64 [instalado]
 
 ---
 
-### 2.4 Actualización de la distribución
+### 2.4 Diferencia entre update, upgrade y dist-upgrade
+
+Estos tres comandos se confunden constantemente porque los tres suenan a "actualizar", pero hacen cosas muy distintas. La clave está en entender que `apt` maneja **dos cosas separadas**: por un lado la **lista** (el catálogo de qué versiones hay disponibles en los repositorios) y por otro los **programas** realmente instalados en el disco.
+
+> **Analogía:** Piensa en el catálogo de una tienda.
+>
+> - `apt update` es **pedir el catálogo nuevo** para enterarte de qué productos y qué versiones hay ahora. No compras nada, solo te informas.
+> - `apt upgrade` es **ir a comprar** las versiones nuevas de lo que ya tienes, sin deshacerte de nada de lo que ya posees.
+> - `apt full-upgrade` (`dist-upgrade`) es una compra en la que, si hiciera falta para que todo encaje, **te deshaces de cosas viejas** o **compras algo nuevo**.
+
+| Comando | Qué hace | ¿Instala software? | ¿Puede eliminar paquetes? |
+|---|---|---|---|
+| `apt update` | Refresca la **lista** de versiones disponibles (los metadatos de los repositorios). | No, solo actualiza información. | No |
+| `apt upgrade` | Actualiza a su última versión los paquetes **ya instalados**. | Sí | **No**, nunca borra ni añade paquetes |
+| `apt full-upgrade` / `dist-upgrade` | Igual que `upgrade`, pero además resuelve conflictos de dependencias entre versiones. | Sí | **Sí**, puede añadir y quitar paquetes si es necesario |
+
+**`apt update` — refrescar la lista (no instala nada).** Descarga de cada repositorio la relación actualizada de qué paquetes existen y en qué versión. Es pura información: después de un `update`, ni un solo programa del sistema ha cambiado. Sin este paso, `apt` trabajaría con un catálogo viejo y no se enteraría de las actualizaciones publicadas; por eso **siempre se ejecuta primero**.
+
+**`apt upgrade` — actualizar lo instalado (sin quitar nada).** Con la lista ya al día, instala las versiones nuevas de los paquetes que ya tienes. Su regla de oro es que **nunca elimina un paquete ni instala uno que no tuvieras**. Si una actualización obligara a hacer cualquiera de esas dos cosas, la deja pendiente y avisa con el mensaje `Los siguientes paquetes se han retenido`. Es la operación segura del mantenimiento diario.
+
+**`apt full-upgrade` / `dist-upgrade` — actualización profunda.** Hace lo mismo que `upgrade`, pero se le permite justo lo que a `upgrade` no: **eliminar paquetes obsoletos e instalar paquetes nuevos** cuando es la única forma de resolver los cambios de dependencias entre versiones. Es la que se necesita al **saltar de una versión de Debian a otra** y, por su capacidad de borrar, exige más cuidado.
+
+> **Importante:** El flujo normal de mantenimiento combina siempre los dos primeros, en este orden:
+>
+> ```bash
+> root@debian:~# apt update && apt upgrade
+> ```
+>
+> Primero refrescar la lista, luego aplicar las actualizaciones. La `&&` encadena ambos: `upgrade` solo se ejecuta si `update` terminó bien. La actualización profunda (`full-upgrade`/`dist-upgrade`) se reserva para los saltos de versión, que se detallan en el apartado siguiente.
+
+> **Nota:** `dist-upgrade` es el nombre histórico en `apt-get`; en el comando moderno `apt` se llama `full-upgrade`. Ambos hacen exactamente lo mismo, así que se pueden usar indistintamente.
+
+---
+
+### 2.5 Actualización de la distribución
 
 Para realizar saltos de versión (por ejemplo, de Debian 12 "Bookworm" a Debian 13 "Trixie"), el proceso es el siguiente:
 
@@ -238,7 +273,7 @@ root@debian:~# reboot
 
 ---
 
-### 2.5 Diferencias entre clean, remove, purge y autoremove
+### 2.6 Diferencias entre clean, remove, purge y autoremove
 
 Cuando se instalan paquetes, `apt` descarga temporalmente los instaladores en `/var/cache/apt/archives/`. Para no saturar el disco, debemos saber diferenciarlos:
 
