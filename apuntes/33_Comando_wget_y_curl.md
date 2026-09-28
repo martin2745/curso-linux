@@ -8,6 +8,7 @@
 2. [Comando curl](#2-comando-curl)
    1. [Parámetros de curl](#21-parámetros-de-curl)
    2. [Ejemplos de curl](#22-ejemplos-de-curl)
+3. [wget frente a curl: dónde y con qué nombre se guarda](#3-wget-frente-a-curl-dónde-y-con-qué-nombre-se-guarda)
 
 ---
 
@@ -33,6 +34,13 @@ Es una herramienta de línea de comandos que permite la descarga de archivos des
 | `--no-check-certificate` | Ignora los errores de validación del certificado TLS. |
 
 > **Advertencia:** `--no-check-certificate` desactiva precisamente la comprobación que garantiza que se está hablando con el servidor legítimo y no con un intermediario. Puede ser razonable en un laboratorio con certificados autofirmados, pero nunca debe convertirse en costumbre ni aparecer en un script de producción. El equivalente en `curl` es `-k`, y merece la misma reserva.
+
+> **Nota:** Por defecto, `wget` guarda el fichero en el **directorio actual** y con el **mismo nombre** que tiene en el servidor. Para cambiar dónde y con qué nombre se guarda hay dos opciones que conviene no confundir:
+>
+> - `-P /ruta/` elige **solo el directorio** de destino y conserva el nombre remoto.
+> - `-O /ruta/nombre` elige la **ruta y el nombre** completos del fichero de salida.
+>
+> Si se combinan ambas, `-O` tiene prioridad y `-P` se ignora.
 
 ### 1.2 Ejemplos de wget
 
@@ -62,6 +70,22 @@ usuario@debian:/tmp/pr$ wget -q https://d.winrar.es/d/97z1713015469/hrYvljKNPEqb
 
 usuario@debian:/tmp/pr$ ls
 rarlinux-x64-700.tar.gz
+```
+
+Descarga a un directorio concreto conservando el nombre remoto (`-P`):
+
+```bash
+usuario@debian:~$ wget -P /var/tmp/descargas https://d.winrar.es/d/97z1713015469/hrYvljKNPEqbS2FjdvSpsQ/rarlinux-x64-700.tar.gz
+usuario@debian:~$ ls /var/tmp/descargas
+rarlinux-x64-700.tar.gz
+```
+
+Descarga eligiendo a la vez la ruta y el nombre del fichero de destino (`-O`):
+
+```bash
+usuario@debian:~$ wget -O /var/tmp/descargas/winrar.tar.gz https://d.winrar.es/d/97z1713015469/hrYvljKNPEqbS2FjdvSpsQ/rarlinux-x64-700.tar.gz
+usuario@debian:~$ ls /var/tmp/descargas
+winrar.tar.gz
 ```
 
 Descarga silenciosa especificando ruta y nombre de salida (`-qO`):
@@ -113,6 +137,8 @@ usuario@debian:~$ curl -s -o /dev/null -w '%{http_code}\n' https://deb.debian.or
 
 > **Advertencia:** Al usar `-u usuario:clave` o `-H 'Authorization: ...'`, la contraseña queda escrita en la línea de órdenes y por tanto visible en `ps aux` para cualquier usuario de la máquina, además de quedar registrada en `~/.bash_history`. Para credenciales reales conviene usar `-u usuario` a secas, que las solicita de forma interactiva, o el fichero `~/.netrc` con permisos `600`.
 
+> **Nota:** A diferencia de `wget`, `curl` **no guarda nada en disco por defecto**: vuelca el contenido descargado por la salida estándar, es decir, lo muestra en la pantalla. Para escribirlo en un fichero hay que indicarlo siempre, con `-O` (usa el nombre remoto) o con `-o /ruta/nombre` (usa el nombre que se elija). Volcar la descarga a pantalla resulta útil, en cambio, para leer directamente un fichero de texto corto o la respuesta de una API sin dejar rastro en el disco.
+
 ### 2.2 Ejemplos de curl
 
 Descarga conservando el nombre original (`-O`):
@@ -149,3 +175,25 @@ usuario@debian:/tmp/prueba$ curl -so /tmp/rar.tar.gz https://d.winrar.es/d/97z17
 usuario@debian:/tmp/prueba$ ls /tmp/
 rar.tar.gz
 ```
+
+---
+
+## 3. wget frente a curl: dónde y con qué nombre se guarda
+
+Ambas herramientas descargan ficheros, pero usan **convenios de nombres opuestos**, y ahí está el error más frecuente al decidir dónde y con qué nombre se guarda la descarga. Esta tabla resume las combinaciones habituales:
+
+| Qué se quiere | wget | curl |
+|---|---|---|
+| Guardar con el nombre remoto, en el directorio actual | `wget URL` | `curl -O URL` |
+| Guardar en otro directorio, conservando el nombre remoto | `wget -P /ruta/ URL` | `curl --output-dir /ruta/ -O URL` |
+| Guardar con la ruta y el nombre que yo elijo | `wget -O /ruta/nombre URL` | `curl -o /ruta/nombre URL` |
+| Mostrar por pantalla sin guardar en disco | `wget -O - URL` | `curl URL` |
+
+> **Importante:** Cuidado con las mayúsculas, porque `wget` y `curl` las usan **al revés**:
+>
+> - En `curl`, la minúscula `-o` significa "*output* con el nombre que yo indico", y la mayúscula `-O` significa "el nombre *Original* remoto".
+> - En `wget` es justo al contrario: la mayúscula `-O` es la que sirve para dar el nombre que uno elige.
+>
+> Confundirlas es la equivocación más habitual, tanto en los exámenes como en la práctica: `curl -O /ruta/nombre` no guarda el fichero con ese nombre, sino que intenta usar `/ruta/nombre` como si fuera una URL y falla.
+
+> **Nota:** La opción `--output-dir` de `curl` requiere una versión 7.73 (año 2020) o posterior, que es la que traen Debian y Ubuntu actuales. En versiones más antiguas, para elegir el directorio hay que dar la ruta completa con `-o /ruta/nombre`.
