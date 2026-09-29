@@ -4,9 +4,16 @@
 
 1. [Sincronización de hora (NTP, chrony y hwclock)](#1-sincronización-de-hora-ntp-chrony-y-hwclock)
 2. [Gestión de hora con timedatectl](#2-gestión-de-hora-con-timedatectl)
-3. [Configuración regional (localectl y locale)](#3-configuración-regional-localectl-y-locale)
-   1. [Variables LC de localización](#31-variables-lc-de-localización)
-4. [Conversión de codificación y formatos](#4-conversión-de-codificación-y-formatos)
+3. [Práctica: servidor y cliente NTP con chrony (modelo de dominio)](#3-práctica-servidor-y-cliente-ntp-con-chrony-modelo-de-dominio)
+   1. [Topología y direccionamiento](#31-topología-y-direccionamiento)
+   2. [Configuración de la red interna](#32-configuración-de-la-red-interna)
+   3. [Configuración del servidor (autoridad de tiempo)](#33-configuración-del-servidor-autoridad-de-tiempo)
+   4. [Configuración del cliente](#34-configuración-del-cliente)
+   5. [Comprobación de la sincronización](#35-comprobación-de-la-sincronización)
+   6. [Relación con los dominios (Samba y Active Directory)](#36-relación-con-los-dominios-samba-y-active-directory)
+4. [Configuración regional (localectl y locale)](#4-configuración-regional-localectl-y-locale)
+   1. [Variables LC de localización](#41-variables-lc-de-localización)
+5. [Conversión de codificación y formatos](#5-conversión-de-codificación-y-formatos)
 
 ---
 
@@ -92,7 +99,160 @@ timedatectl set-ntp yes
 
 ---
 
-## 3. Configuración regional (localectl y locale)
+## 3. Práctica: servidor y cliente NTP con chrony (modelo de dominio)
+
+En esta práctica se montan dos máquinas virtuales: un **servidor** Ubuntu Server que expone la hora a la red y un **cliente** Debian 13 que se sincroniza con él. Es exactamente el modelo de un dominio: el controlador (Samba o Active Directory) hace de **autoridad de tiempo** y todos los equipos miembros ajustan su reloj al suyo.
+
+Se usa **chrony** en las dos máquinas porque es el demonio que emplean hoy los servidores de dominio reales (sustituye al antiguo `ntpd`) y ofrece un diagnóstico muy claro con `chronyc`. El laboratorio es **aislado**: el servidor no toma la hora de Internet, sino que actúa como referencia con su propio reloj, lo que además permite fijar la hora en el servidor y comprobar cómo el cliente le sigue.
+
+### 3.1 Topología y direccionamiento
+
+| Máquina | Sistema | Rol | Adaptador 1 (NAT) | Adaptador 2 (Red interna `intnet-ntp`) |
+|---|---|---|---|---|
+| Servidor | Ubuntu Server | Autoridad de tiempo (chrony) | DHCP, solo para instalar | `192.168.100.1/24` |
+| Cliente | Debian 13 | Cliente NTP (chrony) | DHCP, solo para instalar | `192.168.100.2/24` |
+
+> **Nota:** Se usan dos adaptadores en cada VM. El **Adaptador 1 en modo NAT** sirve únicamente para tener Internet mientras se instala `chrony` con `apt`; una vez instalado, puede desactivarse. El **Adaptador 2 en Red interna** (con el mismo nombre en las dos VMs, por ejemplo `intnet-ntp`) es la red aislada por la que viajará el tráfico NTP. Los nombres reales de las interfaces (`enp0s3`, `enp0s8`...) pueden variar según la máquina; se consultan con `ip a` (documento 31).
+
+### 3.2 Configuración de la red interna
+
+En el **servidor** (Ubuntu Server usa Netplan, documento 31):
+
+```yaml
+# /etc/netplan/01-netcfg.yaml
+network:
+  version: 2
+  ethernets:
+    enp0s8:            # Adaptador de la red interna del laboratorio
+      dhcp4: false
+      addresses:
+        - 192.168.100.1/24
+```
+
+```bash
+usuario@ubuntu-srv:~$ sudo chmod 600 /etc/netplan/01-netcfg.yaml
+usuario@ubuntu-srv:~$ sudo netplan apply
+```
+
+En el **cliente** (Debian usa `/etc/network/interfaces`, documento 31):
+
+```bash
+# /etc/network/interfaces
+auto enp0s8
+iface enp0s8 inet static        # Adaptador de la red interna del laboratorio
+    address 192.168.100.2
+    netmask 255.255.255.0
+```
+
+```bash
+root@debian:~# systemctl restart networking
+```
+
+Comprobar que las dos máquinas se ven entre sí, desde el cliente:
+
+```bash
+root@debian:~# ping -c 2 192.168.100.1
+```
+
+### 3.3 Configuración del servidor (autoridad de tiempo)
+
+Instalar chrony (con el adaptador NAT activo para tener Internet):
+
+```bash
+usuario@ubuntu-srv:~$ sudo apt update && sudo apt install chrony -y
+```
+
+Editar `/etc/chrony/chrony.conf` y añadir al final estas dos líneas:
+
+```bash
+# Autorizar a los clientes de la red interna a pedir la hora
+allow 192.168.100.0/24
+
+# Actuar como fuente de tiempo válida aunque no haya servidor externo
+local stratum 10
+```
+
+> **Importante:** La directiva `local stratum 10` es la clave del laboratorio aislado. Sin ella, chrony se considera "no sincronizado" (porque no alcanza los servidores de Internet) y **se niega a servir** la hora a nadie. Con `local`, se declara a sí mismo una referencia de tiempo válida —de *stratum* 10, deliberadamente alto para no competir con servidores reales— y ya puede atender a los clientes. La directiva `allow` define desde qué red se aceptan las peticiones.
+
+Reiniciar el servicio y comprobar que escucha en el puerto NTP (UDP 123):
+
+```bash
+usuario@ubuntu-srv:~$ sudo systemctl restart chrony
+usuario@ubuntu-srv:~$ sudo ss -putan | grep 123
+udp   UNCONN 0      0               0.0.0.0:123       0.0.0.0:*    users:(("chronyd",pid=2012,fd=6))
+```
+
+> **Nota:** Si el servidor tuviera activo el cortafuegos `ufw` (documento 44), habría que permitir el tráfico NTP: `sudo ufw allow from 192.168.100.0/24 to any port 123 proto udp`. En una instalación estándar de Ubuntu Server, `ufw` viene inactivo.
+
+### 3.4 Configuración del cliente
+
+Instalar chrony. Al hacerlo, **sustituye automáticamente a `systemd-timesyncd`**, que es el cliente NTP por defecto de Debian (ambos no pueden convivir):
+
+```bash
+root@debian:~# apt update && apt install chrony -y
+```
+
+Editar `/etc/chrony/chrony.conf`: comentar las líneas `pool ...` que trae por defecto y añadir el servidor del laboratorio como única fuente:
+
+```bash
+# pool 2.debian.pool.ntp.org iburst      <- comentar esta línea
+server 192.168.100.1 iburst
+```
+
+> **Nota:** `iburst` hace que, al arrancar, el cliente envíe una ráfaga inicial de peticiones para sincronizarse en pocos segundos, en lugar de tardar varios minutos.
+
+Reiniciar el servicio:
+
+```bash
+root@debian:~# systemctl restart chrony
+```
+
+### 3.5 Comprobación de la sincronización
+
+En el cliente, ver la fuente de tiempo y su estado:
+
+```bash
+root@debian:~# chronyc sources -v
+MS Name/IP address        Stratum Poll Reach LastRx Last sample
+===============================================================
+^* 192.168.100.1               10    6   377     17    +2us[  +9us] +/-  312us
+```
+
+El símbolo `^*` indica que ese servidor es la fuente **seleccionada y activa**. Con `chronyc tracking` se ven los detalles:
+
+```bash
+root@debian:~# chronyc tracking
+Reference ID    : C0A86401 (192.168.100.1)
+Stratum         : 11
+System time     : 0.000012 seconds fast of NTP time
+...
+```
+
+> **Nota:** El cliente aparece como *stratum* 11, justo uno más que el servidor (10): cada salto en la cadena de tiempo incrementa el *stratum* en una unidad. El `Reference ID` confirma que su reloj procede de `192.168.100.1`.
+
+Para demostrar que el cliente **sigue** al servidor, se le pone a propósito una hora errónea y se fuerza la corrección:
+
+```bash
+root@debian:~# systemctl stop chrony
+root@debian:~# date -s "2020-01-01 00:00:00"
+root@debian:~# date                      # hora completamente incorrecta
+mié ene  1 00:00:00 CET 2020
+root@debian:~# systemctl start chrony
+root@debian:~# chronyc makestep          # aplica de golpe la corrección
+root@debian:~# date                      # el reloj vuelve a la hora del servidor
+```
+
+> **Nota:** Por defecto, chrony corrige la hora poco a poco (*slew*, acelerando o frenando el reloj) para no dar saltos bruscos que confundan a los programas en ejecución. `chronyc makestep` fuerza un ajuste inmediato de golpe, muy útil para ver el efecto al instante durante la clase.
+
+### 3.6 Relación con los dominios (Samba y Active Directory)
+
+En un dominio gestionado por Active Directory, o por Samba actuando como controlador de dominio, esta sincronización no es opcional sino **obligatoria**. El protocolo de autenticación **Kerberos** incluye marcas de tiempo en sus *tickets* y rechaza cualquiera cuyo reloj difiera del servidor en más de **5 minutos** (tolerancia por defecto). Por eso el controlador de dominio hace de autoridad de tiempo de toda la red —el mismo papel que el servidor de esta práctica— y los equipos miembros se sincronizan con él.
+
+En un Samba AD real se da un paso más: chrony se configura en el controlador con la directiva `ntpsigndsocket /var/lib/samba/ntp_signd`, que le permite **firmar** las respuestas NTP (extensión MS-SNTP) para que los clientes Windows puedan verificar que la hora procede realmente del dominio y no de un impostor.
+
+---
+
+## 4. Configuración regional (localectl y locale)
 
 El comando `localectl` en Linux se utiliza para gestionar la configuración de localización del sistema, como la distribución del teclado, el idioma del sistema y otros parámetros relacionados con la configuración regional. Es parte de `systemd` y evita tener que editar manualmente archivos como `/etc/locale.conf` o `/etc/vconsole.conf`.
 
@@ -108,7 +268,7 @@ LANG="es_ES.UTF-8"
 
 Por otro lado, el comando `locale` permite recuperar información sobre los elementos de regionalización soportados por el sistema y ver los valores de las variables de entorno `LC_*`.
 
-### 3.1 Variables LC de localización
+### 4.1 Variables LC de localización
 
 | Variable | Descripción |
 |----------|-------------|
@@ -162,7 +322,7 @@ export LANG LC_CTYPE
 
 ---
 
-## 4. Conversión de codificación y formatos
+## 5. Conversión de codificación y formatos
 
 Es posible convertir un archivo de texto codificado en una tabla de caracteres concreta hacia otra distinta con la herramienta `iconv`.
 
