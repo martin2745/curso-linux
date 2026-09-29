@@ -389,13 +389,50 @@ lrwxrwxrwx   1 root root    27 may  2 16:29 vmlinuz.old -> boot/vmlinuz-6.1.0-32
 
 ## 15. Criterios de particionado
 
-No todos los directorios del árbol admiten el mismo tratamiento a la hora de diseñar el particionado de un servidor.
+Al instalar un servidor, por ejemplo un Ubuntu Server, el asistente ofrece usar el disco entero con una configuración automática. Funciona, pero en un servidor real casi nunca se deja todo el árbol de directorios en una única partición. La idea clave para entender por qué es que **cada partición es un compartimento estanco**: tiene su propio tamaño y sus propias opciones de montaje y, si se llena o se estropea, el problema se queda dentro de ella sin arrastrar al resto del sistema.
 
-> **Advertencia:** Directorios esenciales como el `/etc`, `/bin`, `/sbin`, `/lib` y `/dev` nunca deberían asignarse a una partición separada de la del sistema (raíz `/`), ya que sus contenidos son imprescindibles para que el núcleo pueda arrancar en modo monousuario y lograr montar otros sistemas de ficheros.
+**Por qué no se instala todo en el mismo disco o partición**
 
-> **Nota:** Por el contrario, los siguientes directorios pueden o incluso deben separarse en particiones independientes por razones de seguridad, espacio y rendimiento:
-> 
-> - `/boot`: Se tiene que separar obligatoriamente si usamos LVM para la partición raíz o sistemas de archivos que el gestor de arranque GRUB no pueda interpretar de forma nativa.
-> - `/boot/efi`: Partición ESP para el arranque en sistemas modernos UEFI. Es muy recomendable (y a menudo obligatorio) que esté formateada nativamente en FAT32.
-> - `/usr`: Útil separarla en entornos muy específicos o si se van a instalar muchos programas estáticos y se quiere montar la partición como solo lectura (`ro`) para mayor seguridad.
-> - `/var`, `/tmp` y `/home`: Es una excelente práctica separarlas en sistemas multiusuario o de servidor. `/var` y `/tmp` porque su tamaño crece incontrolablemente y pueden colapsar el sistema. `/home` porque facilita reinstalar el sistema operativo sin perder los datos personales de los usuarios.
+| Motivo | Qué pasa si todo está junto | Qué se gana al separar |
+|---|---|---|
+| **Espacio** | Un log desbocado o una base de datos que crece llenan `/`. Sin espacio libre, los servicios fallan al escribir, no se pueden instalar paquetes e incluso puede fallar el inicio de sesión. | Si `/var` está aparte, se llena `/var`, pero el sistema sigue funcionando y el administrador puede entrar a resolverlo. |
+| **Separar sistema y datos** | Reinstalar el sistema o cambiar de versión obliga a copiar antes todos los datos a otro sitio. | Se reinstala formateando solo la partición del sistema; `/home` y `/srv` se conservan intactos. |
+| **Seguridad** | Todo el árbol comparte las mismas opciones de montaje. | Cada partición lleva sus propias opciones en `/etc/fstab`, por ejemplo `noexec` en `/tmp` para impedir que se ejecuten programas que un atacante haya dejado ahí. |
+| **Rendimiento y hardware** | Sistema y datos compiten por el mismo disco. | Los datos de uso intensivo pueden ir a un disco más rápido (SSD o NVMe) o protegido con RAID (documento 38), y el sistema a otro. |
+| **Copias de seguridad** | Hay que filtrar qué copiar dentro de un único volumen enorme. | Se copian las particiones de datos, que es lo valioso; el sistema, si se pierde, se reinstala. |
+
+**Disco del sistema y disco de datos**
+
+En servidores es muy habitual ir un paso más allá y usar **dos discos distintos**: uno pequeño para el **sistema operativo** y otro, más grande, para los **datos**. La razón es que ambos tienen un valor muy diferente. El sistema es reemplazable: se reinstala en unos minutos desde la imagen de instalación. Los datos (la web, las bases de datos, los ficheros de los usuarios) son lo que de verdad importa y no se pueden volver a generar.
+
+Separarlos en discos distintos permite cambiar, reinstalar o actualizar el sistema sin tocar los datos, y al revés: el disco de datos puede ampliarse, sustituirse o incluso desconectarse y montarse en otro servidor si el primero se avería. Es la misma lógica que se usa en las máquinas virtuales y en la nube, donde el disco del sistema y los discos de datos se gestionan por separado.
+
+**Esquema orientativo para un Ubuntu Server**
+
+| Punto de montaje | Disco | Tamaño orientativo | Por qué se separa |
+|---|---|---|---|
+| `/boot/efi` | Sistema | 1 GB (FAT32) | Obligatoria en equipos UEFI: es la partición ESP, la única que el firmware sabe leer, y en ella busca el cargador de arranque. |
+| `/boot` | Sistema | 2 GB (ext4) | Guarda el núcleo y el *initramfs*. Ubuntu la crea aparte al usar LVM, y es imprescindible si la raíz va cifrada, porque el núcleo debe poder leerse antes de descifrar nada. |
+| `/` | Sistema | 25-30 GB | Sistema operativo y programas (`/usr`, `/etc`). Crece poco y de forma previsible. |
+| `/var` | Sistema | 10-20 GB | Logs, caché de `apt` y colas. Es lo que más crece sin control, y así no puede llenar la raíz. |
+| `/var/log` | Sistema (opcional) | 5-10 GB | Aísla los registros: un error o un ataque que genere logs masivos no afecta al resto de `/var`, y se conserva el rastro para la auditoría. |
+| `/tmp` | Sistema | 2-5 GB | Aísla los temporales y permite montarla con `noexec,nosuid,nodev`. |
+| `/home` | Datos | Según usuarios | Datos personales de los usuarios, que deben sobrevivir a una reinstalación. |
+| `/srv` | Datos | Resto del disco | Datos que ofrece el servidor (web, FTP, ficheros compartidos). Crecen con el uso del servicio, no con el sistema. |
+| *swap* | Sistema | Según la RAM (documento 37) | Área de intercambio. Ubuntu Server usa por defecto un fichero `/swap.img` dentro de la raíz en lugar de una partición. |
+
+> **Nota:** Los tamaños son orientativos y dependen del uso del servidor. Precisamente por eso el instalador de Ubuntu Server propone **LVM** por defecto: con volúmenes lógicos no hace falta acertar los tamaños el primer día, porque un volumen que se queda corto se amplía más tarde sin reparticionar el disco (documento 42). La práctica habitual es asignar lo justo y dejar espacio libre en el grupo de volúmenes para repartirlo cuando haga falta.
+
+> **Nota:** Las opciones de seguridad se fijan en la línea de cada partición en `/etc/fstab`. Por ejemplo, para `/tmp`:
+>
+> ```text
+> /dev/mapper/vg0-tmp   /tmp   ext4   defaults,nodev,nosuid,noexec   0   2
+> ```
+>
+> `noexec` impide ejecutar programas, `nosuid` anula los bits SUID y `nodev` impide usar ficheros de dispositivo. En Debian 13, `/tmp` se monta por defecto como `tmpfs` (en memoria RAM), por lo que no ocupa partición de disco.
+
+**Qué no se puede separar**
+
+> **Advertencia:** `/etc` y `/usr` deben estar siempre en la misma partición que la raíz `/`. Contienen la configuración y los programas imprescindibles para arrancar y para montar el resto de particiones: si estuvieran en otra, el sistema necesitaría montarlas... con programas que están dentro de ellas. Tras el *UsrMerge*, `/bin`, `/sbin` y `/lib` son enlaces a `/usr`, así que siguen la misma regla, y `systemd` exige además que `/usr` esté disponible desde el primer momento del arranque. Separar `/usr`, que antiguamente se hacía para montarlo como solo lectura, hoy está desaconsejado.
+
+> **Recuerda:** `/dev`, `/proc`, `/sys` y `/run` nunca aparecen en un esquema de particionado, porque no son particiones de disco: son sistemas de ficheros virtuales que el núcleo crea en memoria en cada arranque (sección 9).

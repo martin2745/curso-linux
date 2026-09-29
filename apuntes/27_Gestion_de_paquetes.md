@@ -13,6 +13,15 @@
 3. [Sistemas basados en Red Hat (.rpm)](#3-sistemas-basados-en-red-hat-rpm)
    1. [Herramienta rpm](#31-herramienta-rpm)
    2. [Herramienta yum / dnf](#32-herramienta-yum--dnf)
+4. [Práctica: dos versiones de Apache en el mismo servidor](#4-práctica-dos-versiones-de-apache-en-el-mismo-servidor)
+   1. [Esquema de la práctica](#41-esquema-de-la-práctica)
+   2. [Instalación desde el repositorio](#42-instalación-desde-el-repositorio)
+   3. [Preparación y descarga del código fuente](#43-preparación-y-descarga-del-código-fuente)
+   4. [Compilación e instalación en /opt](#44-compilación-e-instalación-en-opt)
+   5. [Configuración para que no choquen](#45-configuración-para-que-no-choquen)
+   6. [Registro como servicio de systemd](#46-registro-como-servicio-de-systemd)
+   7. [Comprobación: los dos Apache a la vez](#47-comprobación-los-dos-apache-a-la-vez)
+   8. [Comparativa: apt frente a código fuente](#48-comparativa-apt-frente-a-código-fuente)
 
 ---
 
@@ -337,3 +346,211 @@ Es el equivalente a `apt` en distribuciones Red Hat (CentOS, Fedora, Rocky, Alma
 ```
 
 > **Nota:** En distribuciones como openSUSE (familia RPM), la herramienta equivalente de resolución de dependencias se llama `zypper`.
+
+---
+
+## 4. Práctica: dos versiones de Apache en el mismo servidor
+
+Hasta ahora todo el software se ha instalado con `apt`. Es la vía recomendada, pero no la única. En esta práctica se instalan en el mismo Debian 13 **dos servidores Apache distintos funcionando a la vez**:
+
+- El Apache del **repositorio de Debian**, instalado con `apt`, escuchando en el puerto **80**.
+- Un Apache **2.4.62 compilado desde su código fuente** (`.tar.gz`), instalado en `/opt` y escuchando en el puerto **8080**.
+
+En la vida real se recurre a esto cuando una aplicación antigua solo está certificada para una versión concreta, cuando se quiere probar una versión nueva antes de actualizar la de producción, o cuando se necesita una opción de compilación que el paquete de la distribución no incluye.
+
+### 4.1 Esquema de la práctica
+
+| | Apache de `apt` | Apache compilado |
+|---|---|---|
+| Origen | Repositorio de Debian (paquete `.deb`) | Código fuente `.tar.gz` de apache.org |
+| Ubicación | Repartido según el FHS: `/usr/sbin/apache2`, `/etc/apache2`, `/var/www/html` | Todo junto en `/opt/apache-2.4.62` |
+| Puerto | 80 | 8080 |
+| Nombre del binario | `apache2` | `httpd` |
+| Servicio | `apache2.service` (lo trae el paquete) | `apache-opt.service` (lo crea el administrador) |
+
+> **Nota:** ¿Por qué `/opt` y no `/usr/local`? Según el FHS (documento 01), `/usr/local` es para software compilado en local que se **integra** en el sistema, repartiendo sus ficheros en `/usr/local/bin`, `/usr/local/etc`... Mientras que `/opt/<paquete>` es para software **autocontenido**, con todos sus ficheros dentro de un único directorio. Al instalar en `/opt/apache-2.4.62`, con la versión en el nombre, pueden convivir varias versiones sin mezclarse, y desinstalar una se reduce a borrar su directorio.
+
+### 4.2 Instalación desde el repositorio
+
+La vía habitual, con un solo comando y las dependencias resueltas automáticamente:
+
+```bash
+root@debian:~# apt update && apt install apache2 -y
+root@debian:~# apache2 -v
+Server version: Apache/2.4.65 (Debian)
+Server built:   2025-07-29T10:21:46
+root@debian:~# echo '<h1>Apache de apt (puerto 80)</h1>' > /var/www/html/index.html
+```
+
+La versión exacta depende de las actualizaciones que haya publicado Debian; lo importante es que será distinta de la que se va a compilar. La página de inicio se cambia para poder distinguir después qué Apache responde.
+
+### 4.3 Preparación y descarga del código fuente
+
+Compilar exige herramientas y bibliotecas que no hacen falta para instalar con `apt`:
+
+```bash
+root@debian:~# apt install build-essential libapr1-dev libaprutil1-dev libpcre2-dev libssl-dev wget -y
+```
+
+| Paquete | Para qué se necesita |
+|---|---|
+| `build-essential` | El compilador `gcc`, `make` y las herramientas básicas de compilación. |
+| `libapr1-dev`, `libaprutil1-dev` | *Apache Portable Runtime*, la biblioteca base sobre la que está construido Apache. |
+| `libpcre2-dev` | Expresiones regulares, usadas en la configuración y en `mod_rewrite`. |
+| `libssl-dev` | Soporte de HTTPS (`mod_ssl`). |
+
+> **Nota:** Los paquetes terminados en `-dev` contienen las **cabeceras** (ficheros `.h`) de una biblioteca. Para *ejecutar* un programa basta con la biblioteca compartida (`.so`, documento 01), pero para *compilarlo* el compilador necesita además sus cabeceras. Por eso un servidor en producción no suele tener instalados los `-dev`.
+
+El código fuente se descarga en `/usr/local/src`, el directorio que el FHS reserva para el código fuente de lo que se compila en local. Junto al `.tar.gz` se descarga su suma de comprobación para verificar que el fichero es íntegro:
+
+```bash
+root@debian:~# cd /usr/local/src
+root@debian:/usr/local/src# wget https://archive.apache.org/dist/httpd/httpd-2.4.62.tar.gz
+root@debian:/usr/local/src# wget https://archive.apache.org/dist/httpd/httpd-2.4.62.tar.gz.sha256
+root@debian:/usr/local/src# sha256sum -c httpd-2.4.62.tar.gz.sha256
+httpd-2.4.62.tar.gz: OK
+root@debian:/usr/local/src# tar -xzf httpd-2.4.62.tar.gz
+root@debian:/usr/local/src# cd httpd-2.4.62
+```
+
+> **Importante:** Con `apt`, la autenticidad de cada paquete se comprueba sola mediante las firmas del repositorio. Al descargar software a mano, esa comprobación pasa a ser **responsabilidad del administrador**: si `sha256sum -c` no devuelve `OK`, el fichero está dañado o ha sido manipulado y no debe usarse.
+
+> **Advertencia:** Se usa `archive.apache.org` porque conserva todas las versiones publicadas, mientras que la web de descargas principal solo mantiene la más reciente. La 2.4.62 tiene vulnerabilidades corregidas en versiones posteriores: sirve para el laboratorio, precisamente por ser distinta de la de Debian, pero en producción se compila siempre la última versión disponible.
+
+### 4.4 Compilación e instalación en /opt
+
+La instalación desde código fuente sigue tres pasos clásicos, comunes a la mayoría del software libre:
+
+```bash
+root@debian:/usr/local/src/httpd-2.4.62# ./configure --prefix=/opt/apache-2.4.62 --enable-so --enable-ssl --enable-rewrite
+root@debian:/usr/local/src/httpd-2.4.62# make -j"$(nproc)"
+root@debian:/usr/local/src/httpd-2.4.62# make install
+```
+
+| Paso | Qué hace |
+|---|---|
+| `./configure` | Examina el sistema (compilador, bibliotecas disponibles) y prepara la compilación para esta máquina concreta. Con `--prefix` se indica dónde se instalará todo, y con las opciones `--enable-...` qué módulos se incluyen. |
+| `make` | Compila el código fuente y genera los binarios. Es el paso más largo; `-j"$(nproc)"` reparte el trabajo entre todos los núcleos del procesador. |
+| `make install` | Copia los binarios, la configuración y la documentación al directorio indicado en `--prefix`. |
+
+> **Nota:** Si `./configure` se detiene con un error del tipo `APR not found` o `pcre2-config not found`, falta alguna biblioteca de desarrollo. La última línea del error indica cuál; basta con instalar el paquete `-dev` correspondiente y repetir el paso.
+
+El resultado es un árbol completo y autocontenido dentro de `/opt`:
+
+```bash
+root@debian:~# ls /opt/apache-2.4.62
+bin  build  cgi-bin  conf  error  htdocs  icons  include  logs  man  manual  modules
+root@debian:~# /opt/apache-2.4.62/bin/httpd -v
+Server version: Apache/2.4.62 (Unix)
+Server built:   Sep 29 2026 10:42:17
+```
+
+| Directorio | Contenido |
+|---|---|
+| `bin/` | Los ejecutables: `httpd` y la herramienta de control `apachectl`. |
+| `conf/` | La configuración, con `httpd.conf` como fichero principal. |
+| `htdocs/` | La raíz de la web (el equivalente a `/var/www/html`). |
+| `logs/` | Los registros de acceso y de error, y el fichero con el PID. |
+| `modules/` | Los módulos compilados. |
+
+> **Recuerda:** Estos binarios no están en ninguna ruta del `PATH`, así que `httpd -v` a secas devuelve `command not found`. Hay que invocarlos con su ruta completa (documento 07). Es una ventaja: así nunca se confunden con los del Apache de `apt`.
+
+### 4.5 Configuración para que no choquen
+
+Dos servicios no pueden escuchar en el mismo puerto. Como el Apache de `apt` ya ocupa el 80, el compilado se pasa al 8080:
+
+```bash
+root@debian:~# sed -i 's/^Listen 80$/Listen 8080/' /opt/apache-2.4.62/conf/httpd.conf
+root@debian:~# echo 'ServerName localhost:8080' >> /opt/apache-2.4.62/conf/httpd.conf
+root@debian:~# echo '<h1>Apache 2.4.62 compilado en /opt (puerto 8080)</h1>' > /opt/apache-2.4.62/htdocs/index.html
+root@debian:~# /opt/apache-2.4.62/bin/apachectl -t
+Syntax OK
+```
+
+La directiva `ServerName` evita el aviso de que Apache no puede determinar el nombre del servidor, y `apachectl -t` comprueba la sintaxis de la configuración antes de arrancar.
+
+> **Advertencia:** Si se omite el cambio de puerto, el segundo Apache no arranca y en su log de errores aparece `(98)Address already in use: AH00072: make_sock: could not bind to address [::]:80`. Es el error típico de dos servicios que intentan ocupar el mismo puerto.
+
+### 4.6 Registro como servicio de systemd
+
+El Apache de `apt` trae su propia unidad de `systemd`, pero el compilado no: hay que crearla para poder gestionarlo con `systemctl` y que arranque con el sistema (documento 29). Se crea el fichero `/etc/systemd/system/apache-opt.service`:
+
+```ini
+[Unit]
+Description=Apache HTTP Server 2.4.62 (compilado en /opt)
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/opt/apache-2.4.62/logs/httpd.pid
+ExecStart=/opt/apache-2.4.62/bin/apachectl -k start
+ExecStop=/opt/apache-2.4.62/bin/apachectl -k graceful-stop
+ExecReload=/opt/apache-2.4.62/bin/apachectl -k graceful
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+| Directiva | Significado |
+|---|---|
+| `After=network.target` | Se arranca después de que la red esté configurada. |
+| `Type=forking` | `apachectl` lanza el proceso de Apache en segundo plano y termina; `systemd` debe seguir al proceso que queda en marcha. |
+| `PIDFile` | Fichero donde Apache anota su PID, para que `systemd` sepa qué proceso vigilar. |
+| `ExecStart` / `ExecStop` / `ExecReload` | Órdenes para arrancar, parar y recargar la configuración. |
+| `Restart=on-failure` | Si Apache se cae por un fallo, `systemd` lo vuelve a levantar. |
+| `WantedBy=multi-user.target` | Hace que, una vez habilitado, arranque con el sistema. |
+
+Se recarga `systemd` para que lea la nueva unidad, y se habilita y arranca en un solo paso:
+
+```bash
+root@debian:~# systemctl daemon-reload
+root@debian:~# systemctl enable --now apache-opt
+root@debian:~# systemctl status apache-opt
+● apache-opt.service - Apache HTTP Server 2.4.62 (compilado en /opt)
+     Loaded: loaded (/etc/systemd/system/apache-opt.service; enabled; preset: enabled)
+     Active: active (running) since mar 2026-09-29 10:51:03 CEST; 4s ago
+```
+
+### 4.7 Comprobación: los dos Apache a la vez
+
+Con `ss` (documento 32) se ve que hay dos servicios distintos escuchando, cada uno en su puerto:
+
+```bash
+root@debian:~# ss -tlnp | grep -E ':(80|8080) '
+LISTEN 0  511  *:80    *:*  users:(("apache2",pid=1432,fd=4),("apache2",pid=1431,fd=4))
+LISTEN 0  511  *:8080  *:*  users:(("httpd",pid=2210,fd=3),("httpd",pid=2209,fd=3))
+```
+
+Y con `curl` (documento 33) se comprueba que cada uno sirve su propia página:
+
+```bash
+root@debian:~# curl http://localhost
+<h1>Apache de apt (puerto 80)</h1>
+root@debian:~# curl http://localhost:8080
+<h1>Apache 2.4.62 compilado en /opt (puerto 8080)</h1>
+```
+
+> **Nota:** El propio nombre del proceso delata el origen de cada uno. El proyecto Apache llama a su binario `httpd`, mientras que Debian lo renombra a `apache2` en su paquete.
+
+### 4.8 Comparativa: apt frente a código fuente
+
+| Aspecto | Instalación con `apt` | Compilación en `/opt` |
+|---|---|---|
+| Instalación | Un comando; dependencias automáticas. | Dependencias de compilación a mano y los pasos `configure`, `make` y `make install`. |
+| Ficheros | Repartidos por el FHS (`/usr/sbin`, `/etc/apache2`, `/var/www`). | Todo junto en `/opt/apache-2.4.62`. |
+| Versión y opciones | Las que decide Debian. | Las que elige el administrador. |
+| Actualizaciones de seguridad | Automáticas con `apt upgrade`. | **Ninguna**: hay que descargar y compilar cada versión nueva. |
+| Servicio de `systemd` | Lo trae el paquete. | Hay que crearlo. |
+| Desinstalación | `apt purge apache2` | Parar el servicio, borrar su unidad y el directorio de `/opt`. |
+
+> **Importante:** La gran desventaja de compilar es que `apt` **no sabe que ese Apache existe**, así que no recibirá ningún parche de seguridad. Por eso solo se compila cuando hay un motivo concreto, y en ese caso el administrador asume el mantenimiento de esa versión.
+
+Para desinstalar el Apache compilado basta con deshacer lo hecho, gracias a que todo está en un único directorio:
+
+```bash
+root@debian:~# systemctl disable --now apache-opt
+root@debian:~# rm /etc/systemd/system/apache-opt.service
+root@debian:~# systemctl daemon-reload
+root@debian:~# rm -rf /opt/apache-2.4.62
+```
