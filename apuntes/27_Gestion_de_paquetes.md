@@ -443,6 +443,9 @@ bin  build  cgi-bin  conf  error  htdocs  icons  include  logs  man  manual  mod
 root@debian:~# /opt/apache-2.4.62/bin/httpd -v
 Server version: Apache/2.4.62 (Unix)
 Server built:   Sep 29 2026 10:42:17
+root@servidor:/usr/local/src/httpd-2.4.62# apache2 -v
+Server version: Apache/2.4.66 (Ubuntu)
+Server built:   2026-07-06T15:33:20
 ```
 
 | Directorio | Contenido |
@@ -475,7 +478,7 @@ La directiva `ServerName` evita el aviso de que Apache no puede determinar el no
 
 El Apache de `apt` trae su propia unidad de `systemd`, pero el compilado no: hay que crearla para poder gestionarlo con `systemctl` y que arranque con el sistema (documento 29). Se crea el fichero `/etc/systemd/system/apache-opt.service`:
 
-```ini
+```bash
 [Unit]
 Description=Apache HTTP Server 2.4.62 (compilado en /opt)
 After=network.target
@@ -517,7 +520,7 @@ root@debian:~# systemctl status apache-opt
 Con `ss` (documento 32) se ve que hay dos servicios distintos escuchando, cada uno en su puerto:
 
 ```bash
-root@debian:~# ss -tlnp | grep -E ':(80|8080) '
+root@debian:~# ss -putan | grep -E ':(80|8080) '
 LISTEN 0  511  *:80    *:*  users:(("apache2",pid=1432,fd=4),("apache2",pid=1431,fd=4))
 LISTEN 0  511  *:8080  *:*  users:(("httpd",pid=2210,fd=3),("httpd",pid=2209,fd=3))
 ```
