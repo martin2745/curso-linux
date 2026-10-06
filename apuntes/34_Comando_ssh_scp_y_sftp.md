@@ -3,11 +3,12 @@
 ## Índice
 
 1. [Funcionamiento de SSH y establecimiento de conexión](#1-funcionamiento-de-ssh-y-establecimiento-de-conexión)
-   1. [Three-way handshake](#11-three-way-handshake)
-   2. [SSH-TRANS](#12-ssh-trans)
-   3. [Intercambio de claves (SSH_MSG_KEXINIT)](#13-intercambio-de-claves-sshmsgkexinit)
-   4. [Fingerprint del servidor](#14-fingerprint-del-servidor)
-   5. [Generación de la clave de sesión](#15-generación-de-la-clave-de-sesión)
+   1. [Fundamentos: cifrado simétrico y asimétrico](#11-fundamentos-cifrado-simétrico-y-asimétrico)
+   2. [Three-way handshake](#12-three-way-handshake)
+   3. [SSH-TRANS](#13-ssh-trans)
+   4. [Intercambio de claves (SSH_MSG_KEXINIT)](#14-intercambio-de-claves-sshmsgkexinit)
+   5. [Fingerprint del servidor](#15-fingerprint-del-servidor)
+   6. [Generación de la clave de sesión](#16-generación-de-la-clave-de-sesión)
 2. [Comandos para instalar el servidor SSH en Debian](#2-comandos-para-instalar-el-servidor-ssh-en-debian)
 3. [ssh](#3-ssh)
    1. [StrictHostKeyChecking](#31-stricthostkeychecking)
@@ -57,9 +58,82 @@ Protocolo SSH (Secure Shell) es un protocolo que garantiza la confidencialidad, 
 
 ![00](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/00.png)
 
-El proceso de conexión SSH anteriormente mostrado no es más que un conjunto de pasos que podemos ver a continuación junto a una breve explicación.
+El proceso de conexión SSH anteriormente mostrado no es más que un conjunto de pasos que podemos ver a continuación junto a una breve explicación. Antes de recorrerlos conviene tener claros los conceptos de criptografía en los que se apoyan.
 
-### 1.1 Three-way handshake
+### 1.1 Fundamentos: cifrado simétrico y asimétrico
+
+**Cifrar** es transformar un mensaje legible (el *texto en claro*) en otro ilegible (el *texto cifrado*) mediante un **algoritmo** y una **clave**. Solo quien tenga la clave adecuada puede deshacer la transformación y recuperar el mensaje original.
+
+Los algoritmos de cifrado son públicos: cualquiera puede estudiar cómo funcionan AES o RSA. Toda la seguridad reside en mantener en secreto la **clave**. Es como una cerradura: todo el mundo sabe cómo funciona una cerradura, pero solo abre quien tiene la llave.
+
+**Cifrado simétrico: una sola clave**
+
+En el cifrado simétrico se usa **la misma clave para cifrar y para descifrar**. Funciona como una caja fuerte con una única combinación: quien cierra y quien abre tienen que conocer el mismo secreto.
+
+- **Ventaja**: es muy **rápido**, incluso con grandes volúmenes de datos. Los procesadores modernos incluyen además instrucciones específicas para acelerar AES.
+- **Problema**: el **reparto de la clave**. Para que dos equipos se comuniquen, ambos deben conocer la clave, pero ¿cómo se la envía uno al otro por una red insegura sin que nadie la intercepte? Si se mandara sin protección, cualquiera que la capturase podría descifrarlo todo.
+
+**Cifrado asimétrico: un par de claves**
+
+El cifrado asimétrico, también llamado **de clave pública**, resuelve ese problema usando **dos claves distintas** que se generan juntas y están relacionadas matemáticamente:
+
+- **Clave pública**: se puede repartir sin ningún riesgo. Es la que se entrega a los demás o se copia en los servidores.
+- **Clave privada**: es secreta y **nunca sale del equipo** de su propietario. Es la que demuestra quién eres.
+
+La propiedad fundamental es que **lo que se cifra con una de las claves solo se puede descifrar con la otra**, y que a partir de la clave pública es imposible, en la práctica, calcular la privada. Esto permite dos usos distintos:
+
+| Uso | Se cifra con... | Se descifra o verifica con... | Para qué sirve |
+|---|---|---|---|
+| **Confidencialidad** | La clave **pública** del destinatario | La clave **privada** del destinatario | Enviar un secreto que solo el destinatario podrá leer. |
+| **Firma digital (autenticación)** | La clave **privada** del firmante | La clave **pública** del firmante | Demostrar quién ha enviado algo. Si la clave pública de alguien verifica una firma, esa firma solo la pudo hacer el poseedor de la privada. |
+
+La confidencialidad funciona como un **buzón**: cualquiera puede echar una carta por la ranura (cifrar con la clave pública), pero solo el dueño, con su llave, puede abrirlo y leerla (descifrar con la privada). La firma es justo al revés: solo el dueño puede firmar, pero cualquiera puede comprobar la firma.
+
+- **Ventaja**: no hay que compartir ningún secreto. La clave pública puede viajar por la red sin problema.
+- **Problema**: es **mucho más lento** que el simétrico (cientos o miles de veces) y no es práctico para cifrar grandes cantidades de datos.
+
+> **Importante:** SSH usa el cifrado asimétrico sobre todo para **firmar**, es decir, para demostrar identidades. El servidor firma con su clave privada de *host* para probar que es quien dice ser (el *fingerprint* del apartado 1.5 identifica su clave pública), y el usuario firma con su clave privada para entrar sin contraseña (apartado 3.4). La analogía del **candado y la llave** que se usa en el apartado 3.5 representa esta misma idea: el candado es la clave pública, que se puede repartir, y la llave es la clave privada, que nunca se entrega.
+
+**Comparativa entre cifrado simétrico y asimétrico**
+
+| Característica | Simétrico | Asimétrico |
+|---|---|---|
+| Número de claves | Una, compartida por ambos extremos | Dos por participante: pública y privada |
+| Velocidad | Muy rápido | Lento (cientos o miles de veces más) |
+| Principal problema | Cómo repartir la clave de forma segura | Coste de cálculo; no sirve para muchos datos |
+| Tamaño típico de clave | 128 o 256 bits | 2048-4096 bits (RSA) o 256 bits (curvas elípticas) |
+| Uso típico | Cifrar los datos de la comunicación | Autenticar identidades, firmar y acordar claves |
+| Ejemplos | AES, ChaCha20 | RSA, ECDSA, Ed25519, Diffie-Hellman |
+
+> **Nota:** Que una clave RSA tenga 3072 bits y una de AES 256 no significa que RSA sea más segura. Son matemáticas distintas y los tamaños no se comparan directamente: una clave AES de 128 bits ofrece una seguridad parecida a una RSA de 3072 bits. Las curvas elípticas (Ed25519, ECDSA) consiguen la misma seguridad que RSA con claves mucho más cortas, y por eso son más rápidas.
+
+**Principales algoritmos y su papel en SSH**
+
+| Algoritmo | Tipo | Para qué se usa | Estado | Nombre en SSH |
+|---|---|---|---|---|
+| **AES** | Simétrico | Cifrar los datos de la sesión. Es el estándar mundial de cifrado simétrico. | Seguro (128 y 256 bits) | `aes256-gcm@openssh.com`, `aes128-ctr` |
+| **ChaCha20-Poly1305** | Simétrico | Cifrar los datos y garantizar su integridad a la vez. Muy rápido en equipos sin aceleración de AES. | Seguro. Opción preferida por OpenSSH | `chacha20-poly1305@openssh.com` |
+| **3DES / DES** | Simétrico | Cifrado de datos en sistemas antiguos. | Obsoleto e inseguro. Desactivado en OpenSSH moderno | `3des-cbc` |
+| **RSA** | Asimétrico | Firmar (claves de *host* y de usuario). También puede cifrar. | Seguro con 3072 bits o más. La variante con SHA-1 (`ssh-rsa`) está desactivada desde OpenSSH 8.8 | `rsa-sha2-256`, `rsa-sha2-512` |
+| **ECDSA** | Asimétrico (curva elíptica) | Firmar. Claves cortas y rápidas. | Seguro | `ecdsa-sha2-nistp256` |
+| **Ed25519** | Asimétrico (curva elíptica) | Firmar. Claves cortas, muy rápido y difícil de implementar mal. | Seguro. **Recomendado** para claves nuevas | `ssh-ed25519` |
+| **DSA** | Asimétrico | Firmar. | Obsoleto. Eliminado por completo en OpenSSH 10.0 | `ssh-dss` |
+| **Diffie-Hellman (ECDH)** | Asimétrico | **Acordar** una clave simétrica entre dos equipos sin enviarla por la red. No cifra datos. | Seguro en sus variantes modernas | `curve25519-sha256` |
+| **ML-KEM / sntrup761 + X25519** | Asimétrico (híbrido post-cuántico) | Acordar la clave de sesión de forma resistente a futuros ordenadores cuánticos. | Seguro. Opción por defecto en OpenSSH reciente | `mlkem768x25519-sha256`, `sntrup761x25519-sha512` |
+
+> **Nota:** Las **funciones hash** como SHA-256 no son cifrado, aunque aparezcan a su lado. Un hash convierte cualquier dato en una huella de tamaño fijo y no se puede deshacer: no hay clave ni forma de recuperar el original. SSH las usa para calcular el *fingerprint* del servidor (apartado 1.5) y para comprobar que los datos no se han modificado por el camino (algoritmos MAC del apartado 1.4).
+
+**SSH combina los dos tipos: el cifrado híbrido**
+
+Cada tipo de cifrado tiene un punto débil que el otro cubre: el simétrico es rápido pero no sabe repartir su clave, y el asimétrico reparte y autentica sin compartir secretos pero es lento. SSH, igual que HTTPS, los combina y usa cada uno para lo que mejor hace:
+
+1. Con **Diffie-Hellman**, cliente y servidor **acuerdan una clave simétrica de sesión** sin que esta viaje nunca por la red (apartados 1.4 y 1.6).
+2. Con **firmas asimétricas**, el servidor demuestra su identidad (*fingerprint*) y, si se usan claves, también el usuario (apartado 3.4).
+3. Con esa clave de sesión y un algoritmo **simétrico** (AES o ChaCha20) se cifra **todo el tráfico** de la conexión, que es lo que exige velocidad.
+
+La clave de sesión es temporal y distinta en cada conexión. Aunque alguien grabara hoy todo el tráfico y consiguiera más adelante la clave privada del servidor, no podría descifrar las sesiones antiguas. A esta propiedad se le llama ***forward secrecy*** (secreto hacia adelante).
+
+### 1.2 Three-way handshake
 
 ![01](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/1.png)
 
@@ -86,7 +160,7 @@ En un primer momento vemos el establecimiento de la conexión TCP ya que SSH tra
    Contenido: [ACK]  
    Descripción: El cliente (198.0.2.4) termina el proceso enviando un segmento con la bandera ACK, confirmando la recepción del SYN-ACK del servidor y completando así el establecimiento de la conexión.
 
-### 1.2 SSH-TRANS
+### 1.3 SSH-TRANS
 
 ![02](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/2.png)
 ![03](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/3.png)
@@ -99,7 +173,7 @@ Podemos ver en las dos imágenes anteriores cómo cliente y servidor intercambia
 
 **OpenSSH_6.0p1 Debian-4+deb7u6:** Representa el software OpenSSH versión 6.0p1, que es una versión antigua, empaquetada para el sistema Debian 7, la cual corresponde con nuestra máquina Snort. Usar una versión antigua puede significar menos características, soporte de algoritmos criptográficos hoy desfasados y más riesgos de vulnerabilidades históricas.
 
-### 1.3 Intercambio de claves (SSH_MSG_KEXINIT)
+### 1.4 Intercambio de claves (SSH_MSG_KEXINIT)
 
 ![04](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/4.png)
 ![05](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/5.png)
@@ -114,7 +188,7 @@ Al final de esta negociación, cliente y servidor acuerdan:
 - **Algoritmos MAC (mac_algorithms_client_to_server y server_to_client)**: Garantizan la integridad y autenticidad de origen de los datos transmitidos, evitando manipulación. Ejemplos son "umac-64-etm@openssh.com" y "hmac-sha2-256-etm@openssh.com".
 - **Algoritmos de compresión (compression_algorithms_client_to_server y server_to_client)**: Opcionalmente comprimen los datos para optimizar la transferencia, usando opciones como "none" o "zlib@openssh.com".
 
-### 1.4 Fingerprint del servidor
+### 1.5 Fingerprint del servidor
 
 ![06](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/6.png)
 
@@ -126,7 +200,7 @@ Esta clave pública, representada como una larga secuencia hexadecimal, es recib
 
 ![08](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/8.png)
 
-### 1.5 Generación de la clave de sesión
+### 1.6 Generación de la clave de sesión
 
 ![09](../imagenes/recursos/SSH%20establecimiento%20de%20conexión/9.png)
 
@@ -317,11 +391,20 @@ sshpass -p 'abc123.' ssh usuario@192.168.120.101
 
 Una conexión usando el protocolo SSH es de por sí segura (más segura que una conexión no cifrada, como telnet) pero la autenticación por contraseña presenta un inconveniente. Aunque la contraseña viaja cifrada por el túnel y no puede ser interceptada en la red, sigue siendo un secreto que el atacante puede intentar **adivinar**: mientras el servidor acepte contraseñas, queda abierta la posibilidad de ataques de fuerza bruta que prueban miles de combinaciones. Una contraseña fuerte limita el riesgo, pero no lo elimina.
 
-Ante este desafío con SSH se creó un mecanismo de autentificación basado en desafío y en criptografía asimétrica. El cliente cuenta con una clave privada. La clave pública correspondiente se configura en todos los usuarios de servidores remotos que se van a autenticar con la misma clave privada. Ya en el proceso de autenticación el cliente envía información sobre su clave pública al servidor. El servidor busca si para el usuario requerido se ha instalado pública del cliente. Si la encuentra, se envía un desafío al cliente que consiste en un valor aleatorio cifrado con la clave pública del cliente. El cliente, para completar la autenticación satisfactoriamente, debe descifrar el desafío con su clave privada y devolver el valor al servidor. El servidor comprobará si el desafío se ha resuelto correctamente y permitirá el inicio de sesión si así ha sido.
+Ante este desafío, SSH ofrece un mecanismo de autenticación basado en criptografía asimétrica, concretamente en la **firma digital** explicada en el apartado 1.1. El cliente cuenta con una clave privada, y la clave pública correspondiente se copia en el servidor, en el fichero `~/.ssh/authorized_keys` del usuario con el que se quiere entrar. El proceso es el siguiente:
 
-Bajo este esquema de autenticación, un par de claves (pública/privada) permite la autentificación en todos los servidores. Como el desafío es aleatorio, un ataque de fuerza bruta es mucho más difícil. Estas son las principales ventajas de este mecanismo de autentificación. Generamos en el cliente el par de claves pública/privada en la ruta `~/.ssh/id_rsa`.
+1. El cliente indica al servidor qué clave pública quiere usar.
+2. El servidor comprueba si esa clave pública está en el `authorized_keys` del usuario. Si no está, rechaza el método.
+3. El cliente **firma con su clave privada** unos datos únicos de esa conexión (derivados de la sesión que se acaba de negociar) y envía la firma.
+4. El servidor **verifica la firma con la clave pública**. Si es válida, la firma solo pudo hacerla quien tiene la clave privada, así que permite el inicio de sesión.
 
-En primer lugar, el usuario creará su identidad digital generando el par de claves privada-pública. Como ya se explicó en la **criptografía asimétrica**, la clave privada debe mantenerse segura a toda costa, mientras que la pública puede distribuirse. La clave privada puede protegerse mediante una _passphrase_ (frase de contraseña), lo que significa que, al usarla, habrá que introducir dicha contraseña. Es importante señalar que, al escribir la _passphrase_, el texto no será visible en pantalla.
+La clave privada nunca sale del cliente ni viaja por la red: lo único que se envía es una firma que, además, solo vale para esa conexión.
+
+> **Nota:** En el antiguo protocolo SSH-1, el servidor enviaba un reto cifrado con la clave pública del cliente y este debía descifrarlo con su privada. Muchas explicaciones antiguas lo describen así. SSH-2, el único que se usa hoy, emplea firmas digitales.
+
+Bajo este esquema de autenticación, un par de claves (pública/privada) permite la autentificación en todos los servidores. Como ya no hay una contraseña que adivinar, sino una clave privada imposible de deducir, los ataques de fuerza bruta dejan de ser viables. Estas son las principales ventajas de este mecanismo de autentificación. Generamos en el cliente el par de claves pública/privada en la ruta `~/.ssh/id_rsa`.
+
+En primer lugar, el usuario creará su identidad digital generando el par de claves privada-pública. Como se explicó en el apartado 1.1 sobre la **criptografía asimétrica**, la clave privada debe mantenerse segura a toda costa, mientras que la pública puede distribuirse. La clave privada puede protegerse mediante una _passphrase_ (frase de contraseña), lo que significa que, al usarla, habrá que introducir dicha contraseña. Es importante señalar que, al escribir la _passphrase_, el texto no será visible en pantalla.
 
 **Advertencia clave**:
 
