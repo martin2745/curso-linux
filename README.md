@@ -146,7 +146,8 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [02 - NFS](./sistemas_operativos_en_red/02_NFS.md)
 - [03 - Perfiles móviles en Linux con LDAP y NFS](./sistemas_operativos_en_red/03_perfiles_moviles.md)
 - [04 - Seguridad del escenario y kerberos](./sistemas_operativos_en_red/04_seguridad_del_escenario_y_kerberos.md)
-- [05 - Samba](./sistemas_operativos_en_red/05_samba.md)
+- [05 - Samba como servidor independiente (standalone)](./sistemas_operativos_en_red/05_samba_standalone.md) (CC BY-SA 4.0)
+- [06 - Samba como controlador de dominio Active Directory (AD DC)](./sistemas_operativos_en_red/06_samba_ad_dc.md) (CC BY-SA 4.0)
 
 #### Active Directory con Samba promocionado a controlador de dominio
 
