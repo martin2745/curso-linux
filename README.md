@@ -94,6 +94,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 
 - [4.1 Tarea: Iniciar un servicio en sysVinit](./apuntes/tareas/tarea4.1/4.1_tarea.md)
 - [4.2 Tarea: Gestión de servicios con systemD](./apuntes/tareas/tarea4.2/4.2_tarea.md)
+- [4.3 Tarea: Instalación de Apache Tomcat como servicio de SystemD](./apuntes/tareas/tarea4.3/4.3_tarea.md)
 
 #### Tareas SSH y SCP
 
