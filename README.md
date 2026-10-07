@@ -99,6 +99,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 #### Tareas SSH y SCP
 
 - [5.1 Tarea: SSH y SCP](./apuntes/tareas/tarea5.1/5.1_tarea.md)
+- [5.2 Tarea: Autenticación por clave pública y securización del servidor SSH](./apuntes/tareas/tarea5.2/5.2_tarea.md)
 
 #### Tareas de redes
 
