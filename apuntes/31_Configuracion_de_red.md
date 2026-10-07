@@ -197,6 +197,8 @@ root@debian:~# echo 1 > /proc/sys/net/ipv4/ip_forward
 > net.ipv4.ip_forward = 1
 > ```
 
+> **Nota:** Activar el reenvío convierte el equipo en un router, pero no decide **qué** tráfico puede pasar ni con qué direcciones sale. Eso lo hace el cortafuegos con la cadena `FORWARD` y la traducción de direcciones (SNAT y DNAT), que se explican en el documento 46 junto con un cortafuegos perimetral completo.
+
 ### 3.2 Desactivar la respuesta de paquetes ICMP
 
 Para evitar que el servidor responda a peticiones PING (`echo request`), se ajusta el parámetro `icmp_echo_ignore_all`, de forma temporal con `sysctl -w` o persistente en `/etc/sysctl.conf`:

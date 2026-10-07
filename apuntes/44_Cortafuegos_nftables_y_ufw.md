@@ -10,6 +10,7 @@
 3. [Un conjunto de reglas básico para un servidor](#3-un-conjunto-de-reglas-básico-para-un-servidor)
 4. [La regla de oro: no cerrarse el acceso a uno mismo](#4-la-regla-de-oro-no-cerrarse-el-acceso-a-uno-mismo)
 5. [¿ufw o nftables?](#5-ufw-o-nftables)
+6. [Equivalencias entre iptables y nftables](#6-equivalencias-entre-iptables-y-nftables)
 
 ---
 
@@ -182,4 +183,36 @@ Las dos herramientas gestionan el mismo cortafuegos del núcleo, así que no se 
 
 > **Recuerda:** No deben usarse las dos a la vez para gestionar las mismas reglas, porque `ufw` escribe su propia configuración de `nftables` y editar ambas por separado lleva a conflictos difíciles de depurar. Lo sensato es elegir una: `ufw` mientras las necesidades sean sencillas, y pasar a gestionar `nftables` directamente cuando el escenario lo requiera.
 
-> **Nota:** La herramienta antigua `iptables` todavía puede aparecer en documentación y en sistemas heredados. En Debian actual, lo que se ejecuta al invocar `iptables` es en realidad una capa de compatibilidad (`iptables-nft`) que traduce las órdenes a `nftables`. Conviene saber que existe, pero para configuraciones nuevas la recomendación es usar directamente `nftables` o `ufw`.
+> **Nota:** La herramienta antigua `iptables` todavía aparece en mucha documentación, en sistemas heredados y en exámenes. En Debian y Ubuntu actuales, lo que se ejecuta al invocar `iptables` es en realidad una capa de compatibilidad (`iptables-nft`) que traduce las órdenes a `nftables`. Para configuraciones nuevas la recomendación es usar directamente `nftables` o `ufw`, pero iptables se explica a fondo en el documento 46, incluido su uso como cortafuegos perimetral con NAT, y el apartado siguiente recoge las equivalencias entre las dos herramientas.
+
+---
+
+## 6. Equivalencias entre iptables y nftables
+
+Las dos herramientas manejan el mismo cortafuegos del núcleo y los mismos conceptos, así que casi todo lo que se hace con una tiene su equivalente directo en la otra:
+
+| Concepto | iptables (documento 46) | nftables |
+|---|---|---|
+| Ver todas las reglas | `iptables -L -n -v` o `iptables -S` | `nft list ruleset` |
+| Tablas | Predefinidas: `filter`, `nat`... | Las crea el administrador: `table inet filter` |
+| Política de una cadena | `iptables -P INPUT DROP` | `policy drop;` en la definición de la cadena |
+| Añadir al final | `iptables -A INPUT ...` | `nft add rule inet filter input ...` |
+| Insertar al principio | `iptables -I INPUT ...` | `nft insert rule inet filter input ...` |
+| Puerto de destino | `-p tcp --dport 22` | `tcp dport 22` |
+| Varios puertos | `-p tcp -m multiport --dports 80,443` | `tcp dport { 80, 443 }` |
+| Rango de direcciones | `-m iprange --src-range 10.0.0.2-10.0.0.9` | `ip saddr 10.0.0.2-10.0.0.9` |
+| Interfaz de entrada o salida | `-i enp0s8`, `-o enp0s3` | `iifname "enp0s8"`, `oifname "enp0s3"` |
+| Estado de la conexión | `-m conntrack --ctstate NEW` | `ct state new` |
+| Registrar | `-j LOG --log-prefix "texto "` | `log prefix "texto "` |
+| Rechazar con TCP RST | `-j REJECT --reject-with tcp-reset` | `reject with tcp reset` |
+| Cadena de usuario | `iptables -N SSH_FW` y `-j SSH_FW` | `nft add chain inet filter ssh_fw` y `jump ssh_fw` |
+| SNAT | `-t nat -A POSTROUTING -o enp0s3 -j SNAT --to-source 203.0.113.10` | En una tabla `ip nat`: `oifname "enp0s3" snat to 203.0.113.10` |
+| DNAT | `-t nat -A PREROUTING -i enp0s3 -p tcp --dport 80 -j DNAT --to-destination 10.0.1.80` | En una tabla `ip nat`: `iifname "enp0s3" tcp dport 80 dnat to 10.0.1.80` |
+| Reglas persistentes | `netfilter-persistent save`, en `/etc/iptables/rules.v4` | `/etc/nftables.conf` y `systemctl enable nftables` |
+
+La orden `iptables-translate` hace la traducción automáticamente para cualquier regla concreta:
+
+```bash
+root@debian:~# iptables-translate -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT
+nft 'add rule ip filter INPUT tcp dport 22 ct state new counter accept'
+```

@@ -56,6 +56,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [43 - El editor vi y vim](./apuntes/43_Editor_vi_vim.md)
 - [44 - Cortafuegos: nftables y ufw](./apuntes/44_Cortafuegos_nftables_y_ufw.md)
 - [45 - Comando rsync](./apuntes/45_Comando_rsync.md)
+- [46 - Cortafuegos con iptables](./apuntes/46_Cortafuegos_iptables.md)
 - [Cuestionarios](./apuntes/Cuestionarios.md)
 
 ### Tareas de manejo de Linux, entorno y comandos
@@ -104,6 +105,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 #### Tareas de redes
 
 - [6.1 Tarea: Configuración de red](./apuntes/tareas/tarea6.1/6.1_tarea.md)
+- [6.2 Tarea: Cortafuegos perimetral con iptables](./apuntes/tareas/tarea6.2/6.2_tarea.md)
 
 ### Apuntes de Scripting en Bash
 
