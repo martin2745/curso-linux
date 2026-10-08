@@ -76,7 +76,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [1.3 Tarea: Manipulación y Extracción de Información en Listados de Archivos](./apuntes/tareas/tarea1.3/1.3_tarea.md)
 - [1.4 Tarea: Creación de un Shell Restringido](./apuntes/tareas/tarea1.4/1.4_tarea.md)
 - [1.5 Tarea: Gestión de módulos del Kernel](./apuntes/tareas/tarea1.5/1.5_tarea.md)
-- [1.6 Tarea: Instalación de software en el sistema](./apuntes/tareas/tarea1.6/1.6_tarea.md)
+- [1.6 Tarea: Instalación de software en el sistema: Webmin](./apuntes/tareas/tarea1.6/1.6_tarea.md)
 - [1.7 Tarea: Formateo, Búsqueda y Procesamiento Avanzado de Texto en Archivos del Sistema](./apuntes/tareas/tarea1.7/1.7_tarea.md)
 
 #### Tareas de dispositivos de almacenamiento y sistema de ficheros
@@ -106,6 +106,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 
 - [6.1 Tarea: Configuración de red](./apuntes/tareas/tarea6.1/6.1_tarea.md)
 - [6.2 Tarea: Cortafuegos perimetral con iptables](./apuntes/tareas/tarea6.2/6.2_tarea.md)
+- [6.3 Tarea: Repaso de configuración de red](./apuntes/tareas/tarea6.3/6.3_tarea.md)
 
 ### Apuntes de Scripting en Bash
 
