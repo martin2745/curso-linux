@@ -138,6 +138,12 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [01 - Apache como Servidor Web](./servicios_en_red/01_apache_como_servidor_web.md)
 - [02 - DHCP](./servicios_en_red/02_dhcp.md)
 - [03 - FTP](./servicios_en_red/03_ftp.md)
+- [04 - DNS con BIND9](./servicios_en_red/04_dns_bind9.md)
+- [05 - Correo electrónico con Postfix y Dovecot](./servicios_en_red/05_correo_postfix_dovecot.md)
+- [06 - Proxy web con Squid](./servicios_en_red/06_proxy_squid.md)
+- [07 - Nginx: servidor web, proxy inverso y HTTPS](./servicios_en_red/07_nginx_proxy_inverso_https.md)
+- [08 - Acceso remoto gráfico: RDP con xrdp y VNC](./servicios_en_red/08_acceso_remoto_grafico.md)
+- [09 - Laboratorio: router con DHCP y DNS, servidor web y cliente](./servicios_en_red/09_laboratorio_router_dhcp_dns_web.md)
 
 ### Tareas de servicios en red
 
