@@ -58,6 +58,7 @@ Linux es conocido por su seguridad, estabilidad y flexibilidad, características
 - [45 - Comando rsync](./apuntes/45_Comando_rsync.md)
 - [46 - Cortafuegos con iptables](./apuntes/46_Cortafuegos_iptables.md)
 - [47 - Cuotas de disco](./apuntes/47_Cuotas_de_disco.md)
+- [48 - Entorno gráfico en Ubuntu Server](./apuntes/48_Entorno_grafico_Ubuntu_Server.md)
 - [Cuestionarios](./apuntes/Cuestionarios.md)
 
 ### Tareas de manejo de Linux, entorno y comandos
