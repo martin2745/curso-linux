@@ -12,13 +12,23 @@
    3. [Segundo disco `sdb`](#33-segundo-disco-sdb)
 4. [fdisk](#4-fdisk)
 5. [blkid](#5-blkid)
-6. [mkfs](#6-mkfs)
-7. [mount y umount](#7-mount-y-umount)
-8. [fstab](#8-fstab)
-   1. [Como recuperar el sistema si cometemos un error en el archivo /etc/fstab](#81-como-recuperar-el-sistema-si-cometemos-un-error-en-el-archivo-etcfstab)
-9. [Particionado con parted](#9-particionado-con-parted)
-   1. [Ejercicio](#91-ejercicio)
-10. [Partición de swap](#10-partición-de-swap)
+6. [Sistemas de ficheros: qué son y tipos](#6-sistemas-de-ficheros-qué-son-y-tipos)
+   1. [Qué es un sistema de ficheros](#61-qué-es-un-sistema-de-ficheros)
+   2. [El sistema operativo gestiona los ficheros: el VFS](#62-el-sistema-operativo-gestiona-los-ficheros-el-vfs)
+   3. [La pila del almacenamiento](#63-la-pila-del-almacenamiento)
+   4. [Cómo organiza los datos un sistema de ficheros](#64-cómo-organiza-los-datos-un-sistema-de-ficheros)
+   5. [Sistemas de ficheros de Linux](#65-sistemas-de-ficheros-de-linux)
+   6. [Sistemas de ficheros para intercambiar datos con Windows y macOS](#66-sistemas-de-ficheros-para-intercambiar-datos-con-windows-y-macos)
+   7. [Sistemas de ficheros especiales](#67-sistemas-de-ficheros-especiales)
+   8. [Comparativa](#68-comparativa)
+   9. [Cómo elegir el sistema de ficheros](#69-cómo-elegir-el-sistema-de-ficheros)
+7. [mkfs](#7-mkfs)
+8. [mount y umount](#8-mount-y-umount)
+9. [fstab](#9-fstab)
+   1. [Como recuperar el sistema si cometemos un error en el archivo /etc/fstab](#91-como-recuperar-el-sistema-si-cometemos-un-error-en-el-archivo-etcfstab)
+10. [Particionado con parted](#10-particionado-con-parted)
+    1. [Ejercicio](#101-ejercicio)
+11. [Partición de swap](#11-partición-de-swap)
 
 ---
 
@@ -383,7 +393,188 @@ root@debian:~# blkid | grep sdb
 
 ---
 
-## 6. mkfs
+## 6. Sistemas de ficheros: qué son y tipos
+
+Antes de **formatear** una partición con `mkfs` (apartado siguiente) conviene entender qué se está creando realmente y por qué existen tantos tipos distintos.
+
+### 6.1 Qué es un sistema de ficheros
+
+Un disco, o una partición, no es más que una enorme sucesión de bytes numerados. Por sí mismo no sabe qué es un fichero, ni una carpeta, ni a quién pertenece cada cosa. Un **sistema de ficheros** es la **forma de organizar** esos bytes para poder guardar en ellos ficheros con nombre, carpetas, propietarios, permisos y fechas, y encontrarlos después.
+
+Es como el sistema de clasificación de una biblioteca: los libros (los datos) podrían amontonarse en cualquier orden, pero gracias a las fichas y a los números de estantería se sabe dónde está cada uno, de quién es y cuándo llegó. **Formatear** una partición es justamente crear en ella esa estructura vacía, lista para guardar ficheros.
+
+> **Importante:** La expresión «sistema de ficheros» tiene dos significados que conviene no confundir:
+>
+> - El **árbol de directorios** que ve el usuario, que empieza en `/` y que sigue el estándar FHS (`/etc`, `/home`, `/var`...). Es el que se explica en el documento 01.
+> - El **formato** con el que se organizan los datos dentro de una partición: ext4, NTFS, FAT32... Es el de este apartado.
+>
+> Los dos se unen al **montar**: el sistema de ficheros de cada partición se «engancha» en un directorio del árbol. Por ejemplo, una partición ext4 montada en `/home` hace que todo lo que se guarde en `/home` vaya a esa partición.
+
+### 6.2 El sistema operativo gestiona los ficheros: el VFS
+
+Los programas nunca leen ni escriben directamente en el disco. Cuando `nano` guarda un fichero o `cp` lo copia, le piden al **núcleo del sistema operativo** que lo haga, mediante **llamadas al sistema** como `open`, `read`, `write` o `close`. Es el núcleo quien sabe cómo está organizado cada disco y quien se encarga de todo: buscar el sitio libre, escribir los datos, actualizar el propietario y la fecha, y comprobar los permisos.
+
+Para no tener que conocer cada formato, el núcleo de Linux tiene una capa común, el **VFS** (*Virtual File System*). Los programas siempre hablan con el VFS, y es el VFS el que pasa cada petición al **controlador** del sistema de ficheros que corresponda:
+
+```mermaid
+flowchart TB
+    APP["Programas: ls, cp, nano, Firefox..."]
+    SC["Llamadas al sistema<br>open · read · write · close"]
+    VFS["VFS · Virtual File System<br>capa común del núcleo"]
+    EXT4["Controlador ext4"]
+    VFAT["Controlador vfat"]
+    NFS["Cliente NFS"]
+    PROC["procfs"]
+    DISCO[("Disco duro")]
+    USB[("Memoria USB")]
+    RED(("Servidor en la red"))
+    MEM["Datos del propio núcleo"]
+    APP --> SC --> VFS
+    VFS --> EXT4 --> DISCO
+    VFS --> VFAT --> USB
+    VFS --> NFS --> RED
+    VFS --> PROC --> MEM
+```
+
+Gracias al VFS, `ls`, `cp` o `rm` funcionan exactamente igual sobre un disco ext4, una memoria USB en FAT32, una carpeta compartida por la red con NFS o el sistema de ficheros virtual `/proc` (apartado 9 del documento 01): el programa no necesita saber qué hay debajo. Los controladores de los sistemas de ficheros suelen ser **módulos del núcleo** (documento 04), que se cargan cuando hacen falta. El fichero `/proc/filesystems` muestra los tipos que el núcleo sabe manejar en ese momento:
+
+```bash
+usuario@debian:~$ cat /proc/filesystems
+nodev	sysfs
+nodev	tmpfs
+nodev	proc
+...
+	ext4
+	vfat
+```
+
+Los marcados con `nodev` no necesitan ningún dispositivo: son sistemas de ficheros virtuales o de red.
+
+### 6.3 La pila del almacenamiento
+
+Entre el disco físico y el directorio donde el usuario guarda sus ficheros hay varias capas, cada una explicada en un documento:
+
+```mermaid
+flowchart LR
+    D["Disco físico<br>/dev/sda"] --> T["Tabla de particiones<br>MBR o GPT"]
+    T --> P["Partición<br>/dev/sda1"]
+    P --> F["Sistema de ficheros<br>ext4, XFS, NTFS..."]
+    F --> M["Montaje<br>en un directorio: /home"]
+```
+
+| Capa | Qué hace | Dónde se explica |
+|---|---|---|
+| Disco | El dispositivo físico, visto como `/dev/sda`, `/dev/nvme0n1`... | Este documento, apartado 3. |
+| Tabla de particiones | Divide el disco en partes independientes. | Este documento, apartado 1. |
+| Partición | Cada una de esas partes, por ejemplo `/dev/sda1`. | Este documento, apartados 4 y 10. |
+| RAID o LVM (opcional) | Capas intermedias que unen varios discos o permiten cambiar tamaños con flexibilidad. | Documentos 38 y 42. |
+| Sistema de ficheros | Organiza los datos dentro de la partición. Se crea al **formatear**. | Este apartado y el siguiente. |
+| Montaje | Hace accesible el sistema de ficheros en un directorio del árbol. | Este documento, apartados 8 y 9, y documento 25. |
+
+### 6.4 Cómo organiza los datos un sistema de ficheros
+
+Aunque cada tipo lo hace a su manera, casi todos usan las mismas piezas:
+
+| Pieza | Qué es |
+|---|---|
+| **Bloque** | La unidad mínima de espacio, normalmente de 4 KiB. Un fichero de 1 byte ocupa igualmente un bloque entero. |
+| **Inodo** | La «ficha» de cada fichero: su tamaño, propietario, permisos, fechas y en qué bloques están sus datos. El nombre del fichero no está en el inodo, sino en el directorio que lo contiene (documento 03). |
+| **Superbloque** | La ficha del propio sistema de ficheros: su tamaño, cuántos bloques e inodos tiene, cuántos están libres y su estado. Se guardan varias copias por si una se daña. |
+| **Metadatos** | Todos los datos que describen los ficheros, en lugar de ser su contenido: inodos, directorios, el superbloque y los mapas de espacio libre. |
+
+> **Nota:** En los sistemas de ficheros clásicos, como ext4, el número de inodos se fija al formatear. Si se agotan, ya no se pueden crear más ficheros aunque quede espacio libre en el disco. `df -i` (documento 13) muestra cuántos quedan.
+
+**Journaling: sobrevivir a un apagón**
+
+Guardar un fichero exige varias escrituras distintas: los datos, el inodo, el directorio y el mapa de espacio libre. Si el equipo se apaga de golpe a mitad del proceso, los metadatos pueden quedar **incoherentes**: un bloque marcado como ocupado que no pertenece a ningún fichero, o un fichero que apunta a bloques que otro está usando.
+
+Los sistemas de ficheros con ***journaling*** (diario) evitan el problema:
+
+1. Antes de modificar nada, anotan en una zona especial, el **diario**, lo que van a hacer.
+2. Hacen los cambios.
+3. Marcan la operación del diario como completada.
+
+Si el equipo se apaga en mitad del proceso, al arrancar basta con leer el diario: se rehacen o se descartan las operaciones que quedaron a medias, y el sistema de ficheros vuelve a estar coherente en segundos. Sin diario, hay que revisar el disco entero con `fsck`, lo que en un disco grande puede tardar horas. Es la razón por la que las memorias USB en FAT32 que se desconectan sin «expulsarlas» se dañan con facilidad, mientras que un disco ext4 sobrevive a un corte de luz.
+
+Los sistemas de ficheros más modernos, como **Btrfs** y **ZFS**, usan otra técnica, la **copia en escritura** (*copy-on-write*): nunca sobrescriben un dato, sino que escriben la versión nueva en otro sitio y solo al final cambian el puntero que indica cuál es la actual. Si se corta la luz, la versión anterior sigue intacta. La misma técnica permite hacer **instantáneas** (*snapshots*): copias del estado del sistema de ficheros en un momento dado, que se crean al momento y apenas ocupan espacio.
+
+### 6.5 Sistemas de ficheros de Linux
+
+**ext4** (*fourth extended filesystem*)
+
+Es la cuarta versión de la familia *ext*, creada específicamente para Linux, y está disponible desde 2008. Tiene *journaling*, admite volúmenes de hasta 1 EiB y ficheros de hasta 16 TiB, y se puede ampliar y también **reducir**. Es el sistema de ficheros por defecto de **Debian**, **Ubuntu** y **Linux Mint**. Su gran virtud es la **fiabilidad**: lleva décadas de uso masivo, sus herramientas (`e2fsck`, `tune2fs`, `resize2fs`) son muy maduras y es la opción segura para casi cualquier uso.
+
+**XFS**
+
+Creado por Silicon Graphics en 1993 para sus estaciones de trabajo, llegó a Linux en 2001. Tiene *journaling* y destaca con **ficheros muy grandes** y con muchas operaciones en paralelo, lo que lo hace muy adecuado para servidores, bases de datos y almacenamiento de vídeo. Es el sistema de ficheros por defecto de **Red Hat Enterprise Linux** desde la versión 7, y por tanto también de Rocky Linux y AlmaLinux. Su limitación más conocida es que se puede **ampliar, pero no reducir**.
+
+**Btrfs** (*B-tree filesystem*)
+
+Incluido en Linux desde 2009, es un sistema de ficheros moderno con **copia en escritura**. Ofrece **instantáneas**, **subvolúmenes** (divisiones del sistema de ficheros que se gestionan como si fueran particiones, pero sin tamaño fijo), **sumas de comprobación** de los datos (detecta si un fichero se ha corrompido en el disco), **compresión** transparente y RAID integrado. Es el sistema de ficheros por defecto de **Fedora** (desde la versión 33) y de **openSUSE**, que usa sus instantáneas para poder volver atrás tras una actualización que falle. Se puede ampliar y reducir con el sistema montado. Sus modos RAID 5 y RAID 6 todavía no se consideran fiables.
+
+**ZFS**
+
+Creado por Sun Microsystems en 2005 para Solaris, es probablemente el sistema de ficheros más avanzado: une en una sola herramienta el sistema de ficheros, la gestión de volúmenes (lo que en Linux hace LVM) y el RAID (RAID-Z). Tiene copia en escritura, instantáneas, sumas de comprobación y compresión. **No está incluido en el núcleo de Linux** porque su licencia (CDDL) es incompatible con la del núcleo (GPL), así que se instala aparte, con el proyecto **OpenZFS**. Es muy usado en servidores de almacenamiento como TrueNAS, en FreeBSD y en Proxmox, y Ubuntu lo ofrece como opción en su instalador.
+
+### 6.6 Sistemas de ficheros para intercambiar datos con Windows y macOS
+
+**FAT32** (*File Allocation Table*, 32 bits)
+
+Apareció en 1996 con Windows 95 y es el sistema de ficheros más **universal**: lo leen y escriben Windows, macOS, Linux, televisores, cámaras, consolas, coches y casi cualquier dispositivo con un puerto USB. A cambio, es muy limitado: **ningún fichero puede superar los 4 GiB** (menos un byte), no tiene *journaling*, no guarda propietarios ni permisos, y no distingue mayúsculas de minúsculas en los nombres. En Linux aparece como **`vfat`**. Hoy se sigue usando en memorias USB pequeñas y es **obligatorio** para la partición de arranque **EFI** (`/boot/efi`) de los equipos UEFI, porque es el único que el firmware sabe leer.
+
+**exFAT** (*Extended FAT*)
+
+Microsoft lo creó en 2006 como sucesor de FAT32 para las memorias flash. **Elimina el límite de 4 GiB** por fichero, y sigue siendo sencillo y compatible con Windows, macOS y Linux. Tampoco tiene *journaling* ni permisos. Es el formato obligatorio de las tarjetas SDXC de más de 32 GB y la opción recomendada para **memorias USB y discos externos que se vayan a usar en varios sistemas operativos**. Linux lo incluye en su núcleo desde la versión 5.4 (2019), cuando Microsoft publicó su especificación.
+
+**NTFS** (*New Technology File System*)
+
+Es el sistema de ficheros de **Windows** desde Windows NT, en 1993, y el que usa su disco de sistema. Tiene *journaling*, permisos avanzados con listas de control de acceso (ACL), compresión y cifrado. Linux lo lee y escribe con el controlador **`ntfs3`**, incluido en el núcleo desde la versión 5.15 (2021), o con el más antiguo `ntfs-3g`. macOS solo lo puede leer de forma nativa. Es la opción adecuada para un disco que se use sobre todo con Windows, o para leer desde Linux los discos de un equipo Windows.
+
+> **Nota:** Otros sistemas operativos tienen también sus propios formatos: **APFS**, el de macOS desde 2017 (antes, HFS+), y **ReFS**, que Windows Server usa para el almacenamiento de servidores. Linux no los maneja con normalidad.
+
+### 6.7 Sistemas de ficheros especiales
+
+No todos los sistemas de ficheros guardan datos en un disco:
+
+| Tipo | Dónde están los datos | Uso |
+|---|---|---|
+| **tmpfs** | En la **memoria RAM**. Se pierden al apagar. | Ficheros temporales muy rápidos: `/run` y, en Debian 13, `/tmp` (apartado 15 del documento 01). |
+| **ISO 9660** y **UDF** | En un CD, DVD o Blu-ray, o en un fichero `.iso`. | Discos ópticos e imágenes de instalación de los sistemas operativos. |
+| **NFS** | En otro equipo, a través de la red. | Carpetas compartidas entre sistemas Unix y Linux (documento 02 de *Sistemas operativos en red*). |
+| **SMB/CIFS** | En otro equipo, a través de la red. | Carpetas compartidas con Windows o con Samba (documentos 05 y 06 de *Sistemas operativos en red*). |
+| **proc**, **sysfs**, **devtmpfs** | Los genera el núcleo en memoria. | Información del sistema, del hardware y de los dispositivos: `/proc`, `/sys` y `/dev` (apartado 9 del documento 01). |
+
+> **Nota:** El área de intercambio (*swap*, apartado 11 de este documento) se formatea con `mkswap` y aparece en `blkid` con el tipo `swap`, pero **no es un sistema de ficheros**: no contiene ficheros ni se monta en ningún directorio. Es espacio en bruto que el núcleo usa como ampliación de la memoria RAM.
+
+### 6.8 Comparativa
+
+| Sistema | *Journaling* | Permisos Unix | Fichero máximo | Linux | Windows | macOS | Uso típico |
+|---|---|---|---|---|---|---|---|
+| **ext4** | Sí | Sí | 16 TiB | Sí | No | No | Sistema Linux de uso general. Por defecto en Debian y Ubuntu. |
+| **XFS** | Sí | Sí | 8 EiB | Sí | No | No | Servidores y ficheros grandes. Por defecto en Red Hat. |
+| **Btrfs** | Copia en escritura | Sí | 16 EiB | Sí | No | No | Instantáneas y subvolúmenes. Por defecto en Fedora y openSUSE. |
+| **ZFS** | Copia en escritura | Sí | 16 EiB | Instalándolo aparte | No | No | Servidores de almacenamiento. |
+| **FAT32** (`vfat`) | No | No | 4 GiB | Sí | Sí | Sí | Partición EFI y memorias USB pequeñas. |
+| **exFAT** | No | No | Prácticamente ilimitado | Sí | Sí | Sí | Memorias USB, tarjetas SD y discos externos compartidos. |
+| **NTFS** | Sí | ACL de Windows | 16 TiB o más | Sí (`ntfs3`) | Sí | Solo lectura | Discos de Windows. |
+
+### 6.9 Cómo elegir el sistema de ficheros
+
+| Situación | Elección recomendada | Por qué |
+|---|---|---|
+| Instalar Linux en un equipo o servidor de uso general | **ext4** | Fiable, maduro y el que mejor conocen las herramientas. |
+| Servidor con ficheros muy grandes o mucha actividad en paralelo | **XFS** | Rendimiento con ficheros grandes y operaciones simultáneas. |
+| Poder volver atrás tras un error o una actualización | **Btrfs** | Instantáneas que se crean al momento y apenas ocupan espacio. |
+| Memoria USB o disco externo para usar en Linux, Windows y macOS | **exFAT** | Compatible con todos y sin el límite de 4 GiB. |
+| Dispositivo antiguo, televisor o partición de arranque EFI | **FAT32** | Es el único que entienden todos. |
+| Disco compartido con un equipo Windows | **NTFS** | Es el formato propio de Windows, con permisos y *journaling*. |
+| Datos temporales que no deben sobrevivir a un reinicio | **tmpfs** | Está en la RAM: es muy rápido y se vacía solo. |
+
+> **Recuerda:** Para el **disco del sistema** Linux, los únicos candidatos razonables son los sistemas de ficheros propios de Linux (ext4, XFS o Btrfs), porque son los únicos que guardan los propietarios y permisos de los que depende el sistema (documento 28). Una partición FAT32 o exFAT montada en Linux no puede almacenar permisos: todos sus ficheros aparecen con el propietario y los permisos que se indiquen al montarla.
+
+---
+
+## 7. mkfs
 
 `mkfs` Permite aplicar un formato de sistema de ficheros a una partición.
 
@@ -426,7 +617,7 @@ root@debian:~# blkid | grep sdb
 
 ---
 
-## 7. mount y umount
+## 8. mount y umount
 
 El paso final para poder leer y escribir de particiones es montarlas en una ruta del sistema de archivos para lo cual utilizaremos el comando mount:
 
@@ -458,7 +649,7 @@ fichero1.txt   fichero3.txt  fichero5.txt  fichero7.txt  fichero9.txt
 
 ---
 
-## 8. fstab
+## 9. fstab
 
 Para que el montaje de la partición `/dev/sdb1` sea persistente y no tener que volver a realizar este proceso cuando encendamos de nuevo el ordenador tenemos que añadir la configuración correspondiente en el fichero `/etc/fstab`. Tenemos que tener cuidado con las modificaciones realizadas en este fichero ya que si los datos introducidos son incorrectos podría no iniciarse el ordenador. Para ello vamos a hacer un `cp -pv /etc/fstab /etc/fstab_VIEJO` y ejecutar el comando `mount -a` para ver si tenemos algún error antes de reiniciar la máquina.
 
@@ -589,7 +780,7 @@ root@usuario:~# cat /media/sdb5/prueba/prueba.txt
 Hola Mundo!
 ```
 
-### 8.1 Como recuperar el sistema si cometemos un error en el archivo /etc/fstab
+### 9.1 Como recuperar el sistema si cometemos un error en el archivo /etc/fstab
 
 Vamos a cometer un error en el `/etc/fstab` para que el sistema no pueda cargar las particiones, esto producirá que el sistema no cargue correctamente.
 
@@ -608,7 +799,7 @@ Si no arranca el sistema ya que el archivo `/etc/fstab` está incorrectamente fo
 
 ---
 
-## 9. Particionado con parted
+## 10. Particionado con parted
 
 1. Asignamos el tipo de particionado.
 
@@ -656,7 +847,7 @@ root@debian:~# parted -s /dev/sdb rm 1
 4. Proceso de montado.
    Una vez realizado todo este proceso, lo siguiente sería realizar el montado de las particiones o realizar las modificaciones en el `/etc/fstab` para que se carguen en el inicio.
 
-### 9.1 Ejercicio
+### 10.1 Ejercicio
 
 Crear un script bash llamado **`particionar.sh`** que realice las siguientes acciones:
 
@@ -692,7 +883,7 @@ mkfs.ext4 /dev/sdb3
 
 ---
 
-## 10. Partición de swap
+## 11. Partición de swap
 
 La partición o espacio swap en Linux es un área del disco duro que el sistema usa como extensión de la memoria RAM. Cuando la RAM se llena, Linux mueve datos menos usados a la swap para liberar memoria y evitar que el sistema se quede sin recursos, aunque acceder a swap es mucho más lento que a la RAM física.
 
