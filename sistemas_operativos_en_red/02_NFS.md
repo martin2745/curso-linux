@@ -21,16 +21,16 @@
 
 ## 2. Escenario de la práctica
 
-La implementación de la práctica requiere de la siguiente configuración: una red NAT `192.168.10.0/24` con al menos tres equipos:
+La implementación de la práctica requiere de la siguiente configuración: una red NAT `192.168.100.0/24` con al menos dos equipos:
 
-- Servidor Ubuntu con IP `192.168.10.4`.
-- Cliente Debian con IP `192.168.10.5`.
+- Servidor Ubuntu con IP `192.168.100.10`.
+- Cliente Debian con IP `192.168.100.20`.
 
 ```mermaid
 flowchart TB
-    subgraph RED["Red NAT 192.168.10.0/24"]
-        SRV["Servidor Ubuntu<br>192.168.10.4<br>(exporta /mnt/nfs_recursos)"]
-        CU["Cliente Debian<br>192.168.10.5"]
+    subgraph RED["Red NAT 192.168.100.0/24"]
+        SRV["Servidor Ubuntu<br>192.168.100.10<br>(exporta /mnt/nfs_recursos)"]
+        CU["Cliente Debian<br>192.168.100.20"]
         CU --> SRV
     end
 ```
@@ -99,13 +99,13 @@ usuario@servidor:~$ cat /etc/exports
 #
 
 # Recursos NFS
-/mnt/nfs_recursos       192.168.10.0/24(rw,sync,no_subtree_check)
+/mnt/nfs_recursos       192.168.100.0/24(rw,sync,no_subtree_check)
 ```
 
 Al final del fichero se añade la línea que exporta el directorio a toda la red:
 
 ```bash
-/mnt/nfs_recursos       192.168.10.0/24(rw,sync,no_subtree_check)
+/mnt/nfs_recursos       192.168.100.0/24(rw,sync,no_subtree_check)
 ```
 
 Cada línea de `/etc/exports` indica el directorio exportado, los equipos autorizados (una IP, una red o un nombre de equipo) y, entre paréntesis, las opciones de exportación. Las opciones más habituales son las siguientes:
@@ -178,7 +178,7 @@ usuario@debian:~$ sudo mkdir -p /mnt/nfs_cliente_debian
 3. Finalmente, montar la carpeta compartida indicando la IP del servidor, la ruta exportada y el punto de montaje local:
 
 ```bash
-usuario@debian:~$ sudo mount -t nfs 192.168.10.4:/mnt/nfs_recursos /mnt/nfs_cliente_debian/
+usuario@debian:~$ sudo mount -t nfs 192.168.100.10:/mnt/nfs_recursos /mnt/nfs_cliente_debian/
 
 usuario@debian:~$ df -Th
 S.ficheros                     Tipo     Tamaño Usados  Disp Uso% Montado en
@@ -190,7 +190,7 @@ tmpfs                          tmpfs      5,0M   8,0K  5,0M   1% /run/lock
 tmpfs                          tmpfs      1,0M      0  1,0M   0% /run/credentials/systemd-journald.service
 tmpfs                          tmpfs      2,0G    16K  2,0G   1% /tmp
 tmpfs                          tmpfs      393M    96K  393M   1% /run/user/1000
-192.168.10.4:/mnt/nfs_recursos nfs4        24G   7,1G   16G  32% /mnt/nfs_cliente_debian
+192.168.100.10:/mnt/nfs_recursos nfs4        24G   7,1G   16G  32% /mnt/nfs_cliente_debian
 ```
 
 > **Nota:** Puede verificarse que el montaje se ha realizado correctamente con `df -h` o con `mount | grep nfs`. A partir de este momento, todo lo que se escriba en `/mnt/nfs_cliente_debian` se está escribiendo realmente en el servidor.
@@ -211,7 +211,7 @@ usuario@debian:~$ sudo nano /etc/fstab
 Añadimos la siguiente línea al final del fichero:
 
 ```text
-192.168.10.4:/mnt/nfs_recursos    /mnt/nfs_cliente_debian    nfs    defaults    0    0
+192.168.100.10:/mnt/nfs_recursos    /mnt/nfs_cliente_debian    nfs    defaults    0    0
 ```
 
 Comprobamos que no hay errores en la configuración ejecutando `sudo mount -a`: si no devuelve errores, la línea es válida y podemos reiniciar el cliente con seguridad.

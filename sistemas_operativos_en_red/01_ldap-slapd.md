@@ -57,9 +57,9 @@
 
 > **Convención de etiquetas usada en estos apuntes:**
 >
-> **SERVIDOR** — El paso se realiza en la máquina Ubuntu Server 26.04 LTS con `slapd` instalado (`192.168.10.4`).
+> **SERVIDOR** — El paso se realiza en la máquina Ubuntu Server 26.04 LTS con `slapd` instalado (`192.168.100.10`).
 >
-> **CLIENTE** — El paso se realiza en la máquina cliente del alumno o profesor (`192.168.10.5`). El cliente es Debian 13.
+> **CLIENTE** — El paso se realiza en la máquina cliente del alumno o profesor (`192.168.100.20`). El cliente es Debian 13.
 
 ---
 
@@ -143,7 +143,7 @@ Esta estructura combina dos mecanismos complementarios. Las **OUs de curso** (`o
 
 Antes de instalar el servicio, es fundamental preparar correctamente el nombre de host del servidor. OpenLDAP utiliza el FQDN (*Fully Qualified Domain Name*) del servidor para construir internamente algunas referencias, y un hostname incorrecto puede causar errores en el arranque del servicio o en la conexión de los clientes.
 
-En Ubuntu Server 26.04, el nombre de host se gestiona con `hostnamectl`, igual que en otras distribuciones modernas basadas en systemd. En nuestro escenario, el servidor tendrá la IP `192.168.10.4` y el nombre `ldap.ies.local`. Establecer el hostname:
+En Ubuntu Server 26.04, el nombre de host se gestiona con `hostnamectl`, igual que en otras distribuciones modernas basadas en systemd. En nuestro escenario, el servidor tendrá la IP `192.168.100.10` y el nombre `ldap.ies.local`. Establecer el hostname:
 
 ```bash
 root@ubuntu-server:~# hostnamectl set-hostname ldap.ies.local
@@ -168,10 +168,10 @@ El fichero debe contener al menos las siguientes líneas:
 ```
 127.0.0.1       localhost
 127.0.1.1       ldap.ies.local ldap
-192.168.10.4    ldap.ies.local ldap
+192.168.100.10  ldap.ies.local ldap
 ```
 
-> **Nota:** En Ubuntu, la línea `127.0.1.1` es añadida automáticamente por el instalador y sirve para que el hostname resuelva incluso sin interfaz de red activa. Mantenerla y añadir también la línea con la IP real del servidor (`192.168.10.4`) para que los clientes de la red puedan resolver el nombre correctamente.
+> **Nota:** En Ubuntu, la línea `127.0.1.1` es añadida automáticamente por el instalador y sirve para que el hostname resuelva incluso sin interfaz de red activa. Mantenerla y añadir también la línea con la IP real del servidor (`192.168.100.10`) para que los clientes de la red puedan resolver el nombre correctamente.
 
 Guardar el fichero con `Ctrl+O`, confirmar con `Enter` y salir con `Ctrl+X`.
 
@@ -193,15 +193,17 @@ network:
     enp0s3:
       dhcp4: false
       addresses:
-        - 192.168.10.4/24
+        - 192.168.100.10/24
       routes:
         - to: default
-          via: 192.168.10.1
+          via: 192.168.100.1
       nameservers:
         addresses:
           - 8.8.8.8
           - 1.1.1.1
 ```
+
+> **Nota:** Las máquinas del escenario están en una **Red NAT** de VirtualBox con el prefijo `192.168.100.0/24`, que se crea en *Archivo > Herramientas > Gestor de red > Redes NAT*. En esa red, VirtualBox hace de router en la dirección `192.168.100.1`, que es la puerta de enlace que se indica arriba. Las direcciones se reparten así: `.1` para la puerta de enlace, `.10` para el servidor y de la `.20` en adelante para los clientes (`.20` el cliente Debian y `.21` su clon del documento 03). El cliente también debe tener la IP configurada de forma estática (documento 31 de los apuntes de Linux): si se deja por DHCP, el servidor DHCP de VirtualBox le dará la primera dirección libre de la red, y no la `.20`.
 
 > **Snapshot:** Con el hostname y la red ya configurados, y antes de instalar ningún paquete, crear una instantánea de la máquina virtual del servidor (por ejemplo, `pre-slapd`). Si la configuración del directorio saliera mal, bastará con restaurarla en lugar de intentar deshacer los cambios a mano.
 
@@ -345,7 +347,7 @@ result: 0 Success
 | Parámetro | Descripción |
 |-----------|-------------|
 | `-x` | Usa autenticación simple en lugar de SASL. Es el modo estándar para la mayoría de operaciones |
-| `-H ldap://localhost` | Especifica la URI del servidor LDAP al que conectarse. También se puede usar `ldap://192.168.10.4` |
+| `-H ldap://localhost` | Especifica la URI del servidor LDAP al que conectarse. También se puede usar `ldap://192.168.100.10` |
 | `-b "dc=ies,dc=local"` | Define el punto de partida (*base*) de la búsqueda en el árbol. La búsqueda incluirá este nodo y todos sus descendientes |
 
 La respuesta mostrará la entrada raíz del directorio y finalizará con `result: 0 Success`, lo que confirma que el servidor está operativo.
@@ -1268,7 +1270,7 @@ root@ldap:~# ldapdelete -x -H ldap://localhost -D "cn=admin,dc=ies,dc=local" -W 
 
 ## Búsquedas con ldapsearch
 
-**SERVIDOR** (también ejecutable desde **CLIENTE** una vez configurado, sustituyendo `localhost` por `192.168.10.4`)
+**SERVIDOR** (también ejecutable desde **CLIENTE** una vez configurado, sustituyendo `localhost` por `192.168.100.10`)
 
 `ldapsearch` es la herramienta principal para consultar el directorio LDAP. La sintaxis general es:
 
@@ -1394,7 +1396,7 @@ root@ldap:~# ss -putan | grep apache2
 tcp   LISTEN    0      511                *:80               *:*     users:(("apache2",pid=29550,fd=4),("apache2",pid=29549,fd=4),("apache2",pid=29548,fd=4),("apache2",pid=29547,fd=4),("apache2",pid=29546,fd=4),("apache2",pid=29532,fd=4))
 ```
 
-En este momento podremos visualizar la interfaz de administración del servicio. En nuestro caso la dirección será: `http://[IP_ADDRESS]/lam/` (podemos usar un port forward para acceder desde el navegador del anfitrión `http://localhost:8000/lam` o desde un equipo de la red NAT `http://192.168.10.4/lam`).
+En este momento podremos visualizar la interfaz de administración del servicio. En nuestro caso la dirección será: `http://[IP_ADDRESS]/lam/` (podemos usar un port forward para acceder desde el navegador del anfitrión `http://localhost:8000/lam` o desde un equipo de la red NAT `http://192.168.100.10/lam`).
 
 ![Inicio](./recursos/LDAP/imagenes/1.png)
 
@@ -1772,7 +1774,7 @@ config_file_version = 2
 [domain/ies.local]
 id_provider = ldap
 auth_provider = ldap
-ldap_uri = ldap://192.168.10.4
+ldap_uri = ldap://192.168.100.10
 ldap_search_base = dc=ies,dc=local
 ldap_schema = rfc2307
 ldap_user_search_base = ou=usuarios,dc=ies,dc=local
@@ -1782,7 +1784,7 @@ cache_credentials = true
 entry_cache_timeout = 300
 enumerate = true
 chpass_provider = ldap
-ldap_chpass_uri = ldap://192.168.10.4
+ldap_chpass_uri = ldap://192.168.100.10
 ldap_tls_reqcert = never
 ldap_chpass_update_last_change = true
 ldap_id_use_start_tls = false
@@ -2053,7 +2055,7 @@ El comando `id` devuelve el UID, GID y grupos del usuario resolviendo a través 
 uid=10001(a.garcia) gid=10000(SMR1) groups=10000(SMR1)
 ```
 
-> **Nota de diagnóstico:** Si `getent` no devuelve nada, el problema puede estar en la configuración de SSSD (`/etc/sssd/sssd.conf`), en la conectividad de red con el servidor LDAP o en los permisos del fichero de configuración. Verificar con `ping 192.168.10.4` y revisar los logs de SSSD con `journalctl -u sssd -f`. Si `getent` funciona pero el login falla, el problema está en PAM (revisar `/etc/pam.d/common-auth`).
+> **Nota de diagnóstico:** Si `getent` no devuelve nada, el problema puede estar en la configuración de SSSD (`/etc/sssd/sssd.conf`), en la conectividad de red con el servidor LDAP o en los permisos del fichero de configuración. Verificar con `ping 192.168.100.10` y revisar los logs de SSSD con `journalctl -u sssd -f`. Si `getent` funciona pero el login falla, el problema está en PAM (revisar `/etc/pam.d/common-auth`).
 
 **Prueba 6 — Acceso desde GUI (GNOME)**
 

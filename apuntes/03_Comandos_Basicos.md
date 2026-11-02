@@ -26,6 +26,11 @@
    4. [Comando date](#74-comando-date)
    5. [Comando uname](#75-comando-uname)
 8. [Enlaces duros y simbólicos](#8-enlaces-duros-y-simbólicos)
+   1. [Qué es un inodo](#81-qué-es-un-inodo)
+   2. [Qué es un enlace](#82-qué-es-un-enlace)
+   3. [Enlaces duros](#83-enlaces-duros)
+   4. [Enlaces simbólicos](#84-enlaces-simbólicos)
+   5. [Comparativa](#85-comparativa)
 9. [Cambio de usuario](#9-cambio-de-usuario)
 
 ---
@@ -443,101 +448,286 @@ usuario@debian:~$ uname -r
 
 ## 8. Enlaces duros y simbólicos
 
-```bash
-usuario@debian:~$ cd /tmp
-usuario@debian:/tmp$ echo "fichero test" > test
-usuario@debian:/tmp$ ls test
-test
-usuario@debian:/tmp$ cat test
-fichero test
+Un **enlace** permite que un mismo fichero sea accesible con varios nombres o desde varias rutas. Linux tiene dos tipos de enlaces, los **duros** y los **simbólicos**, que funcionan de forma muy distinta. Para entender esa diferencia hace falta saber antes cómo guarda Linux los ficheros en el disco, y para eso hay que conocer los **inodos**.
+
+### 8.1 Qué es un inodo
+
+En los sistemas de ficheros de Linux, cada fichero se guarda en dos partes:
+
+- Sus **datos**, es decir, su contenido, que se reparten en **bloques** del disco.
+- Su **inodo** (*index node*), una ficha con toda la información **sobre** el fichero. Cada inodo se identifica con un **número**, único dentro de su sistema de ficheros.
+
+| Lo que guarda el inodo | Lo que **no** guarda el inodo |
+|---|---|
+| El tipo de fichero: regular, directorio, enlace simbólico, dispositivo... | El **nombre** del fichero. |
+| Los permisos, el propietario y el grupo. | |
+| El tamaño. | |
+| Las fechas `atime`, `mtime` y `ctime` (documento 24). | |
+| El **número de enlaces**: cuántos nombres apuntan a este inodo. | |
+| En qué bloques del disco están los datos. | |
+
+El nombre del fichero no está en el inodo, sino en el **directorio** que lo contiene. Un directorio es, en realidad, una tabla con dos columnas: cada nombre y el número de inodo al que corresponde.
+
+```text
+Directorio ~/enlaces
+┌──────────────┬───────────────┐
+│ Nombre       │ Número inodo  │
+├──────────────┼───────────────┤
+│ test.txt     │ 2359319       │──▶ Inodo 2359319 ──▶ Bloques de datos
+│ notas.txt    │ 2359402       │──▶ Inodo 2359402 ──▶ Bloques de datos
+└──────────────┴───────────────┘
 ```
 
-A continuación creamos un **enlace duro** sobre ese fichero. Obsérvese que el enlace muestra exactamente el mismo contenido que el original:
+Cuando se abre `test.txt`, el sistema busca ese nombre en el directorio, obtiene el número de inodo, lee en el inodo los permisos y la ubicación de los datos, y por último lee los datos.
+
+El número de inodo se ve con `ls -i`, y el resto de la información del inodo, con `stat`:
 
 ```bash
-usuario@debian:/tmp$ ln test enlace-duro-test
-usuario@debian:/tmp$ ls test enlace-duro-test
-enlace-duro-test  test
-usuario@debian:/tmp$ cat enlace-duro-test
-fichero test
+usuario@debian:~$ mkdir enlaces && cd enlaces
+usuario@debian:~/enlaces$ echo "fichero test" > test.txt
+usuario@debian:~/enlaces$ ls -li test.txt
+2359319 -rw-r--r-- 1 usuario usuario 13 sep  5 07:51 test.txt
+usuario@debian:~/enlaces$ stat -c 'Inodo: %i  Enlaces: %h  Tamaño: %s bytes' test.txt
+Inodo: 2359319  Enlaces: 1  Tamaño: 13 bytes
 ```
 
-**Explicación**: El comando `ln` (*Link*) sirve para crear enlaces en Linux. En Linux existen fundamentalmente dos tipos de enlaces con naturalezas muy distintas.
+En `ls -li`, la primera columna es el número de inodo y la tercera, el número de enlaces.
 
-**1. Enlaces simbólicos (Soft links):**
-La manera más sencilla de comprender qué es un enlace simbólico en Linux es compararlo con el "acceso directo" o *shortcut* habitual de Windows. El archivo de datos real se encuentra guardado en un único sector físico, y los enlaces son simplemente pequeños punteros o atajos que apuntan a esa ruta.
-- Tienen su propio número de inodo.
-- Pueden enlazar a directorios o a archivos que residan en otras particiones de disco o discos duros diferentes.
-- Para crearlos, se utiliza el parámetro `-s`.
+> **Nota:** Dos consecuencias de cómo funcionan los inodos que se ven en otros documentos:
+>
+> - El número de inodos de un sistema de ficheros como ext4 se fija al formatearlo. Si se agotan, no se pueden crear más ficheros aunque quede espacio libre. `df -i` muestra cuántos quedan (documento 13).
+> - Cambiar el nombre de un fichero o moverlo dentro del mismo sistema de ficheros con `mv` es instantáneo, aunque el fichero ocupe gigas: solo se modifica la tabla del directorio, y ni el inodo ni los datos se mueven.
 
-Creando un enlace simbólico partiendo de nuestro archivo anterior:
+### 8.2 Qué es un enlace
 
-```bash
-usuario@debian:/tmp$ ls -li test enlace-duro-test
-2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:41 enlace-duro-test
-2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:41 test
+Como el nombre está en el directorio y no en el inodo, **nada impide que dos nombres distintos apunten al mismo inodo**. Eso es un **enlace duro**. De hecho, cualquier nombre de fichero ya es un enlace duro a su inodo: por eso `test.txt` aparece con un `1` en la columna de enlaces.
 
-usuario@debian:/tmp$ ln -s test enlace-simbolico-test
+La otra forma de dar un segundo nombre a un fichero es crear un fichero especial cuyo contenido sea **la ruta** del fichero original. Eso es un **enlace simbólico**.
 
-usuario@debian:/tmp$ ls -li test enlace*
-2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:41 test
-2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:41 enlace-duro-test
-2359336 lrwxrwxrwx 1 usuario usuario  4 sep  5 07:49 enlace-simbolico-test -> test
+```mermaid
+flowchart LR
+    subgraph DIR["Directorio ~/enlaces"]
+        N1["test.txt"]
+        N2["enlace-duro"]
+        N3["enlace-simbolico"]
+    end
+    I1["Inodo 2359319<br/>fichero regular<br/>enlaces: 2"]
+    I2["Inodo 2359337<br/>enlace simbólico<br/>enlaces: 1"]
+    D1[("Datos:<br/>fichero test")]
+    D2[("Datos:<br/>la ruta test.txt")]
+    N1 --> I1
+    N2 --> I1
+    N3 --> I2
+    I1 --> D1
+    I2 --> D2
+    D2 -. "se sigue la ruta" .-> N1
 ```
 
-Observa que en la primera columna (*número de inodo*) el enlace simbólico tiene un número diferente, y en el nombre se nos indica visualmente el puntero: `enlace-simbolico-test -> test`.
+- `test.txt` y `enlace-duro` son **dos nombres del mismo inodo**: son el mismo fichero, y ninguno de los dos es «el original».
+- `enlace-simbolico` es **otro fichero**, con su propio inodo, que solo contiene el texto `test.txt`. Al abrirlo, el sistema lee esa ruta y la sigue.
 
-> **Advertencia:** Es sumamente importante entender que si borramos el fichero origen, el enlace simbólico permanecerá existiendo como archivo, pero se convertirá en un enlace "roto" (quedará ciego y dará error de fichero no encontrado).
+Los dos se crean con la orden `ln` (*link*):
 
-Procedemos a borrar el archivo `test` original para comprobarlo:
+| Orden | Qué crea |
+|---|---|
+| `ln origen nombre` | Un enlace duro llamado `nombre`. |
+| `ln -s origen nombre` | Un enlace simbólico llamado `nombre`. |
 
-```bash
-usuario@debian:/tmp$ rm test
-usuario@debian:/tmp$ ls -li enlace*
-2359319 -rw-r--r-- 1 usuario usuario 13 sep  5 07:41 enlace-duro-test
-2359336 lrwxrwxrwx 1 usuario usuario  4 sep  5 07:49 enlace-simbolico-test -> test
+### 8.3 Enlaces duros
 
-usuario@debian:/tmp$ cat enlace-duro-test
-fichero test
-usuario@debian:/tmp$ cat enlace-simbolico-test
-cat: enlace-simbolico-test: No existe el fichero o el directorio
-```
-
-**2. Enlaces duros (Hard links):**
-Los enlaces duros actúan asociando múltiples nombres de archivo al mismo número de inodo en el sistema de archivos físico. Un enlace duro no es un atajo, es una entrada equivalente; actúa como una copia espejo pero que no ocupa el doble de espacio. Esto implica que al alterar el contenido, permisos o metadatos de un enlace duro, los cambios se reflejan inmediatamente en el resto, ya que debajo son el mismo objeto. Borrar uno no borra los datos mientras sobreviva al menos una referencia dura.
-
-Creamos nuevos archivos y enlaces para observarlo:
+Se crea un enlace duro a `test.txt`:
 
 ```bash
-usuario@debian:/tmp$ rm enlace*
-usuario@debian:/tmp$ echo "fichero test" > test.txt
-usuario@debian:/tmp$ ln test.txt enlace-duro-test
-
-usuario@debian:/tmp$ ls -li test.txt enlace-duro-test
-2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:51 enlace-duro-test
+usuario@debian:~/enlaces$ ln test.txt enlace-duro
+usuario@debian:~/enlaces$ ls -li test.txt enlace-duro
+2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:51 enlace-duro
 2359319 -rw-r--r-- 2 usuario usuario 13 sep  5 07:51 test.txt
 ```
 
-En la primera columna de `ls -li` verificamos que ambos comparten exactamente el mismo inodo (`2359319`). La tercera columna marca un número `2`, confirmando cuántos enlaces duros apuntan actualmente a ese archivo de datos subyacente. Si cambiamos los permisos con `chmod`:
+Los dos nombres tienen el mismo número de inodo (`2359319`), y el número de enlaces ha pasado a `2`. No hay una copia: hay **un solo fichero con dos nombres**, así que el espacio no se duplica y cualquier cambio hecho a través de un nombre se ve a través del otro, tanto en el contenido como en los permisos:
 
 ```bash
-usuario@debian:/tmp$ chmod 755 test.txt
-usuario@debian:/tmp$ ls -li test.txt enlace-duro-test
-2359319 -rwxr-xr-x 2 usuario usuario 13 sep  5 07:51 enlace-duro-test
-2359319 -rwxr-xr-x 2 usuario usuario 13 sep  5 07:51 test.txt
+usuario@debian:~/enlaces$ echo "segunda línea" >> enlace-duro
+usuario@debian:~/enlaces$ cat test.txt
+fichero test
+segunda línea
+usuario@debian:~/enlaces$ chmod 755 test.txt
+usuario@debian:~/enlaces$ ls -li test.txt enlace-duro
+2359319 -rwxr-xr-x 2 usuario usuario 28 sep  5 07:53 enlace-duro
+2359319 -rwxr-xr-x 2 usuario usuario 28 sep  5 07:53 test.txt
 ```
 
-> **Nota:** Por seguridad del sistema de archivos, los enlaces duros no pueden realizarse contra directorios y tampoco pueden cruzar fronteras de sistemas de ficheros distintos (no puedes hacer un enlace duro desde un disco duro hacia un *pendrive* USB externo).
+**Qué pasa al borrar**
 
-**Tabla resumen comparativa de enlaces:**
+`rm` no borra el fichero, sino **un nombre**: quita la entrada del directorio y resta uno al número de enlaces del inodo. El inodo y los datos solo se liberan cuando el número de enlaces llega a `0` (y ningún programa tiene el fichero abierto, como se explica en el documento 13). Por eso, al borrar `test.txt`, el contenido sigue accesible a través de `enlace-duro`:
 
-| Soft Link (Simbólico) | Hard Link (Duro) |
-| --------------------- | ---------------- |
-| Se pueden crear contra ficheros y directorios completos. | Solamente se permite enlazarlos contra ficheros. |
-| Se pueden enlazar cruzando particiones o distintos sistemas de ficheros. | Estrictamente limitados a operar dentro del mismo disco o partición. |
-| Poseen un número de inodo propio e independiente. | Comparten exactamente el mismo inodo. |
-| Si borramos la información original, perdemos los datos y el enlace queda "roto". | Si borramos el archivo de origen "original", los datos siguen estando disponibles a través del enlace. |
-| Actúan como simples punteros o accesos directos de ruta. | Actúan como un espejo en sincronización idéntico del fichero de origen. |
+```bash
+usuario@debian:~/enlaces$ rm test.txt
+usuario@debian:~/enlaces$ ls -li enlace-duro
+2359319 -rwxr-xr-x 1 usuario usuario 28 sep  5 07:53 enlace-duro
+usuario@debian:~/enlaces$ cat enlace-duro
+fichero test
+segunda línea
+```
+
+> **Recuerda:** Por esto mismo, para borrar un fichero no hace falta ningún permiso sobre él, sino permiso de escritura en el **directorio**: borrar es modificar la tabla del directorio (documento 28, sección 6).
+
+**Limitaciones de los enlaces duros**
+
+- **No se pueden crear sobre directorios.** Si se pudiera, un directorio podría acabar dentro de sí mismo y órdenes como `find` o `du` entrarían en un bucle infinito. Los únicos enlaces duros a directorios son `.` y `..`, que crea el propio sistema. Por eso el número de enlaces de un directorio es `2` más el número de subdirectorios que contiene: su nombre en el directorio padre, su propio `.` y el `..` de cada subdirectorio:
+
+  ```bash
+  usuario@debian:~/enlaces$ mkdir -p carpeta/sub1 carpeta/sub2
+  usuario@debian:~/enlaces$ stat -c '%h %n' carpeta carpeta/sub1
+  4 carpeta
+  2 carpeta/sub1
+  ```
+
+- **No pueden cruzar sistemas de ficheros.** Un enlace duro es un número de inodo, y cada sistema de ficheros tiene su propia numeración: el inodo `2359319` de una partición no tiene nada que ver con el `2359319` de otra o de un *pendrive*. Al intentarlo, `ln` falla con un error de enlace entre dispositivos (*cross-device link*).
+
+**Cómo encontrar los otros nombres de un fichero**
+
+Como todos los nombres son equivalentes, no hay un «original» al que preguntar. Para encontrar todos los nombres de un mismo inodo, se busca por número de inodo dentro del mismo sistema de ficheros (documento 17):
+
+```bash
+usuario@debian:~/enlaces$ ln enlace-duro otro-nombre
+usuario@debian:~/enlaces$ find ~ -samefile enlace-duro
+/home/usuario/enlaces/enlace-duro
+/home/usuario/enlaces/otro-nombre
+usuario@debian:~/enlaces$ find ~ -inum 2359319
+/home/usuario/enlaces/enlace-duro
+/home/usuario/enlaces/otro-nombre
+```
+
+### 8.4 Enlaces simbólicos
+
+Un enlace simbólico es un **fichero especial cuyo contenido es una ruta**. La mejor comparación es un **acceso directo** de Windows: no contiene los datos, solo indica dónde están. Se crea con `ln -s`:
+
+```bash
+usuario@debian:~/enlaces$ echo "fichero test" > test.txt
+usuario@debian:~/enlaces$ ln -s test.txt enlace-simbolico
+usuario@debian:~/enlaces$ ls -li test.txt enlace-simbolico
+2359337 lrwxrwxrwx 1 usuario usuario  8 sep  5 07:55 enlace-simbolico -> test.txt
+2359336 -rw-r--r-- 1 usuario usuario 13 sep  5 07:55 test.txt
+usuario@debian:~/enlaces$ cat enlace-simbolico
+fichero test
+```
+
+En el listado se ven todas sus características:
+
+- **Tiene su propio inodo** (`2359337`), distinto del de `test.txt`: es otro fichero.
+- **Su tipo es `l`** (*link*), la primera letra de los permisos (documento 28, sección 5).
+- **Su tamaño es `8`**: los 8 caracteres de la ruta `test.txt`, que es todo lo que contiene.
+- **La flecha** `-> test.txt` indica adónde apunta.
+- **Sus permisos son siempre `rwxrwxrwx`** y no se tienen en cuenta: lo que cuenta son los permisos del fichero de destino.
+- El número de enlaces de `test.txt` sigue siendo `1`: un enlace simbólico no cuenta como enlace del inodo de destino.
+
+A diferencia de los duros, los enlaces simbólicos **pueden apuntar a directorios**, a ficheros de **otros sistemas de ficheros** e incluso a rutas que **no existen**.
+
+**Enlaces rotos**
+
+Como el enlace solo guarda una ruta, si el destino se borra, se mueve o se renombra, el enlace sigue existiendo pero apunta a algo que ya no está. Es un **enlace roto**:
+
+```bash
+usuario@debian:~/enlaces$ rm test.txt
+usuario@debian:~/enlaces$ ls -l enlace-simbolico
+lrwxrwxrwx 1 usuario usuario 8 sep  5 07:55 enlace-simbolico -> test.txt
+usuario@debian:~/enlaces$ cat enlace-simbolico
+cat: enlace-simbolico: No existe el fichero o el directorio
+```
+
+Si se vuelve a crear un fichero `test.txt`, el enlace vuelve a funcionar, porque lo único que hace es seguir esa ruta. Para localizar los enlaces rotos de una carpeta se usa `find` con `-xtype l`, que encuentra los enlaces cuyo destino no existe:
+
+```bash
+usuario@debian:~/enlaces$ find . -xtype l
+./enlace-simbolico
+```
+
+**Rutas relativas y absolutas**
+
+La ruta que se guarda en el enlace puede ser absoluta o relativa, y en este segundo caso se interpreta **desde la carpeta donde está el enlace**, no desde donde se creó. Es un error muy habitual:
+
+```bash
+usuario@debian:~/enlaces$ echo "fichero test" > test.txt
+usuario@debian:~/enlaces$ mkdir docs
+usuario@debian:~/enlaces$ ln -s test.txt docs/enlace-mal
+usuario@debian:~/enlaces$ cat docs/enlace-mal
+cat: docs/enlace-mal: No existe el fichero o el directorio
+```
+
+El enlace guarda la ruta `test.txt`, y desde la carpeta `docs` eso significa `docs/test.txt`, que no existe. Hay dos formas correctas de hacerlo:
+
+```bash
+usuario@debian:~/enlaces$ ln -s ../test.txt docs/enlace-relativo
+usuario@debian:~/enlaces$ ln -s /home/usuario/enlaces/test.txt docs/enlace-absoluto
+usuario@debian:~/enlaces$ ls -l docs
+total 0
+lrwxrwxrwx 1 usuario usuario 30 sep  5 07:58 enlace-absoluto -> /home/usuario/enlaces/test.txt
+lrwxrwxrwx 1 usuario usuario  8 sep  5 07:58 enlace-mal -> test.txt
+lrwxrwxrwx 1 usuario usuario 11 sep  5 07:58 enlace-relativo -> ../test.txt
+```
+
+| Tipo de ruta | Ventaja | Inconveniente |
+|---|---|---|
+| Absoluta | Funciona aunque el enlace se mueva a otra carpeta. | Se rompe si se mueve o se renombra la carpeta de destino. |
+| Relativa | Sigue funcionando si se mueve **todo el conjunto** (enlace y destino) a otra ubicación. | Se rompe si se mueve solo el enlace. |
+
+**Órdenes útiles con enlaces simbólicos**
+
+| Orden | Qué hace |
+|---|---|
+| `readlink enlace` | Muestra la ruta que guarda el enlace, tal cual. |
+| `readlink -f enlace` o `realpath enlace` | Muestra la ruta absoluta final, siguiendo todos los enlaces que haya por el camino. |
+| `ln -sf destino enlace` | Crea el enlace y, si ya existe uno con ese nombre, lo sustituye. Si el enlace apunta a un directorio, hay que añadir `-n` (`ln -sfn`) para que se sustituya el enlace en lugar de crear uno nuevo dentro de ese directorio. |
+| `rm enlace` o `unlink enlace` | Borra el enlace. El destino no se toca. |
+
+```bash
+usuario@debian:~/enlaces$ readlink docs/enlace-relativo
+../test.txt
+usuario@debian:~/enlaces$ readlink -f docs/enlace-relativo
+/home/usuario/enlaces/test.txt
+```
+
+**Cómo tratan las órdenes a los enlaces simbólicos**
+
+Algunas órdenes actúan sobre el **destino** del enlace y otras sobre el **propio enlace**:
+
+| Orden | Actúa sobre |
+|---|---|
+| `cat`, `less`, `nano`, `vim` y, en general, leer o escribir | El destino: se lee o se modifica el fichero al que apunta. |
+| `chmod` | El destino. Los permisos de un enlace no se pueden cambiar. |
+| `chown` | El destino. Con `chown -h`, el propio enlace. |
+| `cp enlace copia` | El destino: `copia` es un fichero normal con su contenido. Con `cp -P` o `cp -a`, se copia el enlace. |
+| `rm`, `mv` | El propio enlace. |
+| `ls -l` | El propio enlace. Con `ls -lL`, muestra los datos del destino. |
+
+> **Advertencia:** Para borrar un enlace a un directorio se usa `rm enlace` o `unlink enlace`, **sin barra final**. Con la barra, `rm -r enlace/` entra en el directorio de destino y borra **su contenido**, que no es lo que se pretendía.
+
+**Enlaces simbólicos en el propio sistema**
+
+Linux usa enlaces simbólicos constantemente. Algunos ejemplos que aparecen en otros documentos:
+
+| Enlace | Para qué sirve |
+|---|---|
+| `/bin -> usr/bin`, `/sbin -> usr/sbin`, `/lib -> usr/lib` | Mantienen las rutas antiguas tras la unificación de `/usr` (documento 01). |
+| `/etc/alternatives/` | Deciden qué programa se ejecuta cuando hay varios que hacen lo mismo, como los editores o las versiones de `sudo` de Ubuntu (`update-alternatives`). |
+| `/etc/apache2/sites-enabled/` | Los sitios web activos son enlaces a los ficheros de `sites-available` (documento 01 de servicios en red). |
+| `/etc/systemd/system/*.wants/` | `systemctl enable` activa un servicio creando un enlace a su unidad (documento 29). |
+
+### 8.5 Comparativa
+
+| | Enlace duro | Enlace simbólico |
+|---|---|---|
+| Qué es | Otro nombre para el **mismo inodo**. | Un fichero distinto cuyo contenido es **una ruta**. |
+| Número de inodo | El mismo que el destino. | Uno propio. |
+| Orden para crearlo | `ln origen nombre` | `ln -s origen nombre` |
+| Cómo se reconoce en `ls -li` | Mismo inodo y número de enlaces mayor que `1`. | Tipo `l` y una flecha `->` hacia el destino. |
+| ¿Puede apuntar a directorios? | No. | Sí. |
+| ¿Puede cruzar sistemas de ficheros? | No. | Sí. |
+| ¿Puede apuntar a algo que no existe? | No. | Sí: queda roto. |
+| Si se borra el fichero original | Los datos siguen accesibles por el otro nombre. | El enlace queda roto. |
+| Espacio que ocupa | Ninguno: solo una entrada más en el directorio. | Un inodo y el texto de la ruta. |
+| Uso habitual | Copias de seguridad que no duplican ficheros iguales (`rsync --link-dest`, documento 45). | Accesos directos, rutas de compatibilidad y activar configuraciones. |
 
 ---
 

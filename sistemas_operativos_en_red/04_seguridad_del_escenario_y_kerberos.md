@@ -150,7 +150,7 @@ En una red de aula con un switch esto ya supone un riesgo; en una red con wifi o
 
 ### 2.4. Confianza en la dirección IP del cliente
 
-Las exportaciones de NFS se restringen a una red (`192.168.20.0/24`). Es una barrera útil, pero débil por sí sola: una **dirección IP se puede falsificar** (*IP spoofing*), y basta con conectar un equipo a esa red y asignarle una dirección del rango para que el servidor lo acepte como cliente legítimo. El control por IP disuade, pero no autentica.
+Las exportaciones de NFS se restringen a una red (`192.168.100.0/24`). Es una barrera útil, pero débil por sí sola: una **dirección IP se puede falsificar** (*IP spoofing*), y basta con conectar un equipo a esa red y asignarle una dirección del rango para que el servidor lo acepte como cliente legítimo. El control por IP disuade, pero no autentica.
 
 ### 2.5. LDAP sin TLS
 
@@ -320,7 +320,7 @@ Añadir Kerberos a nuestro escenario implicaría incorporar estos elementos:
 ```mermaid
 flowchart TB
     subgraph RED["Red de la empresa"]
-        subgraph SRV["Servidor 192.168.20.4"]
+        subgraph SRV["Servidor 192.168.100.10"]
             LDAP["OpenLDAP<br>identidades"]
             KDC["KDC Kerberos<br>autenticación"]
             NFS["NFS con sec=krb5<br>datos"]

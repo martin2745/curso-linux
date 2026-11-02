@@ -32,9 +32,9 @@
 
 > **Convención de etiquetas usada en estos apuntes:**
 >
-> **SERVIDOR** — El paso se realiza en la máquina Ubuntu Server 26.04 LTS con `slapd` y NFS (`192.168.10.4`).
+> **SERVIDOR** — El paso se realiza en la máquina Ubuntu Server 26.04 LTS con `slapd` y NFS (`192.168.100.10`).
 >
-> **CLIENTE** — El paso se realiza en la máquina Debian 13 del alumno o profesor (`192.168.10.5`).
+> **CLIENTE** — El paso se realiza en la máquina Debian 13 del alumno o profesor (`192.168.100.20`).
 
 ---
 
@@ -68,11 +68,11 @@ La solución completa combina tres piezas que ya se han trabajado por separado:
 
 ```mermaid
 flowchart TB
-    subgraph SRV["Servidor 192.168.10.4"]
+    subgraph SRV["Servidor 192.168.100.10"]
         LDAP["slapd (LDAP)<br>identidades: uid, uidNumber, gidNumber"]
         NFSS["NFS<br>exporta /home/alumnos y /home/profesores"]
     end
-    subgraph CLI["Cliente Debian 192.168.10.5"]
+    subgraph CLI["Cliente Debian 192.168.100.20"]
         SSSD["SSSD + PAM + NSS<br>autentica al usuario"]
         MNT["Montaje NFS en /home/alumnos"]
     end
@@ -99,8 +99,8 @@ Se parte del escenario ya montado en la unidad anterior, sin añadir ninguna má
 
 | Equipo | Sistema | IP | Función |
 |---|---|---|---|
-| `ldap.ies.local` | Ubuntu Server 26.04 LTS | `192.168.10.4` | Servidor LDAP y, a partir de ahora, servidor NFS de los homes |
-| `cliente` | Debian 13 | `192.168.10.5` | Equipo del aula, ya integrado en el directorio mediante SSSD |
+| `ldap.ies.local` | Ubuntu Server 26.04 LTS | `192.168.100.10` | Servidor LDAP y, a partir de ahora, servidor NFS de los homes |
+| `cliente` | Debian 13 | `192.168.100.20` | Equipo del aula, ya integrado en el directorio mediante SSSD |
 
 Los usuarios y grupos del directorio, con sus identificadores numéricos y sus homes, son los definidos en la UD3:
 
@@ -165,7 +165,7 @@ uid=10001(a.garcia) gid=10000(SMR1) groups=10000(SMR1)
 Comprobar también que hay conectividad con el servidor:
 
 ```bash
-root@cliente:~# ping -c 2 192.168.10.4
+root@cliente:~# ping -c 2 192.168.100.10
 ```
 
 > **Importante:** Si `getent passwd a.garcia` no devuelve nada, el cliente ha perdido la integración con LDAP y no tiene sentido continuar: primero hay que resolver ese problema revisando SSSD, tal y como se explica en los apuntes de la UD3. El montaje NFS por sí solo no da acceso a nadie.
@@ -207,15 +207,15 @@ Añadir al final del fichero las siguientes líneas:
 
 ```text
 # Perfiles móviles - homes de los alumnos
-/home/alumnos       192.168.10.0/24(rw,sync,no_subtree_check,root_squash)
+/home/alumnos       192.168.100.0/24(rw,sync,no_subtree_check,root_squash)
 
 # Perfiles móviles - homes de los profesores
-/home/profesores    192.168.10.0/24(rw,sync,no_subtree_check,root_squash)
+/home/profesores    192.168.100.0/24(rw,sync,no_subtree_check,root_squash)
 ```
 
 | Opción | Motivo por el que se emplea aquí |
 |---|---|
-| `192.168.10.0/24` | Solo los equipos de la red del aula pueden montar los homes. Nunca debe exportarse a `*` (cualquier equipo). |
+| `192.168.100.0/24` | Solo los equipos de la red del aula pueden montar los homes. Nunca debe exportarse a `*` (cualquier equipo). |
 | `rw` | Imprescindible: el usuario tiene que poder guardar sus trabajos, no solo leerlos. |
 | `sync` | Confirma cada escritura en disco antes de responder. Con datos de alumnado, la integridad prima sobre la velocidad. |
 | `no_subtree_check` | Se exporta un subdirectorio (`/home/alumnos`) y no una partición completa; esta opción evita la sobrecarga y los fallos al renombrar ficheros abiertos. |
@@ -245,12 +245,12 @@ Comprobar el resultado. La salida muestra las opciones efectivas, incluidas las 
 
 ```bash
 root@ldap:~# exportfs -v
-/home/alumnos   192.168.10.0/24(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)
+/home/alumnos   192.168.100.0/24(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)
 /home/profesores
-                192.168.10.0/24(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)
+                192.168.100.0/24(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)
 ```
 
-> **Nota:** Si el firewall `ufw` estuviera activo en el servidor, habría que permitir el servicio NFS con `ufw allow from 192.168.10.0/24 to any port nfs`. En el escenario de la práctica `ufw` está inactivo, por lo que no es necesario.
+> **Nota:** Si el firewall `ufw` estuviera activo en el servidor, habría que permitir el servicio NFS con `ufw allow from 192.168.100.0/24 to any port nfs`. En el escenario de la práctica `ufw` está inactivo, por lo que no es necesario.
 
 ---
 
@@ -269,10 +269,10 @@ root@cliente:~# apt update && apt install nfs-common -y
 Comprobar desde el cliente qué está exportando el servidor. Es la forma más rápida de verificar que la configuración del servidor es correcta y visible desde la red:
 
 ```bash
-root@cliente:~# showmount -e 192.168.10.4
-Export list for 192.168.10.4:
-/home/profesores 192.168.10.0/24
-/home/alumnos    192.168.10.0/24
+root@cliente:~# showmount -e 192.168.100.10
+Export list for 192.168.100.10:
+/home/profesores 192.168.100.0/24
+/home/alumnos    192.168.100.0/24
 ```
 
 > **Nota:** Si `showmount` no devuelve nada o da un error de conexión, el problema está en el servidor (servicio parado, exportación mal escrita) o en la red, y no tiene sentido intentar el montaje todavía.
@@ -339,16 +339,16 @@ Comentar la línea del módulo anteponiendo una almohadilla:
 Antes de configurar el montaje permanente conviene probarlo a mano, ya que un error en `/etc/fstab` puede afectar al arranque del sistema:
 
 ```bash
-root@cliente:~# mount -t nfs 192.168.10.4:/home/alumnos /home/alumnos
-root@cliente:~# mount -t nfs 192.168.10.4:/home/profesores /home/profesores
+root@cliente:~# mount -t nfs 192.168.100.10:/home/alumnos /home/alumnos
+root@cliente:~# mount -t nfs 192.168.100.10:/home/profesores /home/profesores
 ```
 
 Verificar que ambos montajes aparecen y que el sistema de ficheros es `nfs4`:
 
 ```bash
 root@cliente:~# df -Th | grep nfs
-192.168.10.4:/home/alumnos     nfs4   24G  7,2G   16G  32% /home/alumnos
-192.168.10.4:/home/profesores  nfs4   24G  7,2G   16G  32% /home/profesores
+192.168.100.10:/home/alumnos     nfs4   24G  7,2G   16G  32% /home/alumnos
+192.168.100.10:/home/profesores  nfs4   24G  7,2G   16G  32% /home/profesores
 ```
 
 > **Nota:** Ambos montajes muestran el mismo tamaño y ocupación porque no son dos discos distintos: son dos directorios de la misma partición del servidor. Lo que informa `df` es el espacio de esa partición.
@@ -377,8 +377,8 @@ root@cliente:~# nano /etc/fstab
 Añadir al final del fichero las dos líneas siguientes:
 
 ```text
-192.168.10.4:/home/alumnos     /home/alumnos     nfs  defaults,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0  0
-192.168.10.4:/home/profesores  /home/profesores  nfs  defaults,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0  0
+192.168.100.10:/home/alumnos     /home/alumnos     nfs  defaults,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0  0
+192.168.100.10:/home/profesores  /home/profesores  nfs  defaults,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0  0
 ```
 
 | Opción | Descripción |
@@ -451,7 +451,7 @@ a.garcia@cliente:~$ pwd
 /home/alumnos/a.garcia
 a.garcia@cliente:~$ df -h .
 S.ficheros                  Tamaño Usados  Disp Uso% Montado en
-192.168.10.4:/home/alumnos    24G   7,2G   16G  32% /home/alumnos
+192.168.100.10:/home/alumnos    24G   7,2G   16G  32% /home/alumnos
 ```
 
 La salida de `df -h .` confirma que el directorio actual **no está en el disco del equipo**, sino en el servidor. Crear un fichero de prueba y cerrar la sesión:
@@ -490,7 +490,7 @@ La verificación anterior demuestra que el home está centralizado, pero no que 
 root@cliente:~# hostnamectl set-hostname cliente2
 ```
 
-Editar la configuración de red del clon para asignarle la dirección `192.168.10.6`, y reiniciar. A partir de ahí, iniciar sesión en el **segundo** equipo con la misma alumna:
+Editar la configuración de red del clon para asignarle la dirección `192.168.100.21`, y reiniciar. A partir de ahí, iniciar sesión en el **segundo** equipo con la misma alumna:
 
 ```bash
 root@cliente2:~# su - a.garcia
@@ -546,7 +546,7 @@ root@cliente:~# nano /etc/auto.alumnos
 ```
 
 ```text
-*   -fstype=nfs4,rw   192.168.10.4:/home/alumnos/&
+*   -fstype=nfs4,rw   192.168.100.10:/home/alumnos/&
 ```
 
 ```bash
@@ -554,13 +554,13 @@ root@cliente:~# nano /etc/auto.profesores
 ```
 
 ```text
-*   -fstype=nfs4,rw   192.168.10.4:/home/profesores/&
+*   -fstype=nfs4,rw   192.168.100.10:/home/profesores/&
 ```
 
 | Elemento | Descripción |
 |---|---|
 | `*` | Clave comodín: representa cualquier subdirectorio solicitado dentro del punto de montaje |
-| `&` | Se sustituye por el valor que ha tomado el comodín. Si se accede a `/home/alumnos/a.garcia`, monta `192.168.10.4:/home/alumnos/a.garcia` |
+| `&` | Se sustituye por el valor que ha tomado el comodín. Si se accede a `/home/alumnos/a.garcia`, monta `192.168.100.10:/home/alumnos/a.garcia` |
 | `-fstype=nfs4` | Tipo de sistema de ficheros que se va a montar |
 | `--timeout=60` | Segundos de inactividad tras los cuales el recurso se desmonta automáticamente |
 
@@ -578,7 +578,7 @@ root@cliente:~# ls /home/alumnos/
 root@cliente:~# ls /home/alumnos/a.garcia/
 trabajo.txt
 root@cliente:~# df -h | grep a.garcia
-192.168.10.4:/home/alumnos/a.garcia   24G  7,2G   16G  32% /home/alumnos/a.garcia
+192.168.100.10:/home/alumnos/a.garcia   24G  7,2G   16G  32% /home/alumnos/a.garcia
 ```
 
 > **Nota:** El listado inicial vacío es el comportamiento normal y esperado de `autofs` con mapas de comodín: el servicio no sabe qué directorios existen en el servidor hasta que alguien los solicita por su nombre. El inicio de sesión de un usuario provoca ese acceso automáticamente.
@@ -592,7 +592,7 @@ root@cliente:~# df -h | grep a.garcia
 | Síntoma | Causa habitual | Comprobación y solución |
 |---|---|---|
 | El usuario inicia sesión pero aparece `Could not chdir to home directory` | El montaje NFS no está activo o el usuario no tiene home provisionado en el servidor | `df -h \| grep nfs` en el cliente y `ls -ln /home/alumnos/` en el servidor |
-| El inicio de sesión se queda bloqueado | El servidor NFS no responde y el montaje es de tipo `hard` sin `automount` | Comprobar `ping 192.168.10.4` y `showmount -e 192.168.10.4`; añadir `x-systemd.automount` |
+| El inicio de sesión se queda bloqueado | El servidor NFS no responde y el montaje es de tipo `hard` sin `automount` | Comprobar `ping 192.168.100.10` y `showmount -e 192.168.100.10`; añadir `x-systemd.automount` |
 | Los ficheros aparecen como propiedad de `nobody` | La exportación tiene `all_squash`, o el UID del usuario no coincide en ambas máquinas | Revisar `/etc/exports` y comparar `id usuario` en cliente y `ls -ln` en servidor |
 | `Permission denied` al guardar en el home | Los permisos del home en el servidor no corresponden al UID del usuario | En el servidor: `chown -R uid:gid` y `chmod 700` sobre el home |
 | El alumno entra pero su escritorio está vacío y sus ficheros no se ven en el servidor | El montaje falló y `pam_mkhomedir` creó un home local vacío | Verificar que `pam_mkhomedir` está desactivado (punto 4.3) y revisar el montaje |
@@ -602,7 +602,7 @@ root@cliente:~# df -h | grep a.garcia
 Herramientas de diagnóstico útiles durante la puesta en marcha:
 
 ```bash
-root@cliente:~# showmount -e 192.168.10.4
+root@cliente:~# showmount -e 192.168.100.10
 root@cliente:~# mount | grep nfs
 root@cliente:~# journalctl -u sssd -f
 root@ldap:~# exportfs -v

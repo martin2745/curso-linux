@@ -347,6 +347,27 @@ root@debian:~# hostnamectl
 
 > **Nota:** `hostnamectl set-hostname` aplica el cambio de inmediato y lo hace persistente escribiéndolo en `/etc/hostname`; no hace falta reiniciar ningún servicio. El *prompt* de la terminal actual, en cambio, no se actualiza hasta abrir una sesión nueva, porque se calculó al iniciarla.
 
+> **Importante:** La orden clásica **`hostname`** también cambia el nombre, pero **solo hasta el siguiente reinicio**: cambia el nombre que tiene el núcleo en memoria, pero no escribe nada en `/etc/hostname`. `hostnamectl` lo deja claro, porque distingue entre el nombre **transitorio** (*transient*), el que está en uso ahora, y el **estático** (*static*), el guardado en `/etc/hostname` que se cargará en el próximo arranque:
+>
+> ```bash
+> usuario@servidor:~$ sudo hostname cliente
+> usuario@servidor:~$ hostnamectl
+> Transient hostname: cliente
+>    Static hostname: servidor
+>          Icon name: computer-vm
+> ```
+>
+> Al reiniciar, el equipo volvería a llamarse `servidor`. Para que el cambio sea persistente hay que usar `hostnamectl set-hostname`, que cambia los dos a la vez, y actualizar `/etc/hosts`:
+>
+> ```bash
+> usuario@servidor:~$ sudo hostnamectl set-hostname cliente
+> usuario@servidor:~$ sudo sed -i 's/^127\.0\.1\.1\s.*/127.0.1.1\tcliente/' /etc/hosts
+> usuario@servidor:~$ cat /etc/hostname
+> cliente
+> ```
+>
+> Tras `set-hostname`, `hostnamectl` ya no muestra la línea `Transient hostname`, porque los dos nombres vuelven a coincidir. En ambos casos el *prompt* sigue mostrando `servidor` hasta que se abre una sesión nueva.
+
 > **Recuerda:** Cambiar el *hostname* no basta para que la máquina se reconozca a sí misma por ese nombre. Conviene añadir también la línea correspondiente en `/etc/hosts` asociándolo a `127.0.1.1`, tal como hace el instalador de Debian. De lo contrario, algunos programas tardan en arrancar mientras intentan resolver sin éxito el nombre del propio equipo.
 
 ### 4.7 Configurar el cliente de DNS
