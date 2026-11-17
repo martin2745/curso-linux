@@ -23,8 +23,8 @@
 
 La implementación de la práctica requiere de la siguiente configuración: una red NAT `192.168.100.0/24` con al menos dos equipos:
 
-- Servidor Ubuntu con IP `192.168.100.10`.
-- Cliente Debian con IP `192.168.100.20`.
+- Servidor Ubuntu `ldap.ies.local` con IP `192.168.100.10`. Es el mismo servidor del [documento 01](./01_ldap-slapd.md).
+- Cliente Debian `cliente` con IP `192.168.100.20`.
 
 ```mermaid
 flowchart TB
@@ -46,7 +46,7 @@ Los pasos que se deben seguir para instalar un servidor NFS son los siguientes:
 1. Instalar los paquetes necesarios para montar un servidor NFS, en concreto el paquete `nfs-kernel-server`:
 
 ```bash
-usuario@servidor:~$ sudo apt install -y nfs-kernel-server
+usuario@ldap:~$ sudo apt install -y nfs-kernel-server
 [sudo: authenticate] Password:
 Los paquetes indicados a continuación se instalaron de forma automática y ya no son necesarios:
   linux-headers-7.0.0-14                   linux-modules-7.0.0-14-generic
@@ -65,8 +65,8 @@ Instalando dependencias:
 2. Crear la carpeta que queremos que sea compartida con el resto de clientes NFS:
 
 ```bash
-usuario@servidor:~$ sudo mkdir -p /mnt/nfs_recursos
-usuario@servidor:~$ ls -ld /mnt/nfs_recursos/
+usuario@ldap:~$ sudo mkdir -p /mnt/nfs_recursos
+usuario@ldap:~$ ls -ld /mnt/nfs_recursos/
 drwxr-xr-x 2 root root 4096 Aug 19 12:12 /mnt/nfs_recursos/
 ```
 
@@ -74,9 +74,9 @@ drwxr-xr-x 2 root root 4096 Aug 19 12:12 /mnt/nfs_recursos/
 
 
 ```bash
-usuario@servidor:~$ sudo chown nobody:nogroup /mnt/nfs_recursos/
-usuario@servidor:~$ sudo chmod 777 /mnt/nfs_recursos/
-usuario@servidor:~$ ls -ld /mnt/nfs_recursos/
+usuario@ldap:~$ sudo chown nobody:nogroup /mnt/nfs_recursos/
+usuario@ldap:~$ sudo chmod 777 /mnt/nfs_recursos/
+usuario@ldap:~$ ls -ld /mnt/nfs_recursos/
 drwxrwxrwx 2 nobody nogroup 4096 Aug 19 12:12 /mnt/nfs_recursos/
 ```
 
@@ -85,8 +85,8 @@ drwxrwxrwx 2 nobody nogroup 4096 Aug 19 12:12 /mnt/nfs_recursos/
 4. A continuación hay que darles permiso a los clientes para que puedan acceder al equipo. En este caso se tiene que modificar el fichero `/etc/exports`:
 
 ```bash
-usuario@servidor:~$ sudo nano /etc/exports
-usuario@servidor:~$ cat /etc/exports
+usuario@ldap:~$ sudo nano /etc/exports
+usuario@ldap:~$ cat /etc/exports
 # /etc/exports: the access control list for filesystems which may be exported
 #               to NFS clients.  See exports(5).
 #
@@ -131,14 +131,14 @@ Cada línea de `/etc/exports` indica el directorio exportado, los equipos autori
 5. Se exporta el directorio compartido:
 
 ```bash
-usuario@servidor:~$ sudo exportfs -a
+usuario@ldap:~$ sudo exportfs -a
 ```
 
 6. Se reinicia el servidor NFS para aplicar la configuración:
 
 ```bash
-usuario@servidor:~$ sudo systemctl restart nfs-kernel-server
-usuario@servidor:~$ systemctl status nfs-kernel-server
+usuario@ldap:~$ sudo systemctl restart nfs-kernel-server
+usuario@ldap:~$ systemctl status nfs-kernel-server
 ● nfs-server.service - NFS server and services
      Loaded: loaded (/usr/lib/systemd/system/nfs-server.service; enabled; preset: enabled)
      Active: active (exited) since Wed 2026-08-19 12:19:54 UTC; 1s ago
@@ -151,8 +151,8 @@ usuario@servidor:~$ systemctl status nfs-kernel-server
    Mem peak: 1.9M
         CPU: 35ms
 
-ago 19 12:19:54 servidor systemd[1]: Starting nfs-server.service - NFS server and services...
-ago 19 12:19:54 servidor systemd[1]: Finished nfs-server.service - NFS server and services.
+ago 19 12:19:54 ldap systemd[1]: Starting nfs-server.service - NFS server and services...
+ago 19 12:19:54 ldap systemd[1]: Finished nfs-server.service - NFS server and services.
 ```
 
 > **Nota:** `sudo exportfs -a` aplica todas las exportaciones definidas en `/etc/exports` sin necesidad de reiniciar. Puede comprobarse lo que el servidor está exportando en cada momento con `sudo exportfs -v`.
@@ -166,21 +166,21 @@ Los pasos que se deben seguir para instalar un cliente NFS en Debian son los sig
 1. Instalar el paquete `nfs-common`:
 
 ```bash
-usuario@debian:~$ sudo apt install nfs-common
+usuario@cliente:~$ sudo apt install nfs-common
 ```
 
 2. Crear un directorio donde el equipo montará la carpeta compartida:
 
 ```bash
-usuario@debian:~$ sudo mkdir -p /mnt/nfs_cliente_debian
+usuario@cliente:~$ sudo mkdir -p /mnt/nfs_cliente_debian
 ```
 
 3. Finalmente, montar la carpeta compartida indicando la IP del servidor, la ruta exportada y el punto de montaje local:
 
 ```bash
-usuario@debian:~$ sudo mount -t nfs 192.168.100.10:/mnt/nfs_recursos /mnt/nfs_cliente_debian/
+usuario@cliente:~$ sudo mount -t nfs 192.168.100.10:/mnt/nfs_recursos /mnt/nfs_cliente_debian/
 
-usuario@debian:~$ df -Th
+usuario@cliente:~$ df -Th
 S.ficheros                     Tipo     Tamaño Usados  Disp Uso% Montado en
 udev                           devtmpfs   1,9G      0  1,9G   0% /dev
 tmpfs                          tmpfs      393M   1,3M  391M   1% /run
@@ -200,12 +200,12 @@ tmpfs                          tmpfs      393M    96K  393M   1% /run/user/1000
 Antes de nada hacemos una copia de seguridad del `/etc/fstab`.
 
 ```bash
-usuario@debian:~$ sudo cp -pv /etc/fstab /etc/fstab_COPIA
+usuario@cliente:~$ sudo cp -pv /etc/fstab /etc/fstab_COPIA
 '/etc/fstab' -> '/etc/fstab_COPIA'
 ```
 
 ```bash
-usuario@debian:~$ sudo nano /etc/fstab
+usuario@cliente:~$ sudo nano /etc/fstab
 ```
 
 Añadimos la siguiente línea al final del fichero:
@@ -217,8 +217,8 @@ Añadimos la siguiente línea al final del fichero:
 Comprobamos que no hay errores en la configuración ejecutando `sudo mount -a`: si no devuelve errores, la línea es válida y podemos reiniciar el cliente con seguridad.
 
 ```bash
-usuario@debian:~$ sudo mount -a
-usuario@debian:~$ sudo reboot
+usuario@cliente:~$ sudo mount -a
+usuario@cliente:~$ sudo reboot
 ```
 
 ---
@@ -239,4 +239,4 @@ En NFS los ficheros no tienen dueño «con nombre»: lo que se guarda y lo que v
 
 Con `root` ocurre un caso particular: por la opción por defecto `root_squash`, el root de un cliente queda degradado al usuario anónimo (`nobody:nogroup`) cuando accede a través del montaje NFS, de modo que ser root en el cliente no otorga privilegios sobre el recurso del servidor.
 
-La consecuencia es clara: para que NFS funcione con permisos reales por usuario, los UID y GID deben ser **coherentes en todas las máquinas de la red**, y eso no puede depender de la casualidad ni de la disciplina del administrador. La solución correcta es centralizar las cuentas en un servicio de directorio como **OpenLDAP** (visto en la [UD3](<../UD3 - Administración de un servidor Linux/UD3.md>)): todas las máquinas consultan la misma base de usuarios, con lo que `usuario` es de verdad la misma cuenta, con el mismo UID, en todas partes. En un despliegue real, el orden lógico es ese: **primero el directorio centralizado (LDAP) y después NFS** apoyándose en él; es la base, por ejemplo, de los perfiles móviles, donde el `/home` de cada usuario se sirve por NFS a cualquier equipo en el que inicie sesión.
+La consecuencia es clara: para que NFS funcione con permisos reales por usuario, los UID y GID deben ser **coherentes en todas las máquinas de la red**, y eso no puede depender de la casualidad ni de la disciplina del administrador. La solución correcta es centralizar las cuentas en un servicio de directorio como **OpenLDAP** (visto en el [documento 01](./01_ldap-slapd.md)): todas las máquinas consultan la misma base de usuarios, con lo que `usuario` es de verdad la misma cuenta, con el mismo UID, en todas partes. En un despliegue real, el orden lógico es ese: **primero el directorio centralizado (LDAP) y después NFS** apoyándose en él; es la base, por ejemplo, de los perfiles móviles, donde el `/home` de cada usuario se sirve por NFS a cualquier equipo en el que inicie sesión.

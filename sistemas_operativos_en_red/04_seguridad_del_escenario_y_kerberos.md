@@ -28,7 +28,7 @@
 
 ## 1. Introducción: un escenario que funciona no es un escenario seguro
 
-A lo largo de esta unidad se ha construido una infraestructura completa: un servidor con **OpenLDAP** que centraliza las identidades, **NFS** que sirve los directorios personales y los **perfiles móviles** que permiten a cada trabajador encontrar sus documentos en cualquier equipo. Todo funciona.
+A lo largo de esta unidad se ha construido una infraestructura completa: un servidor con **OpenLDAP** que centraliza las identidades, **NFS** que sirve los directorios personales y los **perfiles móviles** que permiten a cada alumno o profesor encontrar sus documentos en cualquier equipo. Todo funciona.
 
 Sin embargo, que un sistema funcione no significa que sea seguro. El escenario que hemos montado es perfectamente válido para un **laboratorio o un aula controlada**, donde el administrador gobierna todas las máquinas y los usuarios no tienen privilegios de administrador. Pero contiene debilidades que lo hacen inadecuado para un entorno real sin protecciones adicionales.
 
@@ -42,42 +42,42 @@ Este documento analiza esas debilidades, empezando por la más grave, que permit
 
 ### 2.1. Suplantación de identidad por UID (la más grave)
 
-Como se estudió en los apuntes de NFS, este protocolo **no autentica a las personas: confía en números**. Cuando un cliente pide un fichero, lo que viaja por la red es el **UID** del usuario, no su identidad. El servidor comprueba únicamente si ese número coincide con el del propietario del fichero y, si coincide, concede el acceso. No verifica quién es realmente esa persona ni si el equipo desde el que llega la petición es de fiar.
+Como se estudió en los apuntes de NFS ([documento 02](./02_NFS.md)), este protocolo **no autentica a las personas: confía en números**. Cuando un cliente pide un fichero, lo que viaja por la red es el **UID** del usuario, no su identidad. El servidor comprueba únicamente si ese número coincide con el del propietario del fichero y, si coincide, concede el acceso. No verifica quién es realmente esa persona ni si el equipo desde el que llega la petición es de fiar.
 
-Esto abre un ataque directo. El usuario `n.torres` tiene el UID 21001 y sus documentos están en el servidor. Si un atacante consigue privilegios de **root en cualquier equipo cliente** o conecta su propio portátil a la red, puede crear un usuario local con ese mismo UID:
+Esto abre un ataque directo. La alumna `a.garcia` tiene el UID 10001 y sus documentos están en el servidor. Si un atacante consigue privilegios de **root en cualquier equipo cliente** o conecta su propio portátil a la red, puede crear un usuario local con ese mismo UID:
 
 ```bash
-root@atacante:~# useradd -u 21001 falsificador
+root@atacante:~# useradd -u 10001 falsificador
 root@atacante:~# su - falsificador
 ```
 
-Ni siquiera necesita crear el usuario: como root puede convertirse directamente en cualquier UID. A partir de ese momento, cuando acceda al home montado por NFS, el servidor verá llegar peticiones con el UID 21001, las considerará legítimas y le dará **acceso completo a los documentos de `n.torres`**, tanto para leerlos como para modificarlos o borrarlos.
+Ni siquiera necesita crear el usuario: como root puede convertirse directamente en cualquier UID. A partir de ese momento, cuando acceda al home montado por NFS, el servidor verá llegar peticiones con el UID 10001, las considerará legítimas y le dará **acceso completo a los documentos de `a.garcia`**, tanto para leerlos como para modificarlos o borrarlos.
 
 ```mermaid
 sequenceDiagram
     participant R as root en cliente
     participant C as Cliente (kernel NFS)
     participant S as Servidor NFS
-    R->>C: su - falsificador (UID 21001)
-    C->>S: Petición de fichero como UID 21001
-    Note over S: "¿El UID 21001 es el propietario?<br>Sí, coincide."
-    S-->>C: Acceso concedido a los datos de n.torres
-    C-->>R: Documentos de n.torres al descubierto
+    R->>C: su - falsificador (UID 10001)
+    C->>S: Petición de fichero como UID 10001
+    Note over S: "¿El UID 10001 es el propietario?<br>Sí, coincide."
+    S-->>C: Acceso concedido a los datos de a.garcia
+    C-->>R: Documentos de a.garcia al descubierto
 ```
 
 El problema de fondo es que **root, en su propia máquina, es dueño absoluto**: decide qué usuarios existen, qué UID tienen y como quién actúa cada proceso. Y NFS confía en lo que ese root le diga.
 
-> **Advertencia:** Esta es la debilidad más importante del escenario. En una infraestructura NFS clásica, la seguridad de los datos de cada usuario depende por completo de que se confíe en el root de **todos** los equipos cliente. Basta con que un solo equipo se vea comprometido, o con que alguien conecte una máquina propia con root, para que todos los documentos de todos los trabajadores queden expuestos.
+> **Advertencia:** Esta es la debilidad más importante del escenario. En una infraestructura NFS clásica, la seguridad de los datos de cada usuario depende por completo de que se confíe en el root de **todos** los equipos cliente. Basta con que un solo equipo se vea comprometido, o con que alguien conecte una máquina propia con root, para que todos los documentos de todos los usuarios queden expuestos.
 
 #### Demostración: suplantar a la alumna a.garcia
 
-Veámoslo con un caso concreto. La alumna `a.garcia` (UID 10001, grupo SMR1 con GID 10000) ha trabajado en su equipo y ha guardado un fichero en su directorio personal:
+Veámoslo con un caso concreto. La alumna `a.garcia` (UID 10001, grupo principal `alumnos` con GID 10000) ha trabajado en su equipo y ha guardado un fichero en su directorio personal:
 
 ```bash
 a.garcia@cliente:~$ echo "Trabajo de SORE realizado en el cliente" > trabajo.txt
 a.garcia@cliente:~$ ls -l
 total 4
--rw------- 1 a.garcia SMR1 40 ago 19 18:20 trabajo.txt
+-rw------- 1 a.garcia alumnos 40 ago 19 18:20 trabajo.txt
 a.garcia@cliente:~$ exit
 ```
 
@@ -94,10 +94,10 @@ total 4
 El atacante crea en su máquina un usuario local con **ese mismo UID** y se convierte en él:
 
 ```bash
-root@debian:~# useradd -u 10001 -M -s /bin/bash intruso
+root@cliente:~# useradd -u 10001 -M -s /bin/bash intruso
 useradd: el UID 10001 no es único
-root@debian:~# useradd -o -u 10001 -M -s /bin/bash intruso
-root@debian:~# passwd intruso
+root@cliente:~# useradd -o -u 10001 -M -s /bin/bash intruso
+root@cliente:~# passwd intruso
 ```
 
 > **Nota:** El primer intento falla con `el UID 10001 no es único`, y el motivo es revelador: al comprobar si el UID está libre, `useradd` consulta **todas las fuentes de NSS**, incluida LDAP, y encuentra que el 10001 ya pertenece a `a.garcia`. Es la misma agregación de fuentes (`files sss`) configurada en `/etc/nsswitch.conf`. La opción `-o` (*non-unique*) fuerza la creación permitiendo un UID duplicado. En el equipo propio de un atacante, que no está unido al dominio, el UID 10001 estaría libre y el comando funcionaría sin `-o`: que la máquina integrada avise y la ajena no, ilustra el problema de fondo.
@@ -105,20 +105,20 @@ root@debian:~# passwd intruso
 A partir de aquí, para NFS ese usuario **es** `a.garcia`, porque comparte su UID. El atacante accede al home montado y lee sin ninguna dificultad el fichero que los permisos `600` deberían proteger:
 
 ```bash
-root@debian:~# su - intruso
+root@cliente:~# su - intruso
 su: atención: no se puede cambiar el directorio a /home/intruso: No existe el fichero o el directorio
-intruso@debian:/root$ cd /home/alumnos/a.garcia/
-intruso@debian:/home/alumnos/a.garcia$ ls
+intruso@cliente:/root$ cd /home/alumnos/a.garcia/
+intruso@cliente:/home/alumnos/a.garcia$ ls
 Descargas   Escritorio  Música      Público      Vídeos
 Documentos  Imágenes    Plantillas  trabajo.txt
-intruso@debian:/home/alumnos/a.garcia$ cat trabajo.txt
+intruso@cliente:/home/alumnos/a.garcia$ cat trabajo.txt
 Trabajo de SORE realizado en el cliente
 ```
 
 Y no solo puede leerlo: al ser considerado el propietario, también puede **modificarlo o borrarlo**:
 
 ```bash
-intruso@atacante:~$ echo "Contenido manipulado por el intruso" > trabajo.txt
+intruso@cliente:/home/alumnos/a.garcia$ echo "Contenido manipulado por el intruso" > trabajo.txt
 ```
 
 La alumna `a.garcia`, al volver a iniciar sesión en su equipo, encontraría su trabajo alterado sin haber hecho nada y sin dejar rastro de quién fue.
@@ -129,13 +129,13 @@ La alumna `a.garcia`, al volver a iniciar sesión en su equipo, encontraría su 
 
 Es un punto que genera mucha confusión y conviene tenerlo muy claro. En las exportaciones usamos la opción `root_squash`, y podría pensarse que resuelve el problema. **No lo hace.**
 
-`root_squash` protege únicamente contra que el root del cliente actúe **como root** (UID 0) sobre la exportación: cuando llega una petición con UID 0, el servidor la degrada al usuario anónimo `nobody`. Pero el ataque anterior **no usa el UID 0**: el atacante se convierte antes en un usuario normal (UID 21001) y accede con esa identidad. El squash solo vigila el 0, así que deja pasar cualquier otro número sin objeción.
+`root_squash` protege únicamente contra que el root del cliente actúe **como root** (UID 0) sobre la exportación: cuando llega una petición con UID 0, el servidor la degrada al usuario anónimo `nobody`. Pero el ataque anterior **no usa el UID 0**: el atacante se convierte antes en un usuario normal (UID 10001) y accede con esa identidad. El squash solo vigila el 0, así que deja pasar cualquier otro número sin objeción.
 
 ```mermaid
 flowchart TB
     A["root en el cliente"] --> B{"¿Con qué UID<br>accede al recurso?"}
     B -->|"UID 0 (root)"| C["root_squash lo degrada<br>a nobody. Bloqueado."]
-    B -->|"UID 21001 (n.torres)"| D["root_squash no interviene.<br>Acceso concedido."]
+    B -->|"UID 10001 (a.garcia)"| D["root_squash no interviene.<br>Acceso concedido."]
     style C stroke:#2e7d32,stroke-width:2px
     style D stroke:#c62828,stroke-width:2px
 ```
@@ -183,10 +183,10 @@ La seguridad real no se construye sobre la confianza, sino sobre la **autenticac
 ```mermaid
 flowchart LR
     subgraph AHORA["Modelo actual (confianza)"]
-        A1["Cliente dice:<br>soy el UID 21001"] --> A2["Servidor responde:<br>te creo"]
+        A1["Cliente dice:<br>soy el UID 10001"] --> A2["Servidor responde:<br>te creo"]
     end
     subgraph KRB["Modelo con Kerberos (autenticación)"]
-        K1["Cliente dice:<br>soy n.torres y<br>aquí está mi ticket"] --> K2["Servidor comprueba<br>el ticket y responde:<br>demostrado"]
+        K1["Cliente dice:<br>soy a.garcia y<br>aquí está mi ticket"] --> K2["Servidor comprueba<br>el ticket y responde:<br>demostrado"]
     end
 ```
 
@@ -196,7 +196,7 @@ flowchart LR
 
 **Kerberos** es un protocolo de autenticación en red, desarrollado en el MIT en los años 80, que permite a usuarios y servicios demostrar su identidad de forma segura sobre una red no fiable, **sin que las contraseñas viajen por ella en ningún momento**. Es la base de la autenticación del Directorio Activo de Windows y de las versiones seguras de NFS.
 
-> **Recuerda:** El término Kerberos aparece en el glosario de esta unidad: «protocolo de autenticación en red basado en tickets emitidos por un servidor de confianza (KDC)». Este documento desarrolla en detalle esa definición.
+> **Recuerda:** Kerberos se suele definir como un «protocolo de autenticación en red basado en tickets emitidos por un servidor de confianza (KDC)». Este documento desarrolla en detalle esa definición.
 
 Su nombre procede de **Cerbero**, el perro de tres cabezas de la mitología griega que guardaba la entrada del inframundo. Las tres cabezas representan las tres partes que intervienen en toda autenticación: el **cliente**, el **servicio** al que se quiere acceder y el **servidor de confianza** que media entre ambos.
 
@@ -210,13 +210,13 @@ Un ticket es una credencial temporal y cifrada que demuestra que su portador es 
 
 | Componente | Descripción |
 |---|---|
-| **Principal** | Cualquier entidad que Kerberos puede autenticar: un usuario (`n.torres`) o un servicio (`nfs/servidor`). Es el equivalente a un «usuario» en el mundo Kerberos. |
+| **Principal** | Cualquier entidad que Kerberos puede autenticar: un usuario (`a.garcia`) o un servicio (`nfs/ldap.ies.local`). Es el equivalente a un «usuario» en el mundo Kerberos. |
 | **KDC** (*Key Distribution Center*) | El servidor de confianza, corazón del sistema. Se compone de dos servicios: el AS y el TGS. |
 | **AS** (*Authentication Server*) | Parte del KDC que autentica inicialmente al usuario y le entrega el primer ticket (el TGT). |
 | **TGS** (*Ticket Granting Server*) | Parte del KDC que, a cambio del TGT, entrega tickets para servicios concretos. |
 | **TGT** (*Ticket Granting Ticket*) | El «ticket para pedir tickets». Se obtiene al iniciar sesión y sirve para solicitar acceso a los servicios sin volver a introducir la contraseña. |
 | **Ticket de servicio** | Ticket que autoriza el acceso a un servicio concreto (por ejemplo, el NFS del servidor). |
-| **Realm** (reino) | El dominio administrativo de Kerberos, que se escribe en mayúsculas. En nuestra empresa sería `RIASBAIXAS.LOCAL`. |
+| **Realm** (reino) | El dominio administrativo de Kerberos, que se escribe en mayúsculas. En nuestro centro sería `IES.LOCAL`: el dominio `ies.local` escrito en mayúsculas. |
 | **Keytab** | Fichero que almacena la clave de un servicio (por ejemplo, la del servidor NFS), para que pueda autenticarse ante el KDC sin intervención humana. |
 
 ### 4.3. Cómo funciona: tickets y el KDC
@@ -237,7 +237,7 @@ flowchart TB
         AS --- DB
         TGS --- DB
     end
-    U["Usuario n.torres"] -->|"1. Me identifico"| AS
+    U["Alumna a.garcia"] -->|"1. Me identifico"| AS
     AS -->|"2. Toma tu TGT"| U
     U -->|"3. Tengo TGT,<br>quiero usar NFS"| TGS
     TGS -->|"4. Toma el ticket<br>para NFS"| U
@@ -249,16 +249,16 @@ Lo esencial, y lo que hace seguro a Kerberos, es que **la contraseña del usuari
 
 ### 4.4. El flujo completo paso a paso
 
-El proceso detallado, cuando `n.torres` inicia sesión y accede a su directorio por NFS, es el siguiente:
+El proceso detallado, cuando `a.garcia` inicia sesión y accede a su directorio por NFS, es el siguiente:
 
 ```mermaid
 sequenceDiagram
-    participant U as n.torres (cliente)
+    participant U as a.garcia (cliente)
     participant AS as AS (KDC)
     participant TGS as TGS (KDC)
     participant NFS as Servidor NFS
     Note over U,AS: Fase 1 - Autenticación inicial (una vez, al iniciar sesión)
-    U->>AS: 1. Soy n.torres, quiero un TGT
+    U->>AS: 1. Soy a.garcia, quiero un TGT
     AS->>U: 2. TGT cifrado con una clave derivada de tu contraseña
     Note over U: 3. Descifra el TGT con su contraseña.<br>Si lo consigue, queda autenticado.
     Note over U,TGS: Fase 2 - Obtención del ticket de servicio (al acceder a NFS)
@@ -266,14 +266,14 @@ sequenceDiagram
     TGS->>U: 5. Ticket de servicio para NFS
     Note over U,NFS: Fase 3 - Acceso al servicio
     U->>NFS: 6. Aquí está mi ticket de servicio
-    NFS->>U: 7. Ticket válido: acceso concedido a los datos de n.torres
+    NFS->>U: 7. Ticket válido: acceso concedido a los datos de a.garcia
 ```
 
-- **Fase 1 (autenticación):** el cliente pide un TGT al AS. El AS responde con el TGT cifrado con una clave derivada de la contraseña del usuario. Solo el verdadero `n.torres`, que conoce la contraseña, puede descifrarlo. Aquí es donde se demuestra la identidad, y ocurre **una sola vez** por sesión.
+- **Fase 1 (autenticación):** el cliente pide un TGT al AS. El AS responde con el TGT cifrado con una clave derivada de la contraseña del usuario. Solo la verdadera `a.garcia`, que conoce la contraseña, puede descifrarlo. Aquí es donde se demuestra la identidad, y ocurre **una sola vez** por sesión.
 - **Fase 2 (autorización):** para acceder al NFS, el cliente presenta el TGT al TGS y recibe un ticket de servicio específico para el NFS.
 - **Fase 3 (acceso):** el cliente presenta ese ticket al servidor NFS, que lo valida y concede el acceso.
 
-En ningún momento el servidor NFS ha visto la contraseña de `n.torres`, ni ha tenido que confiar en el UID que le llegaba: ha comprobado un ticket criptográfico que solo el verdadero `n.torres` pudo obtener.
+En ningún momento el servidor NFS ha visto la contraseña de `a.garcia`, ni ha tenido que confiar en el UID que le llegaba: ha comprobado un ticket criptográfico que solo la verdadera `a.garcia` pudo obtener.
 
 ---
 
@@ -293,12 +293,12 @@ Frente a la opción `sec=sys` que usa NFS por defecto y que es la que confía ci
 
 ### 5.2. Cómo se frena el ataque de suplantación
 
-Con Kerberos activado, el ataque de la sección 2.1 deja de funcionar. El atacante puede seguir creando un usuario local con el UID 21001 en su máquina, pero eso ya **no le sirve de nada**: para que el servidor NFS le conceda el acceso, necesita presentar un **ticket de servicio válido**, y ese ticket solo puede obtenerlo quien previamente haya conseguido un TGT, para lo cual hace falta **la contraseña de `n.torres`**.
+Con Kerberos activado, el ataque de la sección 2.1 deja de funcionar. El atacante puede seguir creando un usuario local con el UID 10001 en su máquina, pero eso ya **no le sirve de nada**: para que el servidor NFS le conceda el acceso, necesita presentar un **ticket de servicio válido**, y ese ticket solo puede obtenerlo quien previamente haya conseguido un TGT, para lo cual hace falta **la contraseña de `a.garcia`**.
 
 ```mermaid
 flowchart TB
-    A["root crea usuario<br>local con UID 21001"] --> B["Intenta acceder<br>al home por NFS"]
-    B --> C{"¿Presenta un ticket<br>Kerberos válido<br>de n.torres?"}
+    A["root crea usuario<br>local con UID 10001"] --> B["Intenta acceder<br>al home por NFS"]
+    B --> C{"¿Presenta un ticket<br>Kerberos válido<br>de a.garcia?"}
     C -->|"No lo tiene:<br>no conoce la contraseña"| D["Acceso denegado"]
     C -->|"Sí (imposible<br>sin la contraseña)"| E["Acceso concedido"]
     style D stroke:#2e7d32,stroke-width:2px
@@ -312,14 +312,14 @@ El UID pasa de ser una **credencial** (algo en lo que el servidor confía para d
 Añadir Kerberos a nuestro escenario implicaría incorporar estos elementos:
 
 - Un **KDC** en la red, que en un entorno pequeño suele instalarse en el propio servidor. En el mundo Linux, la implementación habitual es **MIT Kerberos** (paquetes `krb5-kdc` y `krb5-admin-server`).
-- Un **realm** que englobe la organización, por ejemplo `RIASBAIXAS.LOCAL`.
-- Un **principal por cada usuario** del directorio y un **principal de servicio** para el NFS (`nfs/ldap.riasbaixas.local`), cuya clave se guarda en un fichero **keytab** en el servidor.
-- La **sincronización horaria** entre todas las máquinas, que en Kerberos es **crítica**: los tickets llevan marca de tiempo y caducan, de modo que si los relojes del cliente y del servidor difieren más de unos minutos, la autenticación falla. Es el mismo motivo por el que en la práctica hubo que ajustar la hora tras restaurar las instantáneas.
+- Un **realm** que englobe la organización, en nuestro caso `IES.LOCAL`.
+- Un **principal por cada usuario** del directorio y un **principal de servicio** para el NFS (`nfs/ldap.ies.local`), cuya clave se guarda en un fichero **keytab** en el servidor.
+- La **sincronización horaria** entre todas las máquinas, que en Kerberos es **crítica**: los tickets llevan marca de tiempo y caducan, de modo que si los relojes del cliente y del servidor difieren más de unos minutos, la autenticación falla. Por eso, al restaurar una instantánea de una máquina virtual, hay que comprobar que su reloj vuelve a estar en hora.
 - La exportación y el montaje del NFS con la opción `sec=krb5` (o `krb5i` / `krb5p`) en lugar de la confianza por defecto.
 
 ```mermaid
 flowchart TB
-    subgraph RED["Red de la empresa"]
+    subgraph RED["Red del centro"]
         subgraph SRV["Servidor 192.168.100.10"]
             LDAP["OpenLDAP<br>identidades"]
             KDC["KDC Kerberos<br>autenticación"]
@@ -342,12 +342,12 @@ flowchart TB
 
 A lo largo de esta unidad y de la anterior hemos ido montando por separado las piezas que necesita una red bien administrada:
 
-- **OpenLDAP** para centralizar las identidades (UD3).
-- **NFS** para compartir los directorios y ofrecer perfiles móviles (UD4).
+- **OpenLDAP** para centralizar las identidades ([documento 01](./01_ldap-slapd.md)).
+- **NFS** para compartir los directorios y ofrecer perfiles móviles ([documentos 02](./02_NFS.md) y [03](./03_perfiles_moviles.md)).
 - **Kerberos** para autenticar de forma fuerte y cerrar la debilidad de la suplantación de UID (este documento).
-- **Samba** para compartir recursos con equipos Windows (UD4).
+- **Samba** para compartir recursos con equipos Windows ([documento 05](./05_samba_standalone.md)).
 
-Cada servicio resuelve su parte, pero **integrarlos y mantenerlos coordinados es laborioso**: hay que configurar LDAP, después Kerberos, sincronizar ambos, ajustar SSSD, PAM y NSS en cada cliente… y aun así seguimos teniendo, como se vio en la práctica de Samba, el problema de que la contraseña de Samba y la de LDAP son independientes.
+Cada servicio resuelve su parte, pero **integrarlos y mantenerlos coordinados es laborioso**: hay que configurar LDAP, después Kerberos, sincronizar ambos, ajustar SSSD, PAM y NSS en cada cliente… y aun así seguimos teniendo, como se vio en la práctica de Samba, el problema de que la contraseña de Samba es independiente de la del sistema.
 
 Existe una forma de tener **todas estas piezas trabajando juntas y ya integradas de fábrica**: promover un servidor **Samba a controlador de dominio de Active Directory** (AD DC). Desde la versión 4, Samba puede comportarse exactamente como un controlador de dominio de Windows, y lo consigue porque en su interior reúne los tres servicios que hemos estudiado:
 
@@ -369,7 +369,7 @@ flowchart TB
 
 **2. Autenticación fuerte de serie.** Active Directory usa **Kerberos como mecanismo de autenticación por defecto**. Esto significa que el problema de seguridad central de este documento la suplantación por UID y queda resuelto sin configuración adicional: los accesos se validan con tickets, no con la confianza en un número. Es exactamente la solución que hemos justificado, pero ya incorporada.
 
-**3. Una sola identidad y una sola contraseña.** El trabajador tiene **una única cuenta** que le sirve para iniciar sesión en el equipo, acceder a las carpetas compartidas y usar las impresoras. Desaparece el problema que vimos con Samba, donde la contraseña del sistema y la de Samba eran distintas: aquí el propio dominio gestiona una credencial única.
+**3. Una sola identidad y una sola contraseña.** Cada usuario tiene **una única cuenta** que le sirve para iniciar sesión en el equipo, acceder a las carpetas compartidas y usar las impresoras. Desaparece el problema que vimos con Samba, donde la contraseña del sistema y la de Samba eran distintas: aquí el propio dominio gestiona una credencial única.
 
 **4. Redes verdaderamente mixtas.** Un controlador de dominio Samba puede autenticar tanto a **equipos Windows** como a **equipos Linux** (estos últimos uniéndose al dominio con SSSD). Es la pieza que da pleno sentido al título de la unidad, «compartición de recursos en redes mixtas»: un único directorio para todos los sistemas operativos.
 
@@ -379,14 +379,14 @@ flowchart TB
 
 | Pieza montada por separado en el curso | Su equivalente dentro del dominio AD |
 |---|---|
-| OpenLDAP (UD3) | El directorio interno del controlador de dominio |
+| OpenLDAP (documento 01) | El directorio interno del controlador de dominio |
 | Kerberos (este documento) | La autenticación por defecto del dominio |
-| Samba en grupo de trabajo (UD4) | La compartición de recursos del dominio |
-| Perfiles móviles con NFS (UD4) | Los perfiles móviles y carpetas personales del dominio |
+| Samba en grupo de trabajo (documento 05) | La compartición de recursos del dominio |
+| Perfiles móviles con NFS (documento 03) | Los perfiles móviles y carpetas personales del dominio |
 
 Haber montado cada servicio por separado tiene un enorme valor: permite **entender qué hace cada pieza por dentro**. Cuando después se administra un controlador de dominio, ya no es una caja negra, porque se sabe que ahí dentro hay un LDAP guardando los usuarios, un Kerberos emitiendo tickets y un Samba sirviendo los ficheros.
 
-> **Nota:** La instalación y administración de un controlador de dominio de Active Directory con Windows Server es precisamente el contenido de las siguientes unidades del módulo. Llegarás a ellas sabiendo ya qué ocurre en este escenario, porque habrás construido a mano cada una de las piezas que el dominio integra.
+> **Nota:** La instalación de un controlador de dominio con Samba se desarrolla en el [documento 06](./06_samba_ad_dc.md), y la de Active Directory con Windows Server es el contenido de las siguientes unidades del módulo. Llegarás a ellas sabiendo ya qué ocurre en este escenario, porque habrás construido a mano cada una de las piezas que el dominio integra.
 
 ---
 

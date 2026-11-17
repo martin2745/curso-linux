@@ -44,7 +44,7 @@ Un **perfil móvil** (*roaming profile*) es un perfil de usuario que no reside e
 
 En un centro educativo el problema que resuelve es evidente: un alumno no se sienta siempre en el mismo ordenador. Sin perfiles móviles, los trabajos que guardó el lunes en el PC de la primera fila no estarían disponibles el martes en el PC del fondo. Con perfiles móviles, su carpeta personal le acompaña.
 
-> **Recuerda:** En la [UD3](<../UD3 - Administración de un servidor Linux/ldap.md>) se centralizaron las **identidades** con LDAP: el alumno ya puede autenticarse en cualquier equipo. Lo que falta ahora es centralizar sus **datos**. Son dos problemas distintos y complementarios: LDAP responde a «quién eres» y NFS a «dónde están tus ficheros».
+> **Recuerda:** En el [documento 01](./01_ldap-slapd.md) se centralizaron las **identidades** con LDAP: el alumno ya puede autenticarse en cualquier equipo. Lo que falta ahora es centralizar sus **datos**. Son dos problemas distintos y complementarios: LDAP responde a «quién eres» y NFS a «dónde están tus ficheros».
 
 ### 1.1. Perfiles móviles en Windows y en Linux
 
@@ -95,24 +95,24 @@ El proceso al iniciar sesión un alumno en cualquier equipo del aula es el sigui
 
 ### 2.1. Máquinas y direccionamiento
 
-Se parte del escenario ya montado en la unidad anterior, sin añadir ninguna máquina nueva:
+Se parte del escenario ya montado en el [documento 01](./01_ldap-slapd.md), sin añadir ninguna máquina nueva:
 
 | Equipo | Sistema | IP | Función |
 |---|---|---|---|
 | `ldap.ies.local` | Ubuntu Server 26.04 LTS | `192.168.100.10` | Servidor LDAP y, a partir de ahora, servidor NFS de los homes |
 | `cliente` | Debian 13 | `192.168.100.20` | Equipo del aula, ya integrado en el directorio mediante SSSD |
 
-Los usuarios y grupos del directorio, con sus identificadores numéricos y sus homes, son los definidos en la UD3:
+Los usuarios y grupos del directorio, con sus identificadores numéricos y sus homes, son los definidos en el [documento 01](./01_ldap-slapd.md):
 
-| Usuario | uidNumber | gidNumber | Grupo | homeDirectory |
+| Usuario | uidNumber | gidNumber (grupo principal) | Grupo de curso | homeDirectory |
 |---|---|---|---|---|
-| `a.garcia` | `10001` | `10000` | SMR1 | `/home/alumnos/a.garcia` |
-| `c.lopez` | `10002` | `10000` | SMR1 | `/home/alumnos/c.lopez` |
-| `l.moreno` | `11001` | `11000` | SMR2 | `/home/alumnos/l.moreno` |
-| `m.fernandez` | `12001` | `12000` | FPB1 | `/home/alumnos/m.fernandez` |
-| `j.martin` | `13001` | `13000` | FPB2 | `/home/alumnos/j.martin` |
-| `p.rodriguez` | `20001` | `30000` | profesores | `/home/profesores/p.rodriguez` |
-| `l.sanchez` | `20002` | `30000` | profesores | `/home/profesores/l.sanchez` |
+| `a.garcia` | `10001` | `10000` (`alumnos`) | `smr1` | `/home/alumnos/a.garcia` |
+| `c.lopez` | `10002` | `10000` (`alumnos`) | `smr1` | `/home/alumnos/c.lopez` |
+| `l.moreno` | `10003` | `10000` (`alumnos`) | `smr2` | `/home/alumnos/l.moreno` |
+| `m.fernandez` | `10004` | `10000` (`alumnos`) | `fpb1` | `/home/alumnos/m.fernandez` |
+| `j.martin` | `10005` | `10000` (`alumnos`) | `fpb2` | `/home/alumnos/j.martin` |
+| `p.rodriguez` | `20001` | `20000` (`profesores`) | | `/home/profesores/p.rodriguez` |
+| `l.sanchez` | `20002` | `20000` (`profesores`) | | `/home/profesores/l.sanchez` |
 
 > **Snapshot:** Antes de comenzar, crear una instantánea de ambas máquinas virtuales (por ejemplo, `ldap-ok` y `cliente-ldap-ok`). El escenario LDAP funcionando es el resultado de toda una unidad de trabajo y conviene poder recuperarlo si algo sale mal durante el montaje de los homes.
 
@@ -127,26 +127,26 @@ root@ldap:~# systemctl is-active slapd
 active
 ```
 
-Comprobar que los homes provisionados en la sección 5.6 de los apuntes de LDAP existen y conservan sus propietarios numéricos:
+Comprobar que los homes provisionados en el apartado 5.6 del [documento 01](./01_ldap-slapd.md) existen y conservan sus propietarios numéricos:
 
 ```bash
 root@ldap:~# ls -ln /home/alumnos/
 total 20
 drwx------ 2 10001 10000 4096 ago 19 18:02 a.garcia
 drwx------ 2 10002 10000 4096 ago 19 18:04 c.lopez
-drwx------ 2 13001 13000 4096 ago 19 18:04 j.martin
-drwx------ 2 11001 11000 4096 ago 19 18:04 l.moreno
-drwx------ 2 12001 12000 4096 ago 19 18:04 m.fernandez
+drwx------ 2 10005 10000 4096 ago 19 18:04 j.martin
+drwx------ 2 10003 10000 4096 ago 19 18:04 l.moreno
+drwx------ 2 10004 10000 4096 ago 19 18:04 m.fernandez
 
 root@ldap:~# ls -ln /home/profesores/
 total 8
-drwx------ 2 20002 30000 4096 ago 19 18:05 l.sanchez
-drwx------ 2 20001 30000 4096 ago 19 18:05 p.rodriguez
+drwx------ 2 20002 20000 4096 ago 19 18:05 l.sanchez
+drwx------ 2 20001 20000 4096 ago 19 18:05 p.rodriguez
 ```
 
 > **Importante:** Si algún usuario del directorio no tiene su home provisionado aquí, debe crearse **antes** de continuar (`mkdir`, copia de `/etc/skel`, `chown` numérico y `chmod 700`). Un usuario sin home en el servidor podrá autenticarse en el cliente, pero iniciará sesión en un directorio inexistente.
 
-> **Recuerda:** Los propietarios se muestran como números (`10001`, `10000`) porque el servidor no es cliente de su propio LDAP y no sabe traducir esos identificadores a nombres. Es exactamente el comportamiento explicado en la sección [El problema de los usuarios y los UID](NFS.md#6-el-problema-de-los-usuarios-y-los-uid) de los apuntes de NFS.
+> **Recuerda:** Los propietarios se muestran como números (`10001`, `10000`) porque el servidor no es cliente de su propio LDAP y no sabe traducir esos identificadores a nombres. Es exactamente el comportamiento explicado en la sección [El problema de los usuarios y los UID](./02_NFS.md#6-el-problema-de-los-usuarios-y-los-uid) de los apuntes de NFS.
 
 ### 2.3. Comprobaciones en el cliente
 
@@ -156,10 +156,10 @@ Verificar que el cliente sigue resolviendo los usuarios del directorio a través
 
 ```bash
 root@cliente:~# getent passwd a.garcia
-a.garcia:x:10001:10000:Ana Garcia Lopez:/home/alumnos/a.garcia:/bin/bash
+a.garcia:*:10001:10000:Ana García López:/home/alumnos/a.garcia:/bin/bash
 
 root@cliente:~# id a.garcia
-uid=10001(a.garcia) gid=10000(SMR1) groups=10000(SMR1)
+uid=10001(a.garcia) gid=10000(alumnos) grupos=10000(alumnos),30001(smr1)
 ```
 
 Comprobar también que hay conectividad con el servidor:
@@ -168,7 +168,7 @@ Comprobar también que hay conectividad con el servidor:
 root@cliente:~# ping -c 2 192.168.100.10
 ```
 
-> **Importante:** Si `getent passwd a.garcia` no devuelve nada, el cliente ha perdido la integración con LDAP y no tiene sentido continuar: primero hay que resolver ese problema revisando SSSD, tal y como se explica en los apuntes de la UD3. El montaje NFS por sí solo no da acceso a nadie.
+> **Importante:** Si `getent passwd a.garcia` no devuelve nada, el cliente ha perdido la integración con LDAP y no tiene sentido continuar: primero hay que resolver ese problema revisando SSSD, tal y como se explica en el apartado 10 del [documento 01](./01_ldap-slapd.md). El montaje NFS por sí solo no da acceso a nadie.
 
 ---
 
@@ -223,7 +223,7 @@ Añadir al final del fichero las siguientes líneas:
 
 > **Importante:** Mantener `root_squash` es posible precisamente porque los homes ya están creados en el servidor. Si se hubiese dejado que el cliente los creara con `pam_mkhomedir`, habría hecho falta `no_root_squash` —el módulo se ejecuta como root en el cliente— y cualquier alumno con privilegios de administrador en un PC del aula tendría control total sobre los ficheros de todos sus compañeros.
 
-> **Recuerda:** La tabla completa de opciones de `/etc/exports` (`ro`, `all_squash`, `anonuid`, `secure`, `async`…) está en los apuntes de [NFS](NFS.md#3-instalación-del-servidor-nfs).
+> **Recuerda:** La tabla completa de opciones de `/etc/exports` (`ro`, `all_squash`, `anonuid`, `secure`, `async`…) está en los apuntes de [NFS](./02_NFS.md#3-instalación-del-servidor-nfs).
 
 ### 3.3. Aplicación y verificación de las exportaciones
 
@@ -288,7 +288,7 @@ Antes de montar, comprobar qué homes locales existen:
 ```bash
 root@cliente:~# ls -l /home/alumnos/
 total 4
-drwx------ 3 a.garcia SMR1 4096 ago 19 17:40 a.garcia
+drwx------ 3 a.garcia alumnos 4096 ago 19 17:40 a.garcia
 ```
 
 Apartar los directorios locales renombrándolos, en lugar de borrarlos, para poder recuperar cualquier fichero de las pruebas anteriores:
@@ -326,7 +326,7 @@ Comentar la línea del módulo anteponiendo una almohadilla:
 
 > **Snapshot:** Cualquier modificación en los ficheros de `/etc/pam.d/` puede impedir el inicio de sesión en el equipo. Antes de editarlos, crear una instantánea del cliente y mantener abierta una segunda terminal con sesión de `root` ya iniciada.
 
-> **Nota:** Si en la UD3 se activó el módulo mediante `pam-auth-update` en lugar de editando el fichero a mano, la forma correcta de desactivarlo es volver a ejecutar `pam-auth-update` y desmarcar la opción *Create home directory on login*.
+> **Nota:** Si en el [documento 01](./01_ldap-slapd.md) se activó el módulo mediante `pam-auth-update` en lugar de editando el fichero a mano, la forma correcta de desactivarlo es volver a ejecutar `pam-auth-update` y desmarcar la opción *Create home directory on login*.
 
 ---
 
@@ -428,14 +428,14 @@ Este es el momento en el que se comprueba que las dos piezas encajan. Listar los
 ```bash
 root@cliente:~# ls -l /home/alumnos/
 total 20
-drwx------ 2 a.garcia    SMR1 4096 ago 19 18:02 a.garcia
-drwx------ 2 c.lopez     SMR1 4096 ago 19 18:04 c.lopez
-drwx------ 2 j.martin    FPB2 4096 ago 19 18:04 j.martin
-drwx------ 2 l.moreno    SMR2 4096 ago 19 18:04 l.moreno
-drwx------ 2 m.fernandez FPB1 4096 ago 19 18:04 m.fernandez
+drwx------ 2 a.garcia    alumnos 4096 ago 19 18:02 a.garcia
+drwx------ 2 c.lopez     alumnos 4096 ago 19 18:04 c.lopez
+drwx------ 2 j.martin    alumnos 4096 ago 19 18:04 j.martin
+drwx------ 2 l.moreno    alumnos 4096 ago 19 18:04 l.moreno
+drwx------ 2 m.fernandez alumnos 4096 ago 19 18:04 m.fernandez
 ```
 
-Los mismos directorios que en el servidor aparecían como `10001 10000` se muestran ahora con nombres (`a.garcia`, `SMR1`). No ha cambiado nada en el disco: lo único que viaja por NFS siguen siendo los números, pero el cliente **sí** es capaz de traducirlos porque consulta LDAP a través de SSSD.
+Los mismos directorios que en el servidor aparecían como `10001 10000` se muestran ahora con nombres (`a.garcia`, `alumnos`). No ha cambiado nada en el disco: lo único que viaja por NFS siguen siendo los números, pero el cliente **sí** es capaz de traducirlos porque consulta LDAP a través de SSSD.
 
 > **Recuerda:** Esta es la demostración práctica de por qué LDAP debe implantarse antes que NFS. Sin un directorio centralizado, cada equipo traduciría el UID 10001 según su fichero `/etc/passwd` local y el mismo directorio parecería pertenecer a personas distintas en cada máquina.
 
@@ -460,7 +460,7 @@ La salida de `df -h .` confirma que el directorio actual **no está en el disco 
 a.garcia@cliente:~$ echo "Trabajo de SORE realizado en el cliente" > trabajo.txt
 a.garcia@cliente:~$ ls -l
 total 4
--rw------- 1 a.garcia SMR1 40 ago 19 18:20 trabajo.txt
+-rw------- 1 a.garcia alumnos 40 ago 19 18:20 trabajo.txt
 a.garcia@cliente:~$ exit
 ```
 
@@ -617,7 +617,7 @@ root@ldap:~# journalctl -u nfs-kernel-server --no-pager | tail -20
 
 > **Importante:** El retraso sobre la fecha estimada de entrega supone la anulación de la misma.
 
-Partiendo del escenario LDAP de la unidad anterior, configura los perfiles móviles del centro educativo. En todo el ejercicio se deben realizar las pertinentes capturas de pantalla que justifiquen cada uno de los pasos.
+Partiendo del escenario LDAP del [documento 01](./01_ldap-slapd.md), configura los perfiles móviles del centro educativo. En todo el ejercicio se deben realizar las pertinentes capturas de pantalla que justifiquen cada uno de los pasos.
 
 El ejercicio debe realizarse en un documento que posteriormente debe ser convertido a formato `.pdf`, con el nombre `perfilesmovilestunombretusapellidos.pdf`.
 
